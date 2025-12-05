@@ -14,6 +14,7 @@ class ClassSection extends Model
 
     public $incrementing = false;
     protected $keyType = 'string';
+    protected $guarded = [];
 
     protected static function boot()
     {
@@ -60,4 +61,3 @@ class ClassSection extends Model
         return $this->hasMany(Student::class, 'current_class_id');
     }
 }
-

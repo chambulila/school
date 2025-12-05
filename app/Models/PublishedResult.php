@@ -13,6 +13,7 @@ class PublishedResult extends Model
 
     public $incrementing = false;
     protected $keyType = 'string';
+    protected $guarded = [];
 
     protected static function boot()
     {
@@ -39,4 +40,3 @@ class PublishedResult extends Model
         return $this->belongsTo(User::class, 'published_by');
     }
 }
-

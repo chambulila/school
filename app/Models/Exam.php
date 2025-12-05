@@ -14,6 +14,7 @@ class Exam extends Model
 
     public $incrementing = false;
     protected $keyType = 'string';
+    protected $guarded = [];
 
     protected static function boot()
     {
@@ -40,4 +41,3 @@ class Exam extends Model
         return $this->hasMany(PublishedResult::class);
     }
 }
-

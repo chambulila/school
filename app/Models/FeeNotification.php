@@ -14,6 +14,7 @@ class FeeNotification extends Model
     protected $primaryKey = 'fee_notification_id';
     public $incrementing = false;
     protected $keyType = 'string';
+    protected $guarded = [];
 
     protected static function boot()
     {
@@ -35,4 +36,3 @@ class FeeNotification extends Model
         return $this->belongsTo(StudentBilling::class, 'bill_id', 'bill_id');
     }
 }
-

@@ -15,6 +15,7 @@ class Payment extends Model
     protected $primaryKey = 'payment_id';
     public $incrementing = false;
     protected $keyType = 'string';
+    protected $guarded = [];
 
     protected static function boot()
     {
@@ -46,4 +47,3 @@ class Payment extends Model
         return $this->hasOne(PaymentReceipt::class, 'payment_id', 'payment_id');
     }
 }
-

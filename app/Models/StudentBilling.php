@@ -15,6 +15,7 @@ class StudentBilling extends Model
     protected $primaryKey = 'bill_id';
     public $incrementing = false;
     protected $keyType = 'string';
+    protected $guarded = [];
 
     protected static function boot()
     {
@@ -46,4 +47,3 @@ class StudentBilling extends Model
         return $this->hasMany(FeeNotification::class, 'bill_id', 'bill_id');
     }
 }
-

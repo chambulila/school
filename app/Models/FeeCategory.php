@@ -14,6 +14,7 @@ class FeeCategory extends Model
     protected $primaryKey = 'fee_category_id';
     public $incrementing = false;
     protected $keyType = 'string';
+    protected $guarded = [];
 
     protected static function boot()
     {
@@ -30,4 +31,3 @@ class FeeCategory extends Model
         return $this->hasMany(FeeStructure::class, 'fee_category_id', 'fee_category_id');
     }
 }
-

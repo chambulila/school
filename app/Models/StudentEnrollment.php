@@ -13,6 +13,7 @@ class StudentEnrollment extends Model
 
     public $incrementing = false;
     protected $keyType = 'string';
+    protected $guarded = [];
 
     protected static function boot()
     {
@@ -39,4 +40,3 @@ class StudentEnrollment extends Model
         return $this->belongsTo(AcademicYear::class);
     }
 }
-

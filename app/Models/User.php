@@ -74,6 +74,15 @@ class User extends Authenticatable
         });
     }
 
+    protected $appends = ['name'];
+
+    public function getNameAttribute(): string
+    {
+        $first = trim((string) ($this->attributes['first_name'] ?? ''));
+        $last = trim((string) ($this->attributes['last_name'] ?? ''));
+        return trim($first . ' ' . $last);
+    }
+
     public function userRoles(): HasMany
     {
         return $this->hasMany(UserRole::class);
@@ -81,7 +90,9 @@ class User extends Authenticatable
 
     public function roles(): BelongsToMany
     {
-        return $this->belongsToMany(Role::class, 'user_roles', 'user_id', 'role_id');
+        return $this->belongsToMany(Role::class, 'user_roles', 'user_id', 'role_id')
+            ->using(\App\Models\Pivots\UserRolePivot::class)
+            ->withTimestamps();
     }
 
     public function student(): HasOne

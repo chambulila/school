@@ -13,6 +13,7 @@ class Grade extends Model
 
     public $incrementing = false;
     protected $keyType = 'string';
+    protected $guarded = [];
 
     protected static function boot()
     {
@@ -39,4 +40,3 @@ class Grade extends Model
         return $this->hasMany(FeeStructure::class);
     }
 }
-

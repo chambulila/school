@@ -14,6 +14,7 @@ class PaymentReceipt extends Model
     protected $primaryKey = 'receipt_id';
     public $incrementing = false;
     protected $keyType = 'string';
+    protected $guarded = [];
 
     protected static function boot()
     {
@@ -35,4 +36,3 @@ class PaymentReceipt extends Model
         return $this->belongsTo(User::class, 'generated_by');
     }
 }
-

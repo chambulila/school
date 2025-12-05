@@ -14,6 +14,7 @@ class Role extends Model
 
     public $incrementing = false;
     protected $keyType = 'string';
+    protected $fillable = ['role_name', 'description'];
 
     protected static function boot()
     {
@@ -32,7 +33,8 @@ class Role extends Model
 
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'user_roles', 'role_id', 'user_id');
+        return $this->belongsToMany(User::class, 'user_roles', 'role_id', 'user_id')
+            ->using(\App\Models\Pivots\UserRolePivot::class)
+            ->withTimestamps();
     }
 }
-

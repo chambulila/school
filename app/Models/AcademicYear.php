@@ -13,6 +13,7 @@ class AcademicYear extends Model
 
     public $incrementing = false;
     protected $keyType = 'string';
+    protected $guarded = [];
 
     protected static function boot()
     {
@@ -44,4 +45,3 @@ class AcademicYear extends Model
         return $this->hasMany(StudentBilling::class);
     }
 }
-

@@ -18,8 +18,16 @@ class CreateNewUser implements CreatesNewUsers
      */
     public function create(array $input): User
     {
+        // Map legacy 'name' to first_name/last_name if provided
+        if (!isset($input['first_name']) && isset($input['name'])) {
+            $parts = preg_split('/\s+/', trim($input['name']));
+            $input['first_name'] = $parts[0] ?? '';
+            $input['last_name'] = isset($parts[1]) ? implode(' ', array_slice($parts, 1)) : '';
+        }
+
         Validator::make($input, [
-            'name' => ['required', 'string', 'max:255'],
+            'first_name' => ['required', 'string', 'max:100'],
+            'last_name' => ['required', 'string', 'max:100'],
             'email' => [
                 'required',
                 'string',
@@ -31,7 +39,8 @@ class CreateNewUser implements CreatesNewUsers
         ])->validate();
 
         return User::create([
-            'name' => $input['name'],
+            'first_name' => $input['first_name'],
+            'last_name' => $input['last_name'],
             'email' => $input['email'],
             'password' => $input['password'],
         ]);
