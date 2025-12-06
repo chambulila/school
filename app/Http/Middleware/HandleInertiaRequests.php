@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -37,6 +38,15 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
+        $user = $request->user();
+
+        // Load user roles and permissions properly
+        if ($user) {
+            $user->load('roles');
+            $permissions = $user->getAllPermissions()->pluck('name');
+        } else {
+            $permissions = collect();
+        }
 
         return [
             ...parent::share($request),
@@ -44,8 +54,15 @@ class HandleInertiaRequests extends Middleware
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
                 'user' => $request->user(),
+                'can' => $permissions,
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'flash' => [
+                'success' => Session::get('success'),
+                'error' => Session::get('error'),
+                'warning' => Session::get('warning'),
+                'info' => Session::get('info'),
+            ],
         ];
     }
 }

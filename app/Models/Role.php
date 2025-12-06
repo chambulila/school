@@ -37,4 +37,11 @@ class Role extends Model
             ->using(\App\Models\Pivots\UserRolePivot::class)
             ->withTimestamps();
     }
+
+    public function permissions(): BelongsToMany
+    {
+        return $this->belongsToMany(Permission::class, 'role_permissions', 'role_id', 'permission_id')
+            ->using(\App\Models\Pivots\RolePermissionPivot::class)
+            ->withTimestamps();
+    }
 }

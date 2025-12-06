@@ -119,4 +119,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(PaymentReceipt::class, 'generated_by');
     }
+
+    public function getAllPermissions()
+    {
+        return $this->roles()->with('permissions')->get()->pluck('permissions')->flatten();
+    }
 }

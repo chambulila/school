@@ -24,6 +24,12 @@ const mainNavItems: NavItem[] = [
     },
 ];
 
+const adminNavItems: NavItem[] = [
+    { title: 'Users', href: '/admin/users' },
+    { title: 'Roles', href: '/admin/roles' },
+    { title: 'Permissions', href: '/admin/permissions' },
+];
+
 const footerNavItems: NavItem[] = [
     {
         title: 'Repository',
@@ -54,6 +60,7 @@ export function AppSidebar() {
 
             <SidebarContent>
                 <NavMain items={mainNavItems} />
+                <NavMain label="Admin" items={adminNavItems} />
             </SidebarContent>
 
             <SidebarFooter>
