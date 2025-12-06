@@ -41,7 +41,7 @@ export default function RolesIndex() {
     const handleAddRole = async () => {
         const isConfirmed = await askConfirmation('Are you sure you want to add this role?');
         if (!isConfirmed) return;
-        router.post('/admin/roles', {
+        router.post('/dashboard/roles', {
             role_name: newRoleName,
         });
     };
@@ -49,7 +49,7 @@ export default function RolesIndex() {
     const handleSavePermissions = async () => {
         const isConfirmed = await askConfirmation('Are you sure that you want to update permissions to this role?')
         if (isConfirmed) {
-            router.put(`/admin/permissions/${selectedRoleId}`, {
+            router.put(`/dashboard/permissions/${selectedRoleId}`, {
                 preserveState: true,
                 preserveScroll: true,
                 permission_ids: selectedIds

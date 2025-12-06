@@ -16,7 +16,7 @@ class UserController extends Controller
 {
     public function index(): Response
     {
-        return Inertia::render('admin/users', [
+        return Inertia::render('dashboard/users', [
             'users' => User::query()->with('roles')->orderBy('first_name')->get(),
             'roles' => Role::query()->orderBy('role_name')->get(),
         ]);

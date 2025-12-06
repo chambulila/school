@@ -30,17 +30,17 @@ export default function UsersPage({ users, roles }) {
     e.preventDefault()
     const parsed = userSchema.safeParse({ ...data, password: data.password || undefined })
     if (!parsed.success) return
-    post('/admin/users', { onSuccess: () => reset('first_name','last_name','email','password','phone','gender','date_of_birth','address','guardian_name','guardian_phone','roles') })
+    post('/dashboard/users', { onSuccess: () => reset('first_name','last_name','email','password','phone','gender','date_of_birth','address','guardian_name','guardian_phone','roles') })
   }
 
   const submitUpdate = (id) => {
     const parsed = userSchema.safeParse({ ...data })
     if (!parsed.success) return
-    put(`/admin/users/${id}`)
+    put(`/dashboard/users/${id}`)
   }
 
   return (
-    <AuthenticatedLayout breadcrumbs={[{ title: 'Admin', href: '/admin' }, { title: 'Users', href: '/admin/users' }]}>
+    <AuthenticatedLayout breadcrumbs={[{ title: 'Admin', href: '/dashboard' }, { title: 'Users', href: '/dashboard/users' }]}>
     <div className="p-6">
       <Head title="Users" />
       <h1 className="text-xl font-semibold mb-4">Users</h1>
@@ -111,7 +111,7 @@ export default function UsersPage({ users, roles }) {
                 }}>Quick Save</Button>
                 <Button variant="destructive" onClick={() => {
                   if (window.confirm('Delete user?')) {
-                    router.delete(`/admin/users/${u.id}`)
+                    router.delete(`/dashboard/users/${u.id}`)
                   }
                 }}>Delete</Button>
               </td>
