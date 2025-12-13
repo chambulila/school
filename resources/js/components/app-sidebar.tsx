@@ -118,7 +118,7 @@ export function AppSidebar() {
                         isActive: url.startsWith('/dashboard/subjects'),
                     },
                     {
-                        title: "Teacher Subject Assignments",
+                        title: "Teacher Subjects",
                         url: "/dashboard/teacher-subject-assignments",
                         isVisible: true,
                         isActive: url.startsWith('/dashboard/teacher-subject-assignments'),
