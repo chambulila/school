@@ -42,7 +42,7 @@ const footerNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
-        const { can } = usePermission();
+    const { can } = usePermission();
     const { url } = usePage();
 
     const data = {
@@ -245,37 +245,37 @@ export function AppSidebar() {
                             </SidebarMenuButton>
                         </SidebarMenuItem>
                         {data.navMain
-                        .filter(item => item.isVisible)?.map((item, index) => {
-                            const Icon = item.icon;
+                            .filter(item => item.isVisible)?.map((item, index) => {
+                                const Icon = item.icon;
 
-                            return (
-                                <Collapsible key={item.title} defaultOpen={item.items?.filter(it => it?.isActive)?.length > 0} className="group/collapsible">
-                                    <SidebarMenuItem>
-                                        <CollapsibleTrigger asChild>
-                                            <SidebarMenuButton>
-                                                {Icon && <Icon />}
-                                                {item.title}
-                                                <Plus className="ml-auto group-data-[state=open]/collapsible:hidden" />
-                                                <Minus className="ml-auto group-data-[state=closed]/collapsible:hidden" />
-                                            </SidebarMenuButton>
-                                        </CollapsibleTrigger>
-                                        {item.items?.length ? (
-                                            <CollapsibleContent >
-                                                <SidebarMenuSub>
-                                                    {item.items?.filter(it => it.isVisible)?.map((subItem) => (
-                                                        <SidebarMenuSubItem key={subItem.title}>
-                                                            <SidebarMenuSubButton asChild isActive={subItem.isActive}>
-                                                                <Link href={subItem.url}>{subItem.title}</Link>
-                                                            </SidebarMenuSubButton>
-                                                        </SidebarMenuSubItem>
-                                                    ))}
-                                                </SidebarMenuSub>
-                                            </CollapsibleContent>
-                                        ) : null}
-                                    </SidebarMenuItem>
-                                </Collapsible>
-                            );
-                        })}
+                                return (
+                                    <Collapsible key={item.title} defaultOpen={item.items?.filter(it => it?.isActive)?.length > 0} className="group/collapsible">
+                                        <SidebarMenuItem>
+                                            <CollapsibleTrigger asChild>
+                                                <SidebarMenuButton>
+                                                    {Icon && <Icon />}
+                                                    {item.title}
+                                                    <Plus className="ml-auto group-data-[state=open]/collapsible:hidden" />
+                                                    <Minus className="ml-auto group-data-[state=closed]/collapsible:hidden" />
+                                                </SidebarMenuButton>
+                                            </CollapsibleTrigger>
+                                            {item.items?.length ? (
+                                                <CollapsibleContent >
+                                                    <SidebarMenuSub>
+                                                        {item.items?.filter(it => it.isVisible)?.map((subItem) => (
+                                                            <SidebarMenuSubItem key={subItem.title}>
+                                                                <SidebarMenuSubButton asChild isActive={subItem.isActive}>
+                                                                    <Link href={subItem.url}>{subItem.title}</Link>
+                                                                </SidebarMenuSubButton>
+                                                            </SidebarMenuSubItem>
+                                                        ))}
+                                                    </SidebarMenuSub>
+                                                </CollapsibleContent>
+                                            ) : null}
+                                        </SidebarMenuItem>
+                                    </Collapsible>
+                                );
+                            })}
 
                     </SidebarMenu>
                 </SidebarGroup>

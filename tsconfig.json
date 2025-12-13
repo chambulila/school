@@ -113,5 +113,11 @@
         },
         "jsx": "react-jsx"
     },
-    "include": ["resources/js/**/*.ts", "resources/js/**/*.d.ts", "resources/js/**/*.tsx", "resources/js/app.jsx", "resources/js/ssr.jsx", "resources/js/pages/welcome.jsx", "resources/js/layouts/authenticated-layout.jsx"]
+    "include": [
+        "resources/js/**/*.ts",
+        "resources/js/**/*.d.ts",
+        "resources/js/**/*.tsx",
+        "resources/js/**/*.js",
+        "resources/js/**/*.jsx"
+    ]
 }

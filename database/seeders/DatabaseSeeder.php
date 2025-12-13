@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionSeeder::class);
 
         $user = User::firstOrCreate(
-            ['email' => 'admin@example.com'],
+            ['email' => 'admin@gmail.com'],
             [
                 'first_name' => 'Admin',
                 'last_name' => 'User',
