@@ -13,7 +13,7 @@ class Grade extends Model
 
     public $incrementing = false;
     protected $keyType = 'string';
-    protected $guarded = [];
+    protected $fillable = ['grade_name', 'id'];
 
     protected static function boot()
     {

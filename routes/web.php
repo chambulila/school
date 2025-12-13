@@ -41,5 +41,10 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
         Route::post('grades', [\App\Http\Controllers\Admin\GradeController::class, 'store'])->name('admin.grades.store');
         Route::put('grades/{grade}', [\App\Http\Controllers\Admin\GradeController::class, 'update'])->name('admin.grades.update');
         Route::delete('grades/{grade}', [\App\Http\Controllers\Admin\GradeController::class, 'destroy'])->name('admin.grades.destroy');
+
+        Route::get('sections', [\App\Http\Controllers\Admin\ClassSectionController::class, 'index'])->name('admin.sections.index');
+        Route::post('sections', [\App\Http\Controllers\Admin\ClassSectionController::class, 'store'])->name('admin.sections.store');
+        Route::put('sections/{section}', [\App\Http\Controllers\Admin\ClassSectionController::class, 'update'])->name('admin.sections.update');
+        Route::delete('sections/{section}', [\App\Http\Controllers\Admin\ClassSectionController::class, 'destroy'])->name('admin.sections.destroy');
     });
 });

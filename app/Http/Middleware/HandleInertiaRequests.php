@@ -48,6 +48,11 @@ class HandleInertiaRequests extends Middleware
             $permissions = collect();
         }
 
+        $time = now()->format('H:i:s');
+        $append = function ($msg) use ($time) {
+            return $msg ? ($msg.' '.$time) : null;
+        };
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -58,10 +63,10 @@ class HandleInertiaRequests extends Middleware
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'flash' => [
-                'success' => Session::get('success'),
-                'error' => Session::get('error'),
-                'warning' => Session::get('warning'),
-                'info' => Session::get('info'),
+                'success' => $append(Session::get('success')),
+                'error' => $append(Session::get('error')),
+                'warning' => $append(Session::get('warning')),
+                'info' => $append(Session::get('info')),
             ],
         ];
     }
