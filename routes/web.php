@@ -61,5 +61,15 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
         Route::post('teacher-subject-assignments', [\App\Http\Controllers\Admin\TeacherSubjectAssignmentController::class, 'store'])->name('admin.teacher-subject-assignments.store');
         Route::put('teacher-subject-assignments/{teacherSubjectAssignment}', [\App\Http\Controllers\Admin\TeacherSubjectAssignmentController::class, 'update'])->name('admin.teacher-subject-assignments.update');
         Route::delete('teacher-subject-assignments/{teacherSubjectAssignment}', [\App\Http\Controllers\Admin\TeacherSubjectAssignmentController::class, 'destroy'])->name('admin.teacher-subject-assignments.destroy');
+
+        Route::get('teachers', [\App\Http\Controllers\Admin\TeacherController::class, 'index'])->name('admin.teachers.index');
+        Route::post('teachers', [\App\Http\Controllers\Admin\TeacherController::class, 'store'])->name('admin.teachers.store');
+        Route::put('teachers/{teacher}', [\App\Http\Controllers\Admin\TeacherController::class, 'update'])->name('admin.teachers.update');
+        Route::delete('teachers/{teacher}', [\App\Http\Controllers\Admin\TeacherController::class, 'destroy'])->name('admin.teachers.destroy');
+
+        Route::get('students', [\App\Http\Controllers\Admin\StudentController::class, 'index'])->name('admin.students.index');
+        Route::post('students', [\App\Http\Controllers\Admin\StudentController::class, 'store'])->name('admin.students.store');
+        Route::put('students/{student}', [\App\Http\Controllers\Admin\StudentController::class, 'update'])->name('admin.students.update');
+        Route::delete('students/{student}', [\App\Http\Controllers\Admin\StudentController::class, 'destroy'])->name('admin.students.destroy');
     });
 });
