@@ -51,5 +51,10 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
         Route::post('academic-years', [\App\Http\Controllers\Admin\AcademicYearController::class, 'store'])->name('admin.academic-years.store');
         Route::put('academic-years/{academicYear}', [\App\Http\Controllers\Admin\AcademicYearController::class, 'update'])->name('admin.academic-years.update');
         Route::delete('academic-years/{academicYear}', [\App\Http\Controllers\Admin\AcademicYearController::class, 'destroy'])->name('admin.academic-years.destroy');
+
+        Route::get('subjects', [\App\Http\Controllers\Admin\SubjectController::class, 'index'])->name('admin.subjects.index');
+        Route::post('subjects', [\App\Http\Controllers\Admin\SubjectController::class, 'store'])->name('admin.subjects.store');
+        Route::put('subjects/{subject}', [\App\Http\Controllers\Admin\SubjectController::class, 'update'])->name('admin.subjects.update');
+        Route::delete('subjects/{subject}', [\App\Http\Controllers\Admin\SubjectController::class, 'destroy'])->name('admin.subjects.destroy');
     });
 });
