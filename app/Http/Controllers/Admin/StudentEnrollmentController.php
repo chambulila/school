@@ -1,0 +1,77 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreStudentEnrollmentRequest;
+use App\Http\Requests\Admin\UpdateStudentEnrollmentRequest;
+use App\Models\AcademicYear;
+use App\Models\ClassSection;
+use App\Models\Student;
+use App\Models\StudentEnrollment;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class StudentEnrollmentController extends Controller
+{
+    public function index(Request $request): Response
+    {
+        $search = (string) $request->input('search', '');
+        $perPage = (int) $request->input('perPage', 10);
+
+        $enrollments = StudentEnrollment::query()
+            ->with(['student.user', 'classSection.grade', 'academicYear'])
+            ->when($search !== '', function ($q) use ($search) {
+                $q->whereHas('student', function ($sq) use ($search) {
+                    $sq->where('admission_number', 'like', '%'.$search.'%')
+                        ->orWhereHas('user', function ($uq) use ($search) {
+                            $uq->where('name', 'like', '%'.$search.'%')
+                               ->orWhere('first_name', 'like', '%'.$search.'%')
+                               ->orWhere('last_name', 'like', '%'.$search.'%')
+                               ->orWhere('email', 'like', '%'.$search.'%');
+                        });
+                })
+                ->orWhereHas('classSection', function ($cq) use ($search) {
+                    $cq->where('section_name', 'like', '%'.$search.'%');
+                })
+                ->orWhereHas('academicYear', function ($yq) use ($search) {
+                    $yq->where('year_name', 'like', '%'.$search.'%');
+                });
+            })
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage)
+            ->withQueryString();
+
+        return Inertia::render('dashboard/StudentEnrollments', [
+            'enrollments' => $enrollments,
+            'students' => Student::query()->with('user')->orderBy('admission_number')->get(),
+            'sections' => ClassSection::query()->with('grade')->orderBy('section_name')->get(),
+            'years' => AcademicYear::query()->orderBy('year_name')->get(),
+            'filters' => [
+                'search' => $search,
+                'perPage' => $perPage,
+            ],
+        ]);
+    }
+
+    public function store(StoreStudentEnrollmentRequest $request)
+    {
+        StudentEnrollment::create($request->validated());
+        return back()->with('success', 'Student enrollment created');
+    }
+
+    public function update(UpdateStudentEnrollmentRequest $request, StudentEnrollment $studentEnrollment)
+    {
+        $studentEnrollment->update($request->validated());
+        return back()->with('success', 'Student enrollment updated');
+    }
+
+    public function destroy(StudentEnrollment $studentEnrollment)
+    {
+        $studentEnrollment->delete();
+        return back()->with('success', 'Student enrollment deleted');
+    }
+}
+
