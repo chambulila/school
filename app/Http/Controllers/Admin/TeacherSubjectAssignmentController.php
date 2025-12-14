@@ -53,19 +53,19 @@ class TeacherSubjectAssignmentController extends Controller
         ]);
     }
 
-    public function store(StoreTeacherSubjectAssignmentRequest $request): RedirectResponse
+    public function store(StoreTeacherSubjectAssignmentRequest $request)
     {
         TeacherSubjectAssignment::create($request->validated());
         return back()->with('success', 'Teacher subject assignment created');
     }
 
-    public function update(UpdateTeacherSubjectAssignmentRequest $request, TeacherSubjectAssignment $teacherSubjectAssignment): RedirectResponse
+    public function update(UpdateTeacherSubjectAssignmentRequest $request, TeacherSubjectAssignment $teacherSubjectAssignment)
     {
         $teacherSubjectAssignment->update($request->validated());
         return back()->with('success', 'Teacher subject assignment updated');
     }
 
-    public function destroy(TeacherSubjectAssignment $teacherSubjectAssignment): RedirectResponse
+    public function destroy(TeacherSubjectAssignment $teacherSubjectAssignment)
     {
         $teacherSubjectAssignment->delete();
         return back()->with('success', 'Teacher subject assignment deleted');
