@@ -62,6 +62,21 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
         Route::put('teacher-subject-assignments/{teacherSubjectAssignment}', [\App\Http\Controllers\Admin\TeacherSubjectAssignmentController::class, 'update'])->name('admin.teacher-subject-assignments.update');
         Route::delete('teacher-subject-assignments/{teacherSubjectAssignment}', [\App\Http\Controllers\Admin\TeacherSubjectAssignmentController::class, 'destroy'])->name('admin.teacher-subject-assignments.destroy');
 
+        Route::get('exams', [\App\Http\Controllers\Admin\ExamController::class, 'index'])->name('admin.exams.index');
+        Route::post('exams', [\App\Http\Controllers\Admin\ExamController::class, 'store'])->name('admin.exams.store');
+        Route::put('exams/{exam}', [\App\Http\Controllers\Admin\ExamController::class, 'update'])->name('admin.exams.update');
+        Route::delete('exams/{exam}', [\App\Http\Controllers\Admin\ExamController::class, 'destroy'])->name('admin.exams.destroy');
+
+        Route::get('exam-results', [\App\Http\Controllers\Admin\ExamResultController::class, 'index'])->name('admin.exam-results.index');
+        Route::post('exam-results', [\App\Http\Controllers\Admin\ExamResultController::class, 'store'])->name('admin.exam-results.store');
+        Route::put('exam-results/{examResult}', [\App\Http\Controllers\Admin\ExamResultController::class, 'update'])->name('admin.exam-results.update');
+        Route::delete('exam-results/{examResult}', [\App\Http\Controllers\Admin\ExamResultController::class, 'destroy'])->name('admin.exam-results.destroy');
+
+        Route::get('published-results', [\App\Http\Controllers\Admin\PublishedResultController::class, 'index'])->name('admin.published-results.index');
+        Route::post('published-results', [\App\Http\Controllers\Admin\PublishedResultController::class, 'store'])->name('admin.published-results.store');
+        Route::put('published-results/{publishedResult}', [\App\Http\Controllers\Admin\PublishedResultController::class, 'update'])->name('admin.published-results.update');
+        Route::delete('published-results/{publishedResult}', [\App\Http\Controllers\Admin\PublishedResultController::class, 'destroy'])->name('admin.published-results.destroy');
+
         Route::get('student-enrollments', [\App\Http\Controllers\Admin\StudentEnrollmentController::class, 'index'])->name('admin.student-enrollments.index');
         Route::post('student-enrollments', [\App\Http\Controllers\Admin\StudentEnrollmentController::class, 'store'])->name('admin.student-enrollments.store');
         Route::put('student-enrollments/{studentEnrollment}', [\App\Http\Controllers\Admin\StudentEnrollmentController::class, 'update'])->name('admin.student-enrollments.update');
