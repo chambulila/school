@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Pencil, Trash } from 'lucide-react';
 import { askConfirmation } from '@/utils/sweetAlerts';
 import { cleanParams } from '@/lib/utils';
+import DeleteButton from '@/components/buttons/DeleteButton';
+import EditButton from '@/components/buttons/EditButon';
 
 export default function TeachersPage() {
     const { props } = usePage();
@@ -21,17 +23,38 @@ export default function TeachersPage() {
     const isFirstSearchEffect = useRef(true);
 
     const [isAddOpen, setIsAddOpen] = useState(false);
-    const [newUserId, setNewUserId] = useState('');
+    const [newFirstName, setNewFirstName] = useState('');
+    const [newLastName, setNewLastName] = useState('');
+    const [newEmail, setNewEmail] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [newPhone, setNewPhone] = useState('');
+    const [newGender, setNewGender] = useState('');
+    const [newDob, setNewDob] = useState('');
+    const [newAddress, setNewAddress] = useState('');
+    const [newGuardianName, setNewGuardianName] = useState('');
+    const [newGuardianPhone, setNewGuardianPhone] = useState('');
     const [newEmp, setNewEmp] = useState('');
     const [newQual, setNewQual] = useState('');
     const [newHire, setNewHire] = useState('');
     const [isSaving, setIsSaving] = useState(false);
 
     const [editingId, setEditingId] = useState(null);
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const [editFirstName, setEditFirstName] = useState('');
+    const [editLastName, setEditLastName] = useState('');
+    const [editEmail, setEditEmail] = useState('');
+    const [editPassword, setEditPassword] = useState('');
+    const [editPhone, setEditPhone] = useState('');
+    const [editGender, setEditGender] = useState('');
+    const [editDob, setEditDob] = useState('');
+    const [editAddress, setEditAddress] = useState('');
+    const [editGuardianName, setEditGuardianName] = useState('');
+    const [editGuardianPhone, setEditGuardianPhone] = useState('');
     const [editUserId, setEditUserId] = useState('');
     const [editEmp, setEditEmp] = useState('');
     const [editQual, setEditQual] = useState('');
     const [editHire, setEditHire] = useState('');
+    const [isEditSaving, setIsEditSaving] = useState(false);
 
     useEffect(() => {
         if (isFirstSearchEffect.current) {
@@ -47,25 +70,50 @@ export default function TeachersPage() {
 
     const startEdit = (row) => {
         setEditingId(row.id);
-        setEditUserId(row.user_id || (row.user?.id ?? ''));
+        const u = row.user || {};
+        setEditUserId(row.user_id || u.id || '');
+        setEditFirstName(u.first_name || '');
+        setEditLastName(u.last_name || '');
+        setEditEmail(u.email || '');
+        setEditPassword('');
+        setEditPhone(u.phone || '');
+        setEditGender(u.gender || '');
+        setEditDob(u.date_of_birth || '');
+        setEditAddress(u.address || '');
+        setEditGuardianName(u.guardian_name || '');
+        setEditGuardianPhone(u.guardian_phone || '');
         setEditEmp(row.employee_number || '');
         setEditQual(row.qualification || '');
         setEditHire(row.hire_date || '');
+        setIsEditOpen(true);
     };
 
     const cancelEdit = () => {
+        setIsEditOpen(false);
         setEditingId(null);
         setEditUserId('');
+        setEditFirstName(''); setEditLastName(''); setEditEmail(''); setEditPassword('');
+        setEditPhone(''); setEditGender(''); setEditDob(''); setEditAddress('');
+        setEditGuardianName(''); setEditGuardianPhone('');
         setEditEmp('');
         setEditQual('');
         setEditHire('');
     };
 
     const createTeacher = async () => {
-        if (!newUserId || !newEmp || isSaving) return;
+        if (!newFirstName.trim() || !newLastName.trim() || !newEmail.trim() || !newPassword || !newEmp.trim() || isSaving) return;
         setIsSaving(true);
         router.post('/dashboard/teachers', {
-            user_id: newUserId,
+            first_name: newFirstName,
+            last_name: newLastName,
+            email: newEmail,
+            password: newPassword,
+            phone: newPhone || null,
+            gender: newGender || null,
+            date_of_birth: newDob || null,
+            address: newAddress || null,
+            guardian_name: newGuardianName || null,
+            guardian_phone: newGuardianPhone || null,
             employee_number: newEmp,
             qualification: newQual || null,
             hire_date: newHire || null,
@@ -73,7 +121,10 @@ export default function TeachersPage() {
             preserveState: true,
             preserveScroll: true,
             onSuccess: () => {
-                setNewUserId(''); setNewEmp(''); setNewQual(''); setNewHire('');
+                setNewFirstName(''); setNewLastName(''); setNewEmail(''); setNewPassword('');
+                setNewPhone(''); setNewGender(''); setNewDob(''); setNewAddress('');
+                setNewGuardianName(''); setNewGuardianPhone('');
+                setNewEmp(''); setNewQual(''); setNewHire('');
                 setIsAddOpen(false);
                 setIsSaving(false);
             },
@@ -83,8 +134,19 @@ export default function TeachersPage() {
 
     const saveEdit = async () => {
         if (!editingId) return;
+        setIsEditSaving(true);
         router.put(`/dashboard/teachers/${editingId}`, {
             user_id: editUserId,
+            first_name: editFirstName || undefined,
+            last_name: editLastName || undefined,
+            email: editEmail || undefined,
+            password: editPassword || undefined,
+            phone: editPhone || null,
+            gender: editGender || null,
+            date_of_birth: editDob || null,
+            address: editAddress || null,
+            guardian_name: editGuardianName || null,
+            guardian_phone: editGuardianPhone || null,
             employee_number: editEmp,
             qualification: editQual || null,
             hire_date: editHire || null,
@@ -92,6 +154,7 @@ export default function TeachersPage() {
             preserveState: true,
             preserveScroll: true,
             onSuccess: cancelEdit,
+            onFinish: () => setIsEditSaving(false),
         });
     };
 
@@ -118,24 +181,78 @@ export default function TeachersPage() {
                         <Button onClick={() => setIsAddOpen(true)}>Add Teacher</Button>
                     </div>
                     <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-                        <DialogContent>
+                        <DialogContent className="w-full max-w-[95vw] md:max-w-3xl lg:max-w-6xl">
                             <DialogHeader>
                                 <DialogTitle>Add Teacher</DialogTitle>
                             </DialogHeader>
                             <div className="space-y-3">
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">User</label>
-                                    <Select value={newUserId} onValueChange={setNewUserId}>
-                                        <SelectTrigger className="w-full">
-                                            <SelectValue placeholder="Select user" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {users.map((u) => (
-                                                <SelectItem key={u.id} value={u.id}>{userLabel(u)}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    {errors.user_id && <div className="text-red-500 text-sm mt-1">{errors.user_id}</div>}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">First Name</label>
+                                        <Input value={newFirstName} onChange={(e) => setNewFirstName(e.target.value)} placeholder="First name" />
+                                        {errors.first_name && <div className="text-red-500 text-sm mt-1">{errors.first_name}</div>}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Last Name</label>
+                                        <Input value={newLastName} onChange={(e) => setNewLastName(e.target.value)} placeholder="Last name" />
+                                        {errors.last_name && <div className="text-red-500 text-sm mt-1">{errors.last_name}</div>}
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Email</label>
+                                        <Input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="Email address" />
+                                        {errors.email && <div className="text-red-500 text-sm mt-1">{errors.email}</div>}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Password</label>
+                                        <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Password" />
+                                        {errors.password && <div className="text-red-500 text-sm mt-1">{errors.password}</div>}
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Phone (optional)</label>
+                                        <Input value={newPhone} onChange={(e) => setNewPhone(e.target.value)} placeholder="Phone" />
+                                        {errors.phone && <div className="text-red-500 text-sm mt-1">{errors.phone}</div>}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Gender (optional)</label>
+                                        <Select value={newGender} onValueChange={setNewGender}>
+                                            <SelectTrigger className="w-full">
+                                                <SelectValue placeholder="Select gender" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="male">Male</SelectItem>
+                                                <SelectItem value="female">Female</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        {errors.gender && <div className="text-red-500 text-sm mt-1">{errors.gender}</div>}
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Date of Birth (optional)</label>
+                                        <Input type="date" value={newDob} onChange={(e) => setNewDob(e.target.value)} />
+                                        {errors.date_of_birth && <div className="text-red-500 text-sm mt-1">{errors.date_of_birth}</div>}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Address (optional)</label>
+                                        <Input value={newAddress} onChange={(e) => setNewAddress(e.target.value)} placeholder="Address" />
+                                        {errors.address && <div className="text-red-500 text-sm mt-1">{errors.address}</div>}
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Guardian Name (optional)</label>
+                                        <Input value={newGuardianName} onChange={(e) => setNewGuardianName(e.target.value)} placeholder="Guardian name" />
+                                        {errors.guardian_name && <div className="text-red-500 text-sm mt-1">{errors.guardian_name}</div>}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Guardian Phone (optional)</label>
+                                        <Input value={newGuardianPhone} onChange={(e) => setNewGuardianPhone(e.target.value)} placeholder="Guardian phone" />
+                                        {errors.guardian_phone && <div className="text-red-500 text-sm mt-1">{errors.guardian_phone}</div>}
+                                    </div>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Employee Number</label>
@@ -154,10 +271,20 @@ export default function TeachersPage() {
                                 </div>
                             </div>
                             <DialogFooter>
-                                <Button variant="outline" onClick={() => { setIsAddOpen(false); setNewUserId(''); setNewEmp(''); setNewQual(''); setNewHire(''); }} disabled={isSaving}>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                        setIsAddOpen(false);
+                                        setNewFirstName(''); setNewLastName(''); setNewEmail(''); setNewPassword('');
+                                        setNewPhone(''); setNewGender(''); setNewDob(''); setNewAddress('');
+                                        setNewGuardianName(''); setNewGuardianPhone('');
+                                        setNewEmp(''); setNewQual(''); setNewHire('');
+                                    }}
+                                    disabled={isSaving}
+                                >
                                     Cancel
                                 </Button>
-                                <Button onClick={createTeacher} disabled={isSaving || !newUserId || !newEmp.trim()}>
+                                <Button onClick={createTeacher} disabled={isSaving || !newFirstName.trim() || !newLastName.trim() || !newEmail.trim() || !newPassword || !newEmp.trim()}>
                                     {isSaving ? 'Saving' : 'Save'}
                                 </Button>
                             </DialogFooter>
@@ -179,54 +306,22 @@ export default function TeachersPage() {
                         {(teachers.data ?? teachers).map((t) => (
                             <TableRow key={t.id}>
                                 <TableCell>
-                                    {editingId === t.id ? (
-                                        <Select value={editUserId} onValueChange={setEditUserId}>
-                                            <SelectTrigger className="w-full">
-                                                <SelectValue placeholder="Select user" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {users.map((u) => (
-                                                    <SelectItem key={u.id} value={u.id}>{userLabel(u)}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    ) : (
-                                        t.user ? userLabel(t.user) : '—'
-                                    )}
+                                    {t.user ? userLabel(t.user) : '—'}
                                 </TableCell>
                                 <TableCell>
-                                    {editingId === t.id ? (
-                                        <Input value={editEmp} onChange={(e) => setEditEmp(e.target.value)} />
-                                    ) : (
-                                        t.employee_number
-                                    )}
+                                    {t.employee_number}
                                 </TableCell>
                                 <TableCell>
-                                    {editingId === t.id ? (
-                                        <Input value={editQual} onChange={(e) => setEditQual(e.target.value)} />
-                                    ) : (
-                                        t.qualification || '—'
-                                    )}
+                                    {t.qualification || '—'}
                                 </TableCell>
                                 <TableCell>
-                                    {editingId === t.id ? (
-                                        <Input type="date" value={editHire} onChange={(e) => setEditHire(e.target.value)} />
-                                    ) : (
-                                        t.hire_date || '—'
-                                    )}
+                                    {t.hire_date || '—'}
                                 </TableCell>
                                 <TableCell className="space-x-2">
-                                    {editingId === t.id ? (
-                                        <>
-                                            <Button size="sm" onClick={saveEdit}>Save</Button>
-                                            <Button size="sm" variant="outline" onClick={cancelEdit}>Cancel</Button>
-                                        </>
-                                    ) : (
-                                        <div className="flex items-center gap-2">
-                                            <Pencil className="w-5 h-5 cursor-pointer" onClick={() => startEdit(t)} />
-                                            <Trash className="w-5 h-5 cursor-pointer text-red-800" onClick={() => deleteTeacher(t)} />
-                                        </div>
-                                    )}
+                                    <div className="flex items-center gap-2">
+                                        <EditButton onClick={() => startEdit(t)} />
+                                        <DeleteButton onClick={() => deleteTeacher(t)} />
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         ))}
@@ -237,6 +332,106 @@ export default function TeachersPage() {
                         <Pagination links={teachers.links} filters={cleanParams({ search })} />
                     </div>
                 )}
+                <Dialog open={isEditOpen} onOpenChange={(open) => { if (!open) cancelEdit(); else setIsEditOpen(true); }}>
+                    <DialogContent className="w-full max-w-[95vw] md:max-w-3xl lg:max-w-6xl">
+                        <DialogHeader>
+                            <DialogTitle>Edit Teacher</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-3">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">First Name</label>
+                                    <Input disabled={isEditSaving} value={editFirstName} onChange={(e) => setEditFirstName(e.target.value)} placeholder="First name" />
+                                    {errors.first_name && <div className="text-red-500 text-sm mt-1">{errors.first_name}</div>}
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Last Name</label>
+                                    <Input disabled={isEditSaving} value={editLastName} onChange={(e) => setEditLastName(e.target.value)} placeholder="Last name" />
+                                    {errors.last_name && <div className="text-red-500 text-sm mt-1">{errors.last_name}</div>}
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Email</label>
+                                    <Input disabled={isEditSaving} type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} placeholder="Email address" />
+                                    {errors.email && <div className="text-red-500 text-sm mt-1">{errors.email}</div>}
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Password (optional)</label>
+                                    <Input disabled={isEditSaving} type="password" value={editPassword} onChange={(e) => setEditPassword(e.target.value)} placeholder="New password (leave blank to keep)" />
+                                    {errors.password && <div className="text-red-500 text-sm mt-1">{errors.password}</div>}
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Phone (optional)</label>
+                                    <Input disabled={isEditSaving} value={editPhone} onChange={(e) => setEditPhone(e.target.value)} placeholder="Phone" />
+                                    {errors.phone && <div className="text-red-500 text-sm mt-1">{errors.phone}</div>}
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Gender (optional)</label>
+                                    <Select value={editGender} onValueChange={setEditGender}>
+                                        <SelectTrigger className="w-full" disabled={isEditSaving}>
+                                            <SelectValue placeholder="Select gender" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="male">Male</SelectItem>
+                                            <SelectItem value="female">Female</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    {errors.gender && <div className="text-red-500 text-sm mt-1">{errors.gender}</div>}
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Date of Birth (optional)</label>
+                                    <Input disabled={isEditSaving} type="date" value={editDob} onChange={(e) => setEditDob(e.target.value)} />
+                                    {errors.date_of_birth && <div className="text-red-500 text-sm mt-1">{errors.date_of_birth}</div>}
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Address (optional)</label>
+                                    <Input disabled={isEditSaving} value={editAddress} onChange={(e) => setEditAddress(e.target.value)} placeholder="Address" />
+                                    {errors.address && <div className="text-red-500 text-sm mt-1">{errors.address}</div>}
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Guardian Name (optional)</label>
+                                    <Input disabled={isEditSaving} value={editGuardianName} onChange={(e) => setEditGuardianName(e.target.value)} placeholder="Guardian name" />
+                                    {errors.guardian_name && <div className="text-red-500 text-sm mt-1">{errors.guardian_name}</div>}
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Guardian Phone (optional)</label>
+                                    <Input disabled={isEditSaving} value={editGuardianPhone} onChange={(e) => setEditGuardianPhone(e.target.value)} placeholder="Guardian phone" />
+                                    {errors.guardian_phone && <div className="text-red-500 text-sm mt-1">{errors.guardian_phone}</div>}
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Employee Number</label>
+                                <Input disabled={isEditSaving} value={editEmp} onChange={(e) => setEditEmp(e.target.value)} placeholder="e.g. EMP-0001" />
+                                {errors.employee_number && <div className="text-red-500 text-sm mt-1">{errors.employee_number}</div>}
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Qualification (optional)</label>
+                                <Input disabled={isEditSaving} value={editQual} onChange={(e) => setEditQual(e.target.value)} placeholder="e.g. B.Ed, M.Sc" />
+                                {errors.qualification && <div className="text-red-500 text-sm mt-1">{errors.qualification}</div>}
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Hire Date (optional)</label>
+                                <Input disabled={isEditSaving} type="date" value={editHire} onChange={(e) => setEditHire(e.target.value)} />
+                                {errors.hire_date && <div className="text-red-500 text-sm mt-1">{errors.hire_date}</div>}
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={cancelEdit} disabled={isEditSaving}>
+                                Cancel
+                            </Button>
+                            <Button onClick={saveEdit} disabled={isEditSaving || !editEmp.trim() || !editFirstName.trim() || !editLastName.trim() || !editEmail.trim()}>
+                                {isEditSaving ? 'Saving' : 'Save Changes'}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
         </AuthenticatedLayout>
     );
