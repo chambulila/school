@@ -69,6 +69,7 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
 
         Route::get('exam-results', [\App\Http\Controllers\Admin\ExamResultController::class, 'index'])->name('admin.exam-results.index');
         Route::post('exam-results', [\App\Http\Controllers\Admin\ExamResultController::class, 'store'])->name('admin.exam-results.store');
+        Route::post('exam-results/bulk', [\App\Http\Controllers\Admin\ExamResultController::class, 'storeBulk'])->name('admin.exam-results.store-bulk');
         Route::put('exam-results/{examResult}', [\App\Http\Controllers\Admin\ExamResultController::class, 'update'])->name('admin.exam-results.update');
         Route::delete('exam-results/{examResult}', [\App\Http\Controllers\Admin\ExamResultController::class, 'destroy'])->name('admin.exam-results.destroy');
 

@@ -68,6 +68,35 @@ class ExamResultController extends Controller
         return back()->with('success', 'Exam result created');
     }
 
+    public function storeBulk(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'subject_id' => ['required', 'uuid', 'exists:subjects,id'],
+            'exam_id' => ['required', 'uuid', 'exists:exams,id'],
+            'class_section_id' => ['required', 'uuid', 'exists:class_sections,id'],
+            'students' => ['required', 'array', 'min:1'],
+            'students.*' => ['uuid', 'exists:students,id'],
+        ]);
+
+        foreach ($data['students'] as $studentId) {
+            ExamResult::firstOrCreate(
+                [
+                    'student_id' => $studentId,
+                    'subject_id' => $data['subject_id'],
+                    'exam_id' => $data['exam_id'],
+                ],
+                [
+                    'class_section_id' => $data['class_section_id'],
+                    'score' => null,
+                    'grade' => null,
+                    'remarks' => null,
+                ]
+            );
+        }
+
+        return back()->with('success', 'Students enrolled for the exam');
+    }
+
     public function update(UpdateExamResultRequest $request, ExamResult $examResult): RedirectResponse
     {
         $examResult->update($request->validated());
@@ -80,4 +109,3 @@ class ExamResultController extends Controller
         return back()->with('success', 'Exam result deleted');
     }
 }
-

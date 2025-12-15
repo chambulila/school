@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Pencil, Trash } from 'lucide-react';
 import { askConfirmation } from '@/utils/sweetAlerts';
 import { cleanParams } from '@/lib/utils';
+import EditButton from '@/components/buttons/EditButon';
+import DeleteButton from '@/components/buttons/DeleteButton';
 
 export default function ExamResultsPage() {
     const { props } = usePage();
@@ -24,6 +26,7 @@ export default function ExamResultsPage() {
     const isFirstSearchEffect = useRef(true);
 
     const [isAddOpen, setIsAddOpen] = useState(false);
+    const [isBulkOpen, setIsBulkOpen] = useState(false);
     const [newStudentId, setNewStudentId] = useState('');
     const [newSubjectId, setNewSubjectId] = useState('');
     const [newExamId, setNewExamId] = useState('');
@@ -32,6 +35,12 @@ export default function ExamResultsPage() {
     const [newGrade, setNewGrade] = useState('');
     const [newRemarks, setNewRemarks] = useState('');
     const [isSaving, setIsSaving] = useState(false);
+    const [isBulkSaving, setIsBulkSaving] = useState(false);
+    const [bulkSubjectId, setBulkSubjectId] = useState('');
+    const [bulkExamId, setBulkExamId] = useState('');
+    const [bulkSectionId, setBulkSectionId] = useState('');
+    const [bulkSelectedStudents, setBulkSelectedStudents] = useState([]);
+    const [bulkSelectAll, setBulkSelectAll] = useState(false);
 
     const [editingId, setEditingId] = useState(null);
     const [editStudentId, setEditStudentId] = useState('');
@@ -129,6 +138,46 @@ export default function ExamResultsPage() {
         return [grade, sec.section_name].filter(Boolean).join(' - ');
     };
 
+    const studentsInSection = useMemo(() => {
+        if (!bulkSectionId) return [];
+        return (students ?? []).filter((s) => s.current_class_id === bulkSectionId || s.currentClass?.id === bulkSectionId);
+    }, [students, bulkSectionId]);
+
+    useEffect(() => {
+        if (bulkSelectAll) {
+            setBulkSelectedStudents(studentsInSection.map((s) => s.id));
+        } else {
+            setBulkSelectedStudents([]);
+        }
+    }, [bulkSelectAll, bulkSectionId]); // when section changes, recompute select all
+
+    const toggleStudentSelection = (id) => {
+        setBulkSelectedStudents((prev) => {
+            if (prev.includes(id)) return prev.filter((x) => x !== id);
+            return [...prev, id];
+        });
+    };
+
+    const enrollStudentsBulk = async () => {
+        if (!bulkSubjectId || !bulkExamId || !bulkSectionId || isBulkSaving || bulkSelectedStudents.length === 0) return;
+        setIsBulkSaving(true);
+        router.post('/dashboard/exam-results/bulk', {
+            subject_id: bulkSubjectId,
+            exam_id: bulkExamId,
+            class_section_id: bulkSectionId,
+            students: bulkSelectedStudents,
+        }, {
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                setIsBulkOpen(false);
+                setBulkSubjectId(''); setBulkExamId(''); setBulkSectionId('');
+                setBulkSelectedStudents([]); setBulkSelectAll(false);
+            },
+            onFinish: () => setIsBulkSaving(false),
+        });
+    };
+
     return (
         <AuthenticatedLayout breadcrumbs={[{ title: 'Dashboard', href: '/dashboard' }, { title: 'Exam Results', href: '/dashboard/exam-results' }]}>
             <Head title="Exam Results" />
@@ -141,7 +190,10 @@ export default function ExamResultsPage() {
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search by student, subject, exam, or section"
                         />
-                        <Button onClick={() => setIsAddOpen(true)}>Add Result</Button>
+                        <div className="flex items-center gap-2">
+                            <Button onClick={() => setIsAddOpen(true)}>Add Result</Button>
+                            <Button variant="outline" onClick={() => setIsBulkOpen(true)}>Enroll Students</Button>
+                        </div>
                     </div>
                     <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
                         <DialogContent>
@@ -231,6 +283,100 @@ export default function ExamResultsPage() {
                                 </Button>
                                 <Button onClick={createResult} disabled={isSaving || !newStudentId || !newSubjectId || !newExamId || !newSectionId}>
                                     {isSaving ? 'Saving' : 'Save'}
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+                    <Dialog open={isBulkOpen} onOpenChange={setIsBulkOpen}>
+                        <DialogContent className="w-full max-w-[95vw] md:max-w-3xl lg:max-w-6xl">
+                            <DialogHeader>
+                                <DialogTitle>Enroll Students to Exam</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-3">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Class Section</label>
+                                        <Select value={bulkSectionId} onValueChange={setBulkSectionId}>
+                                            <SelectTrigger className="w-full">
+                                                <SelectValue placeholder="Select section" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {sections.map((sec) => (
+                                                    <SelectItem key={sec.id} value={sec.id}>{sectionLabel(sec)}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Subject</label>
+                                        <Select value={bulkSubjectId} onValueChange={setBulkSubjectId}>
+                                            <SelectTrigger className="w-full">
+                                                <SelectValue placeholder="Select subject" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {subjects.map((s) => (
+                                                    <SelectItem key={s.id} value={s.id}>{s.subject_name} {s.subject_code ? `(${s.subject_code})` : ''}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Exam</label>
+                                        <Select value={bulkExamId} onValueChange={setBulkExamId}>
+                                            <SelectTrigger className="w-full">
+                                                <SelectValue placeholder="Select exam" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {exams.map((e) => (
+                                                    <SelectItem key={e.id} value={e.id}>{examLabel(e)}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className="font-semibold">Students in section</div>
+                                        <label className="flex items-center gap-2 text-sm">
+                                            <input type="checkbox" checked={bulkSelectAll} onChange={(e) => setBulkSelectAll(e.target.checked)} />
+                                            Select all
+                                        </label>
+                                    </div>
+                                    <div className="max-h-[40vh] overflow-auto border rounded">
+                                        {studentsInSection.length === 0 ? (
+                                            <div className="p-3 text-sm text-muted-foreground">Select a section to view students</div>
+                                        ) : (
+                                            <div className="divide-y">
+                                                {studentsInSection.map((s) => (
+                                                    <label key={s.id} className="flex items-center gap-2 p-2">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={bulkSelectedStudents.includes(s.id)}
+                                                            onChange={() => toggleStudentSelection(s.id)}
+                                                        />
+                                                        <span>{s.user ? (s.user.name || [s.user.first_name, s.user.last_name].filter(Boolean).join(' ')) : 'Unknown'}</span>
+                                                        <span className="ml-auto text-xs text-muted-foreground">{s.admission_number}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                        setIsBulkOpen(false);
+                                        setBulkSubjectId(''); setBulkExamId(''); setBulkSectionId('');
+                                        setBulkSelectedStudents([]); setBulkSelectAll(false);
+                                    }}
+                                    disabled={isBulkSaving}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button onClick={enrollStudentsBulk} disabled={isBulkSaving || !bulkSubjectId || !bulkExamId || !bulkSectionId || bulkSelectedStudents.length === 0}>
+                                    {isBulkSaving ? 'Saving' : 'Enroll'}
                                 </Button>
                             </DialogFooter>
                         </DialogContent>
@@ -338,7 +484,7 @@ export default function ExamResultsPage() {
                                         row.remarks ?? '—'
                                     )}
                                 </TableCell>
-                                <TableCell className="space-x-2">
+                                <TableCell className="space-x-2 flex ">
                                     {editingId === row.id ? (
                                         <>
                                             <Button size="sm" onClick={saveEdit}>Save</Button>
@@ -346,12 +492,8 @@ export default function ExamResultsPage() {
                                         </>
                                     ) : (
                                         <>
-                                            <Button size="sm" variant="outline" onClick={() => startEdit(row)}>
-                                                <Pencil className="mr-1 h-4 w-4" /> Edit
-                                            </Button>
-                                            <Button size="sm" variant="destructive" onClick={() => deleteResult(row)}>
-                                                <Trash className="mr-1 h-4 w-4" /> Delete
-                                            </Button>
+                                            <EditButton onClick={() => startEdit(row)} />
+                                            <DeleteButton onClick={() => deleteResult(row)} />
                                         </>
                                     )}
                                 </TableCell>
