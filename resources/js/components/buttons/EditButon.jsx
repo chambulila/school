@@ -6,5 +6,5 @@ export default function EditButton({
     children,
     ...props
 }) {
-    return <Pencil disabled={disabled} {...props} className="text-gray-800 h-4 w-4" />
+    return <Pencil disabled={disabled} {...props} className="text-gray-800 h-4 w-4 cursor-pointer" />
 }

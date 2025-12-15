@@ -332,8 +332,8 @@ export default function StudentsPage() {
                                 </TableCell>
                                 <TableCell className="space-x-2">
                                     <div className="flex items-center gap-2">
-                                            <EditButton />
-                                            <DeleteButton />
+                                            <EditButton onClick={() => startEdit(s) } />
+                                            <DeleteButton onClick={() => deleteStudent(s) } />
                                     </div>
                                 </TableCell>
                             </TableRow>

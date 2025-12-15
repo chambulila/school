@@ -6,5 +6,5 @@ export default function DeleteButton({
     children,
     ...props
 }) {
-    return <Trash disabled={disabled} {...props} className="text-red-800 h-4 w-4" />
+    return <Trash disabled={disabled} {...props} className="text-red-800 h-4 w-4 cursor-pointer" />
 }
