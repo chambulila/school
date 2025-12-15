@@ -9,6 +9,7 @@ import Pagination from '@/components/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Pencil, Trash } from 'lucide-react';
 import { askConfirmation } from '@/utils/sweetAlerts';
+import { cleanParams } from '@/lib/utils';
 
 export default function SubjectsPage() {
     const { props } = usePage();
@@ -36,7 +37,8 @@ export default function SubjectsPage() {
             return;
         }
         const timeout = setTimeout(() => {
-            router.get('/dashboard/subjects', { search }, { replace: true, preserveState: true, preserveScroll: true });
+            const params = cleanParams({ search });
+            router.get('/dashboard/subjects', params, { replace: true, preserveState: true, preserveScroll: true });
         }, 2000);
         return () => clearTimeout(timeout);
     }, [search]);
@@ -231,11 +233,10 @@ export default function SubjectsPage() {
                 </Table>
                 {subjects.links && (
                     <div className="mt-4">
-                        <Pagination links={subjects.links} filters={{ search }} />
+                        <Pagination links={subjects.links} filters={cleanParams({ search })} />
                     </div>
                 )}
             </div>
         </AuthenticatedLayout>
     );
 }
-

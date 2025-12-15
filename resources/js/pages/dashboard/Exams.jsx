@@ -9,6 +9,7 @@ import Pagination from '@/components/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Pencil, Trash } from 'lucide-react';
 import { askConfirmation } from '@/utils/sweetAlerts';
+import { cleanParams } from '@/lib/utils';
 
 export default function ExamsPage() {
     const { props } = usePage();
@@ -40,7 +41,8 @@ export default function ExamsPage() {
             return;
         }
         const timeout = setTimeout(() => {
-            router.get('/dashboard/exams', { search }, { replace: true, preserveState: true, preserveScroll: true });
+            const params = cleanParams({ search });
+            router.get('/dashboard/exams', params, { replace: true, preserveState: true, preserveScroll: true });
         }, 2000);
         return () => clearTimeout(timeout);
     }, [search]);
@@ -251,11 +253,10 @@ export default function ExamsPage() {
                 </Table>
                 {exams.links && (
                     <div className="mt-4">
-                        <Pagination links={exams.links} filters={{ search }} />
+                        <Pagination links={exams.links} filters={cleanParams({ search })} />
                     </div>
                 )}
             </div>
         </AuthenticatedLayout>
     );
 }
-

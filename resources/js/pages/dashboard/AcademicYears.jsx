@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import Pagination from '@/components/ui/pagination';
 import { Pencil, Trash } from 'lucide-react';
 import { askConfirmation } from '@/utils/sweetAlerts';
+import { cleanParams } from '@/lib/utils';
 
 export default function AcademicYearsPage() {
     const { props } = usePage();
@@ -37,7 +38,8 @@ export default function AcademicYearsPage() {
             return;
         }
         const timeout = setTimeout(() => {
-            router.get('/dashboard/academic-years', { search }, { replace: true, preserveState: true, preserveScroll: true });
+            const params = cleanParams({ search });
+            router.get('/dashboard/academic-years', params, { replace: true, preserveState: true, preserveScroll: true });
         }, 2000);
         return () => clearTimeout(timeout);
     }, [search]);
@@ -239,11 +241,10 @@ export default function AcademicYearsPage() {
                 </Table>
                 {years.links && (
                     <div className="mt-4">
-                        <Pagination links={years.links} filters={{ search }} />
+                        <Pagination links={years.links} filters={cleanParams({ search })} />
                     </div>
                 )}
             </div>
         </AuthenticatedLayout>
     );
 }
-

@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import Pagination from '@/components/ui/pagination';
 import PrimaryButton from '@/components/buttons/PrimaryButton';
 import { Pencil, Trash } from 'lucide-react';
+import { cleanParams } from '@/lib/utils';
 import { askConfirmation } from '@/utils/sweetAlerts';
 
 export default function GradesPage() {
@@ -31,7 +32,8 @@ export default function GradesPage() {
             return;
         }
         const timeout = setTimeout(() => {
-            router.get('/dashboard/grades', { search }, { replace: true, preserveState: true, preserveScroll: true });
+            const params = cleanParams({ search });
+            router.get('/dashboard/grades', params, { replace: true, preserveState: true, preserveScroll: true });
         }, 2000);
         return () => clearTimeout(timeout);
     }, [search]);
@@ -152,7 +154,7 @@ export default function GradesPage() {
                 </Table>
                 {grades.links && (
                     <div className="mt-4">
-                        <Pagination links={grades.links} filters={{ search }} />
+                        <Pagination links={grades.links} filters={cleanParams({ search })} />
                     </div>
                 )}
             </div>

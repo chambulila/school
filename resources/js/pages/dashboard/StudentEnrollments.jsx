@@ -9,6 +9,7 @@ import Pagination from '@/components/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Pencil, Trash } from 'lucide-react';
 import { askConfirmation } from '@/utils/sweetAlerts';
+import { cleanParams } from '@/lib/utils';
 
 export default function StudentEnrollmentsPage() {
     const { props } = usePage();
@@ -40,7 +41,8 @@ export default function StudentEnrollmentsPage() {
             return;
         }
         const timeout = setTimeout(() => {
-            router.get('/dashboard/student-enrollments', { search }, { replace: true, preserveState: true, preserveScroll: true });
+            const params = cleanParams({ search });
+            router.get('/dashboard/student-enrollments', params, { replace: true, preserveState: true, preserveScroll: true });
         }, 2000);
         return () => clearTimeout(timeout);
     }, [search]);
@@ -283,7 +285,7 @@ export default function StudentEnrollmentsPage() {
 
                 {enrollments.links && (
                     <div className="mt-4">
-                        <Pagination links={enrollments.links} filters={{ search }} />
+                        <Pagination links={enrollments.links} filters={cleanParams({ search })} />
                     </div>
                 )}
             </div>

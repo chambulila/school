@@ -9,6 +9,7 @@ import Pagination from '@/components/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Pencil, Trash } from 'lucide-react';
 import { askConfirmation } from '@/utils/sweetAlerts';
+import { cleanParams } from '@/lib/utils';
 
 export default function SectionsPage() {
     const { props } = usePage();
@@ -36,7 +37,8 @@ export default function SectionsPage() {
             return;
         }
         const timeout = setTimeout(() => {
-            router.get('/dashboard/sections', { search }, { replace: true, preserveState: true, preserveScroll: true });
+            const params = cleanParams({ search });
+            router.get('/dashboard/sections', params, { replace: true, preserveState: true, preserveScroll: true });
         }, 2000);
         return () => clearTimeout(timeout);
     }, [search]);
@@ -234,7 +236,7 @@ export default function SectionsPage() {
                 </Table>
                 {sections.links && (
                     <div className="mt-4">
-                        <Pagination links={sections.links} filters={{ search }} />
+                        <Pagination links={sections.links} filters={cleanParams({ search })} />
                     </div>
                 )}
             </div>

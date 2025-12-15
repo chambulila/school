@@ -16,3 +16,8 @@ export function isSameUrl(
 export function resolveUrl(url: NonNullable<InertiaLinkProps['href']>): string {
     return typeof url === 'string' ? url : url.url;
 }
+
+export function cleanParams<T extends Record<string, unknown>>(obj: T): Partial<T> {
+    const entries = Object.entries(obj).filter(([, v]) => v !== '' && v !== undefined && v !== null);
+    return Object.fromEntries(entries) as Partial<T>;
+}
