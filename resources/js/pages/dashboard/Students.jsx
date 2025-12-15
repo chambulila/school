@@ -22,17 +22,38 @@ export default function StudentsPage() {
     const isFirstSearchEffect = useRef(true);
 
     const [isAddOpen, setIsAddOpen] = useState(false);
-    const [newUserId, setNewUserId] = useState('');
+    const [newFirstName, setNewFirstName] = useState('');
+    const [newLastName, setNewLastName] = useState('');
+    const [newEmail, setNewEmail] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [newPhone, setNewPhone] = useState('');
+    const [newGender, setNewGender] = useState('');
+    const [newDob, setNewDob] = useState('');
+    const [newAddress, setNewAddress] = useState('');
+    const [newGuardianName, setNewGuardianName] = useState('');
+    const [newGuardianPhone, setNewGuardianPhone] = useState('');
     const [newAdmNum, setNewAdmNum] = useState('');
     const [newAdmDate, setNewAdmDate] = useState('');
     const [newClassId, setNewClassId] = useState('');
     const [isSaving, setIsSaving] = useState(false);
 
     const [editingId, setEditingId] = useState(null);
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const [editFirstName, setEditFirstName] = useState('');
+    const [editLastName, setEditLastName] = useState('');
+    const [editEmail, setEditEmail] = useState('');
+    const [editPassword, setEditPassword] = useState('');
+    const [editPhone, setEditPhone] = useState('');
+    const [editGender, setEditGender] = useState('');
+    const [editDob, setEditDob] = useState('');
+    const [editAddress, setEditAddress] = useState('');
+    const [editGuardianName, setEditGuardianName] = useState('');
+    const [editGuardianPhone, setEditGuardianPhone] = useState('');
     const [editUserId, setEditUserId] = useState('');
     const [editAdmNum, setEditAdmNum] = useState('');
     const [editAdmDate, setEditAdmDate] = useState('');
     const [editClassId, setEditClassId] = useState('');
+    const [isEditSaving, setIsEditSaving] = useState(false);
 
     useEffect(() => {
         if (isFirstSearchEffect.current) {
@@ -48,22 +69,48 @@ export default function StudentsPage() {
 
     const startEdit = (row) => {
         setEditingId(row.id);
-        setEditUserId(row.user_id || (row.user?.id ?? ''));
+        const u = row.user || {};
+        setEditUserId(row.user_id || u.id || '');
+        setEditFirstName(u.first_name || '');
+        setEditLastName(u.last_name || '');
+        setEditEmail(u.email || '');
+        setEditPassword('');
+        setEditPhone(u.phone || '');
+        setEditGender(u.gender || '');
+        setEditDob(u.date_of_birth || '');
+        setEditAddress(u.address || '');
+        setEditGuardianName(u.guardian_name || '');
+        setEditGuardianPhone(u.guardian_phone || '');
         setEditAdmNum(row.admission_number || '');
         setEditAdmDate(row.admission_date || '');
         setEditClassId(row.current_class_id || (row.currentClass?.id ?? ''));
+        setIsEditOpen(true);
     };
 
     const cancelEdit = () => {
+        setIsEditOpen(false);
         setEditingId(null);
-        setEditUserId(''); setEditAdmNum(''); setEditAdmDate(''); setEditClassId('');
+        setEditUserId('');
+        setEditFirstName(''); setEditLastName(''); setEditEmail(''); setEditPassword('');
+        setEditPhone(''); setEditGender(''); setEditDob(''); setEditAddress('');
+        setEditGuardianName(''); setEditGuardianPhone('');
+        setEditAdmNum(''); setEditAdmDate(''); setEditClassId('');
     };
 
     const createStudent = async () => {
-        if (!newUserId || !newAdmNum || isSaving) return;
+        if (!newFirstName.trim() || !newLastName.trim() || !newEmail.trim() || !newPassword || !newAdmNum.trim() || isSaving) return;
         setIsSaving(true);
         router.post('/dashboard/students', {
-            user_id: newUserId,
+            first_name: newFirstName,
+            last_name: newLastName,
+            email: newEmail,
+            password: newPassword,
+            phone: newPhone || null,
+            gender: newGender || null,
+            date_of_birth: newDob || null,
+            address: newAddress || null,
+            guardian_name: newGuardianName || null,
+            guardian_phone: newGuardianPhone || null,
             admission_number: newAdmNum,
             admission_date: newAdmDate || null,
             current_class_id: newClassId || null,
@@ -71,7 +118,10 @@ export default function StudentsPage() {
             preserveState: true,
             preserveScroll: true,
             onSuccess: () => {
-                setNewUserId(''); setNewAdmNum(''); setNewAdmDate(''); setNewClassId('');
+                setNewFirstName(''); setNewLastName(''); setNewEmail(''); setNewPassword('');
+                setNewPhone(''); setNewGender(''); setNewDob(''); setNewAddress('');
+                setNewGuardianName(''); setNewGuardianPhone('');
+                setNewAdmNum(''); setNewAdmDate(''); setNewClassId('');
                 setIsAddOpen(false);
                 setIsSaving(false);
             },
@@ -81,8 +131,19 @@ export default function StudentsPage() {
 
     const saveEdit = async () => {
         if (!editingId) return;
+        setIsEditSaving(true);
         router.put(`/dashboard/students/${editingId}`, {
             user_id: editUserId,
+            first_name: editFirstName || undefined,
+            last_name: editLastName || undefined,
+            email: editEmail || undefined,
+            password: editPassword || undefined,
+            phone: editPhone || null,
+            gender: editGender || null,
+            date_of_birth: editDob || null,
+            address: editAddress || null,
+            guardian_name: editGuardianName || null,
+            guardian_phone: editGuardianPhone || null,
             admission_number: editAdmNum,
             admission_date: editAdmDate || null,
             current_class_id: editClassId || null,
@@ -90,6 +151,7 @@ export default function StudentsPage() {
             preserveState: true,
             preserveScroll: true,
             onSuccess: cancelEdit,
+            onFinish: () => setIsEditSaving(false),
         });
     };
 
@@ -116,24 +178,78 @@ export default function StudentsPage() {
                         <Button onClick={() => setIsAddOpen(true)}>Add Student</Button>
                     </div>
                     <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-                        <DialogContent>
+                        <DialogContent className="w-full max-w-[95vw] md:max-w-3xl lg:max-w-6xl">
                             <DialogHeader>
                                 <DialogTitle>Add Student</DialogTitle>
                             </DialogHeader>
                             <div className="space-y-3">
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">User</label>
-                                    <Select value={newUserId} onValueChange={setNewUserId}>
-                                        <SelectTrigger className="w-full">
-                                            <SelectValue placeholder="Select user" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {users.map((u) => (
-                                                <SelectItem key={u.id} value={u.id}>{userLabel(u)}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    {errors.user_id && <div className="text-red-500 text-sm mt-1">{errors.user_id}</div>}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">First Name</label>
+                                        <Input value={newFirstName} onChange={(e) => setNewFirstName(e.target.value)} placeholder="First name" />
+                                        {errors.first_name && <div className="text-red-500 text-sm mt-1">{errors.first_name}</div>}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Last Name</label>
+                                        <Input value={newLastName} onChange={(e) => setNewLastName(e.target.value)} placeholder="Last name" />
+                                        {errors.last_name && <div className="text-red-500 text-sm mt-1">{errors.last_name}</div>}
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Email</label>
+                                        <Input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="Email address" />
+                                        {errors.email && <div className="text-red-500 text-sm mt-1">{errors.email}</div>}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Password</label>
+                                        <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Password" />
+                                        {errors.password && <div className="text-red-500 text-sm mt-1">{errors.password}</div>}
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Phone (optional)</label>
+                                        <Input value={newPhone} onChange={(e) => setNewPhone(e.target.value)} placeholder="Phone" />
+                                        {errors.phone && <div className="text-red-500 text-sm mt-1">{errors.phone}</div>}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Gender (optional)</label>
+                                        <Select value={newGender} onValueChange={setNewGender}>
+                                            <SelectTrigger className="w-full">
+                                                <SelectValue placeholder="Select gender" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="male">Male</SelectItem>
+                                                <SelectItem value="female">Female</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        {errors.gender && <div className="text-red-500 text-sm mt-1">{errors.gender}</div>}
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Date of Birth (optional)</label>
+                                        <Input type="date" value={newDob} onChange={(e) => setNewDob(e.target.value)} />
+                                        {errors.date_of_birth && <div className="text-red-500 text-sm mt-1">{errors.date_of_birth}</div>}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Address (optional)</label>
+                                        <Input value={newAddress} onChange={(e) => setNewAddress(e.target.value)} placeholder="Address" />
+                                        {errors.address && <div className="text-red-500 text-sm mt-1">{errors.address}</div>}
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Guardian Name (optional)</label>
+                                        <Input value={newGuardianName} onChange={(e) => setNewGuardianName(e.target.value)} placeholder="Guardian name" />
+                                        {errors.guardian_name && <div className="text-red-500 text-sm mt-1">{errors.guardian_name}</div>}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Guardian Phone (optional)</label>
+                                        <Input value={newGuardianPhone} onChange={(e) => setNewGuardianPhone(e.target.value)} placeholder="Guardian phone" />
+                                        {errors.guardian_phone && <div className="text-red-500 text-sm mt-1">{errors.guardian_phone}</div>}
+                                    </div>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Admission Number</label>
@@ -166,10 +282,20 @@ export default function StudentsPage() {
                                 </div>
                             </div>
                             <DialogFooter>
-                                <Button variant="outline" onClick={() => { setIsAddOpen(false); setNewUserId(''); setNewAdmNum(''); setNewAdmDate(''); setNewClassId(''); }} disabled={isSaving}>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                        setIsAddOpen(false);
+                                        setNewFirstName(''); setNewLastName(''); setNewEmail(''); setNewPassword('');
+                                        setNewPhone(''); setNewGender(''); setNewDob(''); setNewAddress('');
+                                        setNewGuardianName(''); setNewGuardianPhone('');
+                                        setNewAdmNum(''); setNewAdmDate(''); setNewClassId('');
+                                    }}
+                                    disabled={isSaving}
+                                >
                                     Cancel
                                 </Button>
-                                <Button onClick={createStudent} disabled={isSaving || !newUserId || !newAdmNum.trim()}>
+                                <Button onClick={createStudent} disabled={isSaving || !newFirstName.trim() || !newLastName.trim() || !newEmail.trim() || !newPassword || !newAdmNum.trim()}>
                                     {isSaving ? 'Saving' : 'Save'}
                                 </Button>
                             </DialogFooter>
@@ -191,66 +317,26 @@ export default function StudentsPage() {
                         {(students.data ?? students).map((s) => (
                             <TableRow key={s.id}>
                                 <TableCell>
-                                    {editingId === s.id ? (
-                                        <Select value={editUserId} onValueChange={setEditUserId}>
-                                            <SelectTrigger className="w-full">
-                                                <SelectValue placeholder="Select user" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {users.map((u) => (
-                                                    <SelectItem key={u.id} value={u.id}>{userLabel(u)}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    ) : (
-                                        s.user ? userLabel(s.user) : '—'
-                                    )}
+                                    {s.user ? userLabel(s.user) : '—'}
                                 </TableCell>
                                 <TableCell>
-                                    {editingId === s.id ? (
-                                        <Input value={editAdmNum} onChange={(e) => setEditAdmNum(e.target.value)} />
-                                    ) : (
-                                        s.admission_number
-                                    )}
+                                    {s.admission_number}
                                 </TableCell>
                                 <TableCell>
-                                    {editingId === s.id ? (
-                                        <Input type="date" value={editAdmDate} onChange={(e) => setEditAdmDate(e.target.value)} />
-                                    ) : (
-                                        s.admission_date || '—'
-                                    )}
+                                    {s.admission_date || '—'}
                                 </TableCell>
                                 <TableCell>
-                                    {editingId === s.id ? (
-                                        <Select value={editClassId} onValueChange={setEditClassId}>
-                                            <SelectTrigger className="w-full">
-                                                <SelectValue placeholder="Select class" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {sections.map((sec) => (
-                                                    <SelectItem key={sec.id} value={sec.id}>
-                                                        {sec.section_name} {sec.grade ? `(${sec.grade.grade_name})` : ''}
-                                                    </SelectItem>
-                                                ))}
-                                                <SelectItem >None</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    ) : (
-                                        s.currentClass ? `${s.currentClass.section_name}${s.currentClass.grade ? ` (${s.currentClass.grade.grade_name})` : ''}` : '—'
-                                    )}
+                                    {s.currentClass ? `${s.currentClass.section_name}${s.currentClass.grade ? ` (${s.currentClass.grade.grade_name})` : ''}` : '—'}
                                 </TableCell>
                                 <TableCell className="space-x-2">
-                                    {editingId === s.id ? (
-                                        <>
-                                            <Button size="sm" onClick={saveEdit}>Save</Button>
-                                            <Button size="sm" variant="outline" onClick={cancelEdit}>Cancel</Button>
-                                        </>
-                                    ) : (
-                                        <div className="flex items-center gap-2">
-                                            <Pencil className="w-5 h-5 cursor-pointer" onClick={() => startEdit(s)} />
-                                            <Trash className="w-5 h-5 cursor-pointer text-red-800" onClick={() => deleteStudent(s)} />
-                                        </div>
-                                    )}
+                                    <div className="flex items-center gap-2">
+                                        <Button size="sm" variant="outline" onClick={() => startEdit(s)}>
+                                            <Pencil className="mr-1 h-4 w-4" /> Edit
+                                        </Button>
+                                        <Button size="sm" variant="destructive" onClick={() => deleteStudent(s)}>
+                                            <Trash className="mr-1 h-4 w-4" /> Delete
+                                        </Button>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         ))}
@@ -261,6 +347,121 @@ export default function StudentsPage() {
                         <Pagination links={students.links} filters={cleanParams({ search })} />
                     </div>
                 )}
+
+                <Dialog open={isEditOpen} onOpenChange={(open) => { if (!open) cancelEdit(); else setIsEditOpen(true); }}>
+                    <DialogContent className="w-full max-w-[95vw] md:max-w-3xl lg:max-w-6xl">
+                        <DialogHeader>
+                            <DialogTitle>Edit Student</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-3">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">First Name</label>
+                                    <Input disabled={isEditSaving} value={editFirstName} onChange={(e) => setEditFirstName(e.target.value)} placeholder="First name" />
+                                    {errors.first_name && <div className="text-red-500 text-sm mt-1">{errors.first_name}</div>}
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Last Name</label>
+                                    <Input disabled={isEditSaving} value={editLastName} onChange={(e) => setEditLastName(e.target.value)} placeholder="Last name" />
+                                    {errors.last_name && <div className="text-red-500 text-sm mt-1">{errors.last_name}</div>}
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Email</label>
+                                    <Input disabled={isEditSaving} type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} placeholder="Email address" />
+                                    {errors.email && <div className="text-red-500 text-sm mt-1">{errors.email}</div>}
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Password (optional)</label>
+                                    <Input disabled={isEditSaving} type="password" value={editPassword} onChange={(e) => setEditPassword(e.target.value)} placeholder="New password (leave blank to keep)" />
+                                    {errors.password && <div className="text-red-500 text-sm mt-1">{errors.password}</div>}
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Phone (optional)</label>
+                                    <Input disabled={isEditSaving} value={editPhone} onChange={(e) => setEditPhone(e.target.value)} placeholder="Phone" />
+                                    {errors.phone && <div className="text-red-500 text-sm mt-1">{errors.phone}</div>}
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Gender (optional)</label>
+                                    <Select value={editGender} onValueChange={setEditGender}>
+                                        <SelectTrigger className="w-full" disabled={isEditSaving}>
+                                            <SelectValue placeholder="Select gender" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="male">Male</SelectItem>
+                                            <SelectItem value="female">Female</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    {errors.gender && <div className="text-red-500 text-sm mt-1">{errors.gender}</div>}
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Date of Birth (optional)</label>
+                                    <Input disabled={isEditSaving} type="date" value={editDob} onChange={(e) => setEditDob(e.target.value)} />
+                                    {errors.date_of_birth && <div className="text-red-500 text-sm mt-1">{errors.date_of_birth}</div>}
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Address (optional)</label>
+                                    <Input disabled={isEditSaving} value={editAddress} onChange={(e) => setEditAddress(e.target.value)} placeholder="Address" />
+                                    {errors.address && <div className="text-red-500 text-sm mt-1">{errors.address}</div>}
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Guardian Name (optional)</label>
+                                    <Input disabled={isEditSaving} value={editGuardianName} onChange={(e) => setEditGuardianName(e.target.value)} placeholder="Guardian name" />
+                                    {errors.guardian_name && <div className="text-red-500 text-sm mt-1">{errors.guardian_name}</div>}
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Guardian Phone (optional)</label>
+                                    <Input disabled={isEditSaving} value={editGuardianPhone} onChange={(e) => setEditGuardianPhone(e.target.value)} placeholder="Guardian phone" />
+                                    {errors.guardian_phone && <div className="text-red-500 text-sm mt-1">{errors.guardian_phone}</div>}
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Admission Number</label>
+                                <Input disabled={isEditSaving} value={editAdmNum} onChange={(e) => setEditAdmNum(e.target.value)} placeholder="e.g. ADM-0001" />
+                                {errors.admission_number && <div className="text-red-500 text-sm mt-1">{errors.admission_number}</div>}
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Admission Date (optional)</label>
+                                    <Input disabled={isEditSaving} type="date" value={editAdmDate} onChange={(e) => setEditAdmDate(e.target.value)} />
+                                    {errors.admission_date && <div className="text-red-500 text-sm mt-1">{errors.admission_date}</div>}
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Current Class (optional)</label>
+                                    <Select value={editClassId} onValueChange={setEditClassId}>
+                                        <SelectTrigger className="w-full" disabled={isEditSaving}>
+                                            <SelectValue placeholder="Select class" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {sections.map((sec) => (
+                                                <SelectItem key={sec.id} value={sec.id}>
+                                                    {sec.section_name} {sec.grade ? `(${sec.grade.grade_name})` : ''}
+                                                </SelectItem>
+                                            ))}
+                                            <SelectItem >None</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    {errors.current_class_id && <div className="text-red-500 text-sm mt-1">{errors.current_class_id}</div>}
+                                </div>
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={cancelEdit} disabled={isEditSaving}>
+                                Cancel
+                            </Button>
+                            <Button onClick={saveEdit} disabled={isEditSaving || !editAdmNum.trim() || !editFirstName.trim() || !editLastName.trim() || !editEmail.trim()}>
+                                {isEditSaving ? 'Saving' : 'Save Changes'}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
         </AuthenticatedLayout>
     );
