@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Pencil, Trash } from 'lucide-react';
 import { askConfirmation } from '@/utils/sweetAlerts';
 import { cleanParams } from '@/lib/utils';
+import DeleteButton from '@/components/buttons/DeleteButton';
+import EditButton from '@/components/buttons/EditButon';
 
 export default function StudentsPage() {
     const { props } = usePage();
@@ -306,7 +308,7 @@ export default function StudentsPage() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>User</TableHead>
+                            <TableHead>Student Name</TableHead>
                             <TableHead>Admission #</TableHead>
                             <TableHead>Admission Date</TableHead>
                             <TableHead>Current Class</TableHead>
@@ -330,12 +332,8 @@ export default function StudentsPage() {
                                 </TableCell>
                                 <TableCell className="space-x-2">
                                     <div className="flex items-center gap-2">
-                                        <Button size="sm" variant="outline" onClick={() => startEdit(s)}>
-                                            <Pencil className="mr-1 h-4 w-4" /> Edit
-                                        </Button>
-                                        <Button size="sm" variant="destructive" onClick={() => deleteStudent(s)}>
-                                            <Trash className="mr-1 h-4 w-4" /> Delete
-                                        </Button>
+                                            <EditButton />
+                                            <DeleteButton />
                                     </div>
                                 </TableCell>
                             </TableRow>
