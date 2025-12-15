@@ -1,5 +1,4 @@
 import { NavFooter } from '@/components/nav-footer';
-import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import {
     Sidebar,
@@ -17,16 +16,9 @@ import {
 import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Folder, Home, LayoutGrid, Minus, Plus, User, Users } from 'lucide-react';
+import { BookOpen, Folder, Home, Minus, Plus, User, Users } from 'lucide-react';
 import AppLogo from './app-logo';
-import usePermission from "@/hooks/use-permission"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
-
-const adminNavItems: NavItem[] = [
-    { title: 'Users', href: '/dashboard/users' },
-    { title: 'Roles', href: '/dashboard/roles' },
-    { title: 'Permissions', href: '/dashboard/permissions' },
-];
 
 const footerNavItems: NavItem[] = [
     {
@@ -42,7 +34,6 @@ const footerNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
-    const { can } = usePermission();
     const { url } = usePage();
 
     const data = {
@@ -245,7 +236,7 @@ export function AppSidebar() {
                             </SidebarMenuButton>
                         </SidebarMenuItem>
                         {data.navMain
-                            .filter(item => item.isVisible)?.map((item, index) => {
+                            .filter(item => item.isVisible)?.map((item) => {
                                 const Icon = item.icon;
 
                                 return (

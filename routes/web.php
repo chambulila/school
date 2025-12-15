@@ -92,5 +92,37 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
         Route::post('students', [\App\Http\Controllers\Admin\StudentController::class, 'store'])->name('admin.students.store');
         Route::put('students/{student}', [\App\Http\Controllers\Admin\StudentController::class, 'update'])->name('admin.students.update');
         Route::delete('students/{student}', [\App\Http\Controllers\Admin\StudentController::class, 'destroy'])->name('admin.students.destroy');
+
+        Route::get('fee-categories', [\App\Http\Controllers\Admin\FeeCategoryController::class, 'index'])->name('admin.fee-categories.index');
+        Route::post('fee-categories', [\App\Http\Controllers\Admin\FeeCategoryController::class, 'store'])->name('admin.fee-categories.store');
+        Route::put('fee-categories/{feeCategory}', [\App\Http\Controllers\Admin\FeeCategoryController::class, 'update'])->name('admin.fee-categories.update');
+        Route::delete('fee-categories/{feeCategory}', [\App\Http\Controllers\Admin\FeeCategoryController::class, 'destroy'])->name('admin.fee-categories.destroy');
+
+        Route::get('fee-structures', [\App\Http\Controllers\Admin\FeeStructureController::class, 'index'])->name('admin.fee-structures.index');
+        Route::post('fee-structures', [\App\Http\Controllers\Admin\FeeStructureController::class, 'store'])->name('admin.fee-structures.store');
+        Route::put('fee-structures/{feeStructure}', [\App\Http\Controllers\Admin\FeeStructureController::class, 'update'])->name('admin.fee-structures.update');
+        Route::delete('fee-structures/{feeStructure}', [\App\Http\Controllers\Admin\FeeStructureController::class, 'destroy'])->name('admin.fee-structures.destroy');
+
+        Route::get('student-billing', [\App\Http\Controllers\Admin\StudentBillingController::class, 'index'])->name('admin.student-billing.index');
+        Route::post('student-billing', [\App\Http\Controllers\Admin\StudentBillingController::class, 'store'])->name('admin.student-billing.store');
+        Route::put('student-billing/{studentBilling}', [\App\Http\Controllers\Admin\StudentBillingController::class, 'update'])->name('admin.student-billing.update');
+        Route::delete('student-billing/{studentBilling}', [\App\Http\Controllers\Admin\StudentBillingController::class, 'destroy'])->name('admin.student-billing.destroy');
+
+        Route::get('payments', [\App\Http\Controllers\Admin\PaymentController::class, 'index'])->name('admin.payments.index');
+        Route::post('payments', [\App\Http\Controllers\Admin\PaymentController::class, 'store'])->name('admin.payments.store');
+        Route::put('payments/{payment}', [\App\Http\Controllers\Admin\PaymentController::class, 'update'])->name('admin.payments.update');
+        Route::delete('payments/{payment}', [\App\Http\Controllers\Admin\PaymentController::class, 'destroy'])->name('admin.payments.destroy');
+
+        Route::get('payment-receipts', [\App\Http\Controllers\Admin\PaymentReceiptController::class, 'index'])->name('admin.payment-receipts.index');
+        Route::post('payment-receipts', [\App\Http\Controllers\Admin\PaymentReceiptController::class, 'store'])->name('admin.payment-receipts.store');
+        Route::put('payment-receipts/{paymentReceipt}', [\App\Http\Controllers\Admin\PaymentReceiptController::class, 'update'])->name('admin.payment-receipts.update');
+        Route::delete('payment-receipts/{paymentReceipt}', [\App\Http\Controllers\Admin\PaymentReceiptController::class, 'destroy'])->name('admin.payment-receipts.destroy');
+
+        Route::get('fee-notifications', [\App\Http\Controllers\Admin\FeeNotificationController::class, 'index'])->name('admin.fee-notifications.index');
+        Route::post('fee-notifications', [\App\Http\Controllers\Admin\FeeNotificationController::class, 'store'])->name('admin.fee-notifications.store');
+        Route::put('fee-notifications/{feeNotification}', [\App\Http\Controllers\Admin\FeeNotificationController::class, 'update'])->name('admin.fee-notifications.update');
+        Route::delete('fee-notifications/{feeNotification}', [\App\Http\Controllers\Admin\FeeNotificationController::class, 'destroy'])->name('admin.fee-notifications.destroy');
+
+        Route::post('finance-demo-seed', [\App\Http\Controllers\Admin\FinanceDemoController::class, 'seed'])->name('admin.finance-demo.seed');
     });
 });

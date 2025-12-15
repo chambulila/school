@@ -12,6 +12,7 @@ class StudentBilling extends Model
 {
     use HasFactory;
 
+    protected $table = "student_billing";
     protected $primaryKey = 'bill_id';
     public $incrementing = false;
     protected $keyType = 'string';
