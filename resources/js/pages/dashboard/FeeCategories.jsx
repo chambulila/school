@@ -9,6 +9,11 @@ import Pagination from '@/components/ui/pagination';
 import { Pencil, Trash } from 'lucide-react';
 import { cleanParams } from '@/lib/utils';
 import { askConfirmation } from '@/utils/sweetAlerts';
+import EditButton from '@/components/buttons/EditButon';
+import DeleteButton from '@/components/buttons/DeleteButton';
+import PrimaryButton from '@/components/buttons/PrimaryButton';
+import SecondaryButton from '@/components/buttons/SecondaryButton';
+import AddButton from '@/components/buttons/AddButton';
 
 export default function FeeCategoriesPage() {
     const { props } = usePage();
@@ -100,7 +105,7 @@ export default function FeeCategoriesPage() {
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search by category name"
                         />
-                        <Button onClick={() => setIsAddOpen(true)}>Add Fee Category</Button>
+                        <AddButton onClick={() => setIsAddOpen(true)}>Add Fee Category</AddButton>
                     </div>
                     <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
                         <DialogContent>
@@ -156,16 +161,16 @@ export default function FeeCategoriesPage() {
                                         row.description || '—'
                                     )}
                                 </TableCell>
-                                <TableCell className="space-x-2">
+                                <TableCell className="space-x-2 flex">
                                     {editingId === (row.fee_category_id || row.id) ? (
                                         <>
-                                            <Button size="sm" onClick={saveEdit}><Pencil className="mr-1 h-4 w-4" /> Save</Button>
-                                            <Button size="sm" variant="outline" onClick={cancelEdit}>Cancel</Button>
+                                            <PrimaryButton onClick={saveEdit}> Save</PrimaryButton>
+                                            <SecondaryButton onClick={cancelEdit}>Cancel</SecondaryButton>
                                         </>
                                     ) : (
                                         <>
-                                            <Button size="sm" variant="outline" onClick={() => startEdit(row)}><Pencil className="mr-1 h-4 w-4" /> Edit</Button>
-                                            <Button size="sm" variant="destructive" onClick={() => deleteCategory(row)}><Trash className="mr-1 h-4 w-4" /> Delete</Button>
+                                            <EditButton  onClick={() => startEdit(row)}/>
+                                            <DeleteButton onClick={() => deleteCategory(row)}/>
                                         </>
                                     )}
                                 </TableCell>

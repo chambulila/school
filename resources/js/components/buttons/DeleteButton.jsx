@@ -4,7 +4,8 @@ export default function DeleteButton({
     className = '',
     disabled,
     children,
+    type = "button",
     ...props
 }) {
-    return <Trash disabled={disabled} {...props} className="text-red-800 h-4 w-4 cursor-pointer" />
+    return <Trash type={type} disabled={disabled} {...props} className="text-red-800 h-4 w-4 cursor-pointer" />
 }
