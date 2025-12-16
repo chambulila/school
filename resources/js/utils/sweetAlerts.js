@@ -34,3 +34,9 @@ export const errorAlert = (title, message) => {
         draggable: true,
     });
 }
+
+// capitalize first letter of a string
+export const capitalizeFirstLetter = (string) => {
+    if (!string) return '';
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}

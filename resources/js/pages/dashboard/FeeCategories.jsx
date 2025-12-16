@@ -8,12 +8,13 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import Pagination from '@/components/ui/pagination';
 import { Pencil, Trash } from 'lucide-react';
 import { cleanParams } from '@/lib/utils';
-import { askConfirmation } from '@/utils/sweetAlerts';
+import { askConfirmation, capitalizeFirstLetter } from '@/utils/sweetAlerts';
 import EditButton from '@/components/buttons/EditButon';
 import DeleteButton from '@/components/buttons/DeleteButton';
 import PrimaryButton from '@/components/buttons/PrimaryButton';
 import SecondaryButton from '@/components/buttons/SecondaryButton';
 import AddButton from '@/components/buttons/AddButton';
+import SaveButton from '@/components/buttons/SaveButton';
 
 export default function FeeCategoriesPage() {
     const { props } = usePage();
@@ -151,7 +152,7 @@ export default function FeeCategoriesPage() {
                                     {editingId === (row.fee_category_id || row.id) ? (
                                         <Input value={editName} onChange={(e) => setEditName(e.target.value)} />
                                     ) : (
-                                        row.category_name
+                                        capitalizeFirstLetter(row.category_name)
                                     )}
                                 </TableCell>
                                 <TableCell>
@@ -164,7 +165,7 @@ export default function FeeCategoriesPage() {
                                 <TableCell className="space-x-2 flex">
                                     {editingId === (row.fee_category_id || row.id) ? (
                                         <>
-                                            <PrimaryButton onClick={saveEdit}> Save</PrimaryButton>
+                                            <SaveButton onClick={saveEdit}> Save</SaveButton>
                                             <SecondaryButton onClick={cancelEdit}>Cancel</SecondaryButton>
                                         </>
                                     ) : (

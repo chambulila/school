@@ -9,7 +9,12 @@ import Pagination from '@/components/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Pencil, Trash } from 'lucide-react';
 import { cleanParams } from '@/lib/utils';
-import { askConfirmation } from '@/utils/sweetAlerts';
+import { askConfirmation, capitalizeFirstLetter } from '@/utils/sweetAlerts';
+import AddButton from '@/components/buttons/AddButton';
+import SaveButton from '@/components/buttons/SaveButton';
+import SecondaryButton from '@/components/buttons/SecondaryButton';
+import EditButton from '@/components/buttons/EditButon';
+import DeleteButton from '@/components/buttons/DeleteButton';
 
 export default function FeeStructuresPage() {
     const { props } = usePage();
@@ -108,8 +113,8 @@ export default function FeeStructuresPage() {
         router.delete(`/dashboard/fee-structures/${id}`, { preserveState: true, preserveScroll: true });
     };
 
-    const categoryLabel = (c) => c.category_name;
-    const gradeLabel = (g) => g.grade_name;
+    const categoryLabel = (c) => capitalizeFirstLetter(c.category_name);
+    const gradeLabel = (g) => capitalizeFirstLetter(g.grade_name);
     const yearLabel = (y) => y.year_name;
 
     return (
@@ -124,7 +129,7 @@ export default function FeeStructuresPage() {
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search by category, grade, or year"
                         />
-                        <Button onClick={() => setIsAddOpen(true)}>Add Fee Structure</Button>
+                        <AddButton onClick={() => setIsAddOpen(true)}>Add Fee Structure</AddButton>
                     </div>
                     <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
                         <DialogContent>
@@ -228,7 +233,7 @@ export default function FeeStructuresPage() {
                                             </SelectContent>
                                         </Select>
                                     ) : (
-                                        row.feeCategory ? categoryLabel(row.feeCategory) : '—'
+                                        capitalizeFirstLetter(row.fee_category?.category_name) || '-'
                                     )}
                                 </TableCell>
                                 <TableCell>
@@ -260,7 +265,7 @@ export default function FeeStructuresPage() {
                                             </SelectContent>
                                         </Select>
                                     ) : (
-                                        row.academicYear ? yearLabel(row.academicYear) : '—'
+                                        row.academic_year ? yearLabel(row.academic_year) : '—'
                                     )}
                                 </TableCell>
                                 <TableCell>
@@ -277,16 +282,16 @@ export default function FeeStructuresPage() {
                                         row.due_date || '—'
                                     )}
                                 </TableCell>
-                                <TableCell className="space-x-2">
+                                <TableCell className="space-x-2 flex">
                                     {editingId === (row.fee_structure_id || row.id) ? (
                                         <>
-                                            <Button size="sm" onClick={saveEdit}><Pencil className="mr-1 h-4 w-4" /> Save</Button>
-                                            <Button size="sm" variant="outline" onClick={cancelEdit}>Cancel</Button>
+                                            <SaveButton onClick={saveEdit}> Save</SaveButton>
+                                            <SecondaryButton  onClick={cancelEdit}>Cancel</SecondaryButton>
                                         </>
                                     ) : (
                                         <>
-                                            <Button size="sm" variant="outline" onClick={() => startEdit(row)}><Pencil className="mr-1 h-4 w-4" /> Edit</Button>
-                                            <Button size="sm" variant="destructive" onClick={() => deleteStructure(row)}><Trash className="mr-1 h-4 w-4" /> Delete</Button>
+                                            <EditButton onClick={() => startEdit(row)}><Pencil className="mr-1 h-4 w-4" /> Edit</EditButton>
+                                            <DeleteButton onClick={() => deleteStructure(row)}><Trash className="mr-1 h-4 w-4" /> Delete</DeleteButton>
                                         </>
                                     )}
                                 </TableCell>
