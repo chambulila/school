@@ -37,9 +37,9 @@ class PaymentController extends Controller
 
         return Inertia::render('dashboard/Payments', [
             'payments' => $payments,
-            'bills' => StudentBilling::query()->with(['student.user', 'academicYear'])->orderBy('issued_date', 'desc')->get(),
+            'bills' => StudentBilling::query()->with(['student.user', 'academicYear'])->orderBy('created_at', 'desc')->get(),
             'students' => Student::query()->with('user')->orderBy('admission_number')->get(),
-            'users' => User::query()->orderBy('name')->get(),
+            'users' => User::query()->orderBy('first_name')->get(),
             'filters' => [
                 'search' => $search,
                 'perPage' => $perPage,
