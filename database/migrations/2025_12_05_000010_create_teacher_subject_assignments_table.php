@@ -16,17 +16,7 @@ return new class extends Migration
                 $table->foreignUuid('subject_id')->constrained('subjects');
                 $table->foreignUuid('class_section_id')->constrained('class_sections');
                 $table->timestamps();
-            });
-        }
 
-        $indexExists = DB::table('information_schema.statistics')
-            ->where('table_schema', DB::getDatabaseName())
-            ->where('table_name', 'teacher_subject_assignments')
-            ->where('index_name', 'teacher_subject_unique')
-            ->exists();
-
-        if (! $indexExists) {
-            Schema::table('teacher_subject_assignments', function (Blueprint $table) {
                 $table->unique(['teacher_id', 'subject_id', 'class_section_id'], 'teacher_subject_unique');
             });
         }

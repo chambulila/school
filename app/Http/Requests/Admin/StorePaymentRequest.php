@@ -15,7 +15,7 @@ class StorePaymentRequest extends FormRequest
     {
         return [
             'bill_id' => ['required', 'string', 'exists:student_billing,bill_id'],
-            'student_id' => ['required', 'uuid', 'exists:students,id'],
+            'student_id' => ['required', 'string', 'exists:students,id'],
             'payment_date' => ['required', 'date'],
             'amount_paid' => ['required', 'numeric', 'min:0.01'],
             'payment_method' => ['nullable', 'string', 'in:Cash,Bank,Mobile Money'],

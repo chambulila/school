@@ -9,6 +9,7 @@ use App\Models\AcademicYear;
 use App\Models\ClassSection;
 use App\Models\Student;
 use App\Models\StudentEnrollment;
+use App\Services\BillingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -56,9 +57,23 @@ class StudentEnrollmentController extends Controller
         ]);
     }
 
-    public function store(StoreStudentEnrollmentRequest $request)
+    public function store(StoreStudentEnrollmentRequest $request, BillingService $billingService)
     {
-        StudentEnrollment::create($request->validated());
+        $enrollment = StudentEnrollment::create($request->validated());
+        
+        // Generate bill automatically
+        $student = Student::find($enrollment->student_id);
+        $academicYear = AcademicYear::find($enrollment->academic_year_id);
+        
+        if ($student && $academicYear) {
+            try {
+                $billingService->generateBill($student, $academicYear);
+                return back()->with('success', 'Student enrollment created and bill generated');
+            } catch (\Exception $e) {
+                return back()->with('warning', 'Student enrollment created but bill generation failed: ' . $e->getMessage());
+            }
+        }
+
         return back()->with('success', 'Student enrollment created');
     }
 

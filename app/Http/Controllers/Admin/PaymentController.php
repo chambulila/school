@@ -9,10 +9,14 @@ use App\Models\Payment;
 use App\Models\StudentBilling;
 use App\Models\Student;
 use App\Models\User;
+use App\Models\PaymentReceipt;
+use App\Services\ReceiptService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class PaymentController extends Controller
 {
@@ -53,21 +57,67 @@ class PaymentController extends Controller
         if (!isset($data['received_by']) && $request->user()) {
             $data['received_by'] = $request->user()->id;
         }
-        Payment::create($data);
-        return back()->with('success', 'Payment recorded');
+
+        try {
+            DB::beginTransaction();
+
+            // 1. Create Payment
+            $payment = Payment::create($data);
+
+            // 2. Update Student Billing
+            $bill = StudentBilling::where('bill_id', $data['bill_id'])->lockForUpdate()->firstOrFail();
+
+            $bill->amount_paid += $payment->amount_paid;
+            $bill->balance = $bill->total_amount - $bill->amount_paid;
+
+            if ($bill->balance <= 0) {
+                $bill->status = 'Fully Paid';
+                // If overpaid, balance is negative (credit).
+            } elseif ($bill->amount_paid > 0) {
+                $bill->status = 'Partially Paid';
+            } else {
+                $bill->status = 'Pending';
+            }
+            $bill->save();
+
+            // 3. Generate Receipt Record
+            $receiptNumber = 'REC-' . date('Ymd') . '-' . strtoupper(Str::random(6));
+
+            PaymentReceipt::create([
+                'payment_id' => $payment->payment_id,
+                'receipt_number' => $receiptNumber,
+                'issued_at' => now(),
+                'generated_by' => $request->user()->id ?? null,
+            ]);
+
+            DB::commit();
+            return back()->with('success', 'Payment recorded and receipt generated');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Failed to record payment: ' . $e->getMessage());
+        }
+    }
+
+    public function downloadReceipt(Payment $payment, ReceiptService $receiptService)
+    {
+        if (!$payment->receipt) {
+             return back()->with('error', 'Receipt not found for this payment');
+        }
+
+        $pdf = $receiptService->generateReceiptPdf($payment);
+        return $pdf->download('receipt-' . $payment->receipt->receipt_number . '.pdf');
     }
 
     public function update(UpdatePaymentRequest $request, Payment $payment)
     {
-        $data = $request->validated();
-        $payment->update($data);
-        return back()->with('success', 'Payment updated');
+        // Core Rule: Payments must never be edited
+        return back()->with('error', 'Payments cannot be edited.');
     }
 
     public function destroy(Payment $payment)
     {
-        $payment->delete();
-        return back()->with('success', 'Payment deleted');
+        // Core Rule: Payments must never be deleted
+        return back()->with('error', 'Payments cannot be deleted.');
     }
 }
-

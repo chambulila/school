@@ -9,6 +9,8 @@ use App\Models\AcademicYear;
 use App\Models\FeeCategory;
 use App\Models\FeeStructure;
 use App\Models\Grade;
+use App\Models\StudentBilling;
+use App\Models\StudentEnrollment;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -58,14 +60,39 @@ class FeeStructureController extends Controller
 
     public function update(UpdateFeeStructureRequest $request, FeeStructure $feeStructure)
     {
+        if ($this->billingExistsFor($feeStructure)) {
+            return back()->with('error', 'Cannot modify fee structure because billing has already started for this grade and academic year.');
+        }
+
         $feeStructure->update($request->validated());
         return back()->with('success', 'Fee structure updated');
     }
 
     public function destroy(FeeStructure $feeStructure)
     {
+        if ($this->billingExistsFor($feeStructure)) {
+            return back()->with('error', 'Cannot delete fee structure because billing has already started for this grade and academic year.');
+        }
+
         $feeStructure->delete();
         return back()->with('success', 'Fee structure deleted');
     }
-}
 
+    private function billingExistsFor(FeeStructure $structure): bool
+    {
+        // Find enrollments for this grade and year
+        $studentIds = StudentEnrollment::where('academic_year_id', $structure->academic_year_id)
+            ->whereHas('classSection', function($q) use ($structure) {
+                $q->where('grade_id', $structure->grade_id);
+            })
+            ->pluck('student_id');
+            
+        if ($studentIds->isEmpty()) {
+            return false;
+        }
+        
+        return StudentBilling::whereIn('student_id', $studentIds)
+            ->where('academic_year_id', $structure->academic_year_id)
+            ->exists();
+    }
+}

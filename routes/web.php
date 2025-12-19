@@ -110,6 +110,7 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
 
         Route::get('payments', [\App\Http\Controllers\Admin\PaymentController::class, 'index'])->name('admin.payments.index');
         Route::post('payments', [\App\Http\Controllers\Admin\PaymentController::class, 'store'])->name('admin.payments.store');
+        Route::get('payments/{payment}/receipt', [\App\Http\Controllers\Admin\PaymentController::class, 'downloadReceipt'])->name('admin.payments.receipt');
         Route::put('payments/{payment}', [\App\Http\Controllers\Admin\PaymentController::class, 'update'])->name('admin.payments.update');
         Route::delete('payments/{payment}', [\App\Http\Controllers\Admin\PaymentController::class, 'destroy'])->name('admin.payments.destroy');
 
