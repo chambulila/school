@@ -222,6 +222,7 @@ export default function StudentBillingPage() {
                             <TableHead>Year</TableHead>
                             <TableHead>Total</TableHead>
                             <TableHead>Paid</TableHead>
+                            <TableHead>Balance</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead>Issued</TableHead>
                             <TableHead>Actions</TableHead>
@@ -241,6 +242,7 @@ export default function StudentBillingPage() {
                                 </TableCell>
                                 <TableCell>{row.total_amount}</TableCell>
                                 <TableCell>{row.amount_paid ?? '—'}</TableCell>
+                                <TableCell>{row.balance ?? '—'}</TableCell>
                                 <TableCell>{row.status}</TableCell>
                                 <TableCell>{row.issued_date || '—'}</TableCell>
                                 <TableCell className="space-x-2 flex">

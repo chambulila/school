@@ -40,7 +40,7 @@ class PaymentReceiptController extends Controller
         return Inertia::render('dashboard/PaymentReceipts', [
             'receipts' => $receipts,
             'payments' => Payment::query()->with(['student.user', 'bill'])->orderBy('payment_date', 'desc')->get(),
-            'users' => User::query()->orderBy('name')->get(),
+            'users' => User::query()->orderBy('first_name')->select(['id', 'first_name', 'last_name'])->get(),
             'filters' => [
                 'search' => $search,
                 'perPage' => $perPage,
