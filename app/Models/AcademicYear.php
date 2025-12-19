@@ -44,4 +44,13 @@ class AcademicYear extends Model
     {
         return $this->hasMany(StudentBilling::class);
     }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+    public function scopeInactive($query)
+    {
+        return $query->where('is_active', false);
+    }
 }

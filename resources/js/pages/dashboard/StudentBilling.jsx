@@ -7,9 +7,13 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Pagination from '@/components/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Pencil, Trash } from 'lucide-react';
 import { cleanParams } from '@/lib/utils';
 import { askConfirmation } from '@/utils/sweetAlerts';
+import SaveButton from '@/components/buttons/SaveButton';
+import SecondaryButton from '@/components/buttons/SecondaryButton';
+import EditButton from '@/components/buttons/EditButon';
+import DeleteButton from '@/components/buttons/DeleteButton';
+import AddButton from '@/components/buttons/AddButton';
 
 export default function StudentBillingPage() {
     const { props } = usePage();
@@ -128,7 +132,7 @@ export default function StudentBillingPage() {
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search by student or academic year"
                         />
-                        <Button onClick={() => setIsAddOpen(true)}>Add Bill</Button>
+                        <AddButton onClick={() => setIsAddOpen(true)}>Add Bill</AddButton>
                     </div>
                     <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
                         <DialogContent>
@@ -214,6 +218,7 @@ export default function StudentBillingPage() {
                     <TableHeader>
                         <TableRow>
                             <TableHead>Student</TableHead>
+                            <TableHead>Admission#</TableHead>
                             <TableHead>Year</TableHead>
                             <TableHead>Total</TableHead>
                             <TableHead>Paid</TableHead>
@@ -229,22 +234,25 @@ export default function StudentBillingPage() {
                                     {row.student ? studentLabel(row.student) : '—'}
                                 </TableCell>
                                 <TableCell>
+                                    {row.student?.user?.admission_number || '—'}
+                                </TableCell>
+                                <TableCell>
                                     {row.academic_year ? yearLabel(row.academic_year) : '—'}
                                 </TableCell>
                                 <TableCell>{row.total_amount}</TableCell>
-                                <TableCell>{row.paid_amount ?? '—'}</TableCell>
+                                <TableCell>{row.amount_paid ?? '—'}</TableCell>
                                 <TableCell>{row.status}</TableCell>
                                 <TableCell>{row.issued_date || '—'}</TableCell>
-                                <TableCell className="space-x-2">
+                                <TableCell className="space-x-2 flex">
                                     {editingId === (row.bill_id || row.id) ? (
                                         <>
-                                            <Button size="sm" onClick={saveEdit}><Pencil className="mr-1 h-4 w-4" /> Save</Button>
-                                            <Button size="sm" variant="outline" onClick={cancelEdit}>Cancel</Button>
+                                            <SaveButton onClick={saveEdit}> Save</SaveButton>
+                                            <SecondaryButton onClick={cancelEdit}>Cancel</SecondaryButton>
                                         </>
                                     ) : (
                                         <>
-                                            <Button size="sm" variant="outline" onClick={() => startEdit(row)}><Pencil className="mr-1 h-4 w-4" /> Edit</Button>
-                                            <Button size="sm" variant="destructive" onClick={() => deleteBill(row)}><Trash className="mr-1 h-4 w-4" /> Delete</Button>
+                                            <EditButton  onClick={() => startEdit(row)} />
+                                            <DeleteButton onClick={() => deleteBill(row)} />
                                         </>
                                     )}
                                 </TableCell>

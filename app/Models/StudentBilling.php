@@ -47,4 +47,5 @@ class StudentBilling extends Model
     {
         return $this->hasMany(FeeNotification::class, 'bill_id', 'bill_id');
     }
+
 }

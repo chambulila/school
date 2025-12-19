@@ -21,11 +21,10 @@ class StudentBillingController extends Controller
         $perPage = (int) $request->input('perPage', 10);
 
         $bills = StudentBilling::query()
-            ->with(['student.user', 'academicYear'])
+            ->with(['student.user:id,first_name,last_name,email', 'academicYear:id,year_name,is_active'])
             ->when($search !== '', function ($q) use ($search) {
                 $q->whereHas('student.user', function ($uq) use ($search) {
-                    $uq->where('name', 'like', '%'.$search.'%')
-                       ->orWhere('first_name', 'like', '%'.$search.'%')
+                    $uq->where('first_name', 'like', '%'.$search.'%')
                        ->orWhere('last_name', 'like', '%'.$search.'%')
                        ->orWhere('email', 'like', '%'.$search.'%');
                 })
@@ -35,12 +34,39 @@ class StudentBillingController extends Controller
             })
             ->orderBy('created_at', 'desc')
             ->paginate($perPage)
-            ->withQueryString();
+            ->withQueryString()
+            ->through(fn($bill) => [
+                'bill_id' => $bill->bill_id,
+                'student' => [
+                    'id' => $bill->student->id,
+                    'user' => [
+                        'id' => $bill->student->user->id,
+                        'first_name' => $bill->student->user->first_name,
+                        'last_name' => $bill->student->user->last_name,
+                        'email' => $bill->student->user->email,
+                        'admission_number' => $bill->student->admission_number,
+                        'grade' => $bill->student->grade,
+                    ],
+                ],
+                'academic_year' => [
+                    'id' => $bill->academicYear->id,
+                    'year_name' => $bill->academicYear->year_name,
+                    'is_active' => $bill->academicYear->is_active,
+                ],
+                'total_amount' => $bill->total_amount,
+                'status' => $bill->status,
+                'due_date' => $bill->due_date,
+                'amount_paid' => $bill->amount_paid,
+                'balance' => $bill->balance,
+                'paid_at' => $bill->paid_at,
+                'created_at' => $bill->created_at->format('d-m-Y'),
+                'updated_at' => $bill->updated_at->format('d-m-Y'),
+            ]);
 
         return Inertia::render('dashboard/StudentBilling', [
             'bills' => $bills,
-            'students' => Student::query()->with('user')->orderBy('admission_number')->get(),
-            'years' => AcademicYear::query()->orderBy('year_name')->get(),
+            'students' => Student::query()->with('user:id,first_name,last_name,email')->orderBy('admission_number')->select('id', 'admission_number', 'user_id')->get(),
+            'years' => AcademicYear::query()->orderBy('year_name')->active()->select('id', 'year_name', 'is_active')->get(),
             'filters' => [
                 'search' => $search,
                 'perPage' => $perPage,
