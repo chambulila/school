@@ -28,6 +28,8 @@ class StoreStudentRequest extends FormRequest
             'admission_number' => ['required', 'string', 'max:50', 'unique:students,admission_number'],
             'admission_date' => ['nullable', 'date'],
             'current_class_id' => ['nullable', 'uuid', 'exists:class_sections,id'],
+            'class_section_id' => ['nullable', 'uuid', 'exists:class_sections,id'],
+            'academic_year_id' => ['required_with:current_class_id,class_section_id', 'nullable', 'uuid', 'exists:academic_years,id'],
         ];
     }
 }

@@ -5,11 +5,15 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreStudentRequest;
 use App\Http\Requests\Admin\UpdateStudentRequest;
+use App\Models\AcademicYear;
 use App\Models\ClassSection;
 use App\Models\Student;
+use App\Models\StudentEnrollment;
 use App\Models\User;
+use App\Services\BillingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -42,6 +46,7 @@ class StudentController extends Controller
             'students' => $students,
             'users' => User::query()->orderBy('first_name')->get(),
             'sections' => ClassSection::query()->with('grade')->orderBy('section_name')->get(),
+            'years' => AcademicYear::query()->orderBy('year_name')->get(),
             'filters' => [
                 'search' => $search,
                 'perPage' => $perPage,
@@ -49,28 +54,69 @@ class StudentController extends Controller
         ]);
     }
 
-    public function store(StoreStudentRequest $request): RedirectResponse
+    public function store(StoreStudentRequest $request, BillingService $billingService): RedirectResponse
     {
-        $data = $request->validated();
-        if (empty($data['user_id'])) {
-            $userPayload = [
-                'first_name' => $data['first_name'],
-                'last_name' => $data['last_name'],
-                'email' => $data['email'],
-                'password' => Hash::make($data['password']),
-                'phone' => $data['phone'] ?? null,
-                'gender' => $data['gender'] ?? null,
-                'date_of_birth' => $data['date_of_birth'] ?? null,
-                'address' => $data['address'] ?? null,
-                'guardian_name' => $data['guardian_name'] ?? null,
-                'guardian_phone' => $data['guardian_phone'] ?? null,
+        return DB::transaction(function () use ($request, $billingService) {
+            $data = $request->validated();
+
+            // Extract enrollment fields
+            $classSectionId = $data['class_section_id'] ?? $data['current_class_id'] ?? null;
+            $academicYearId = $data['academic_year_id'] ?? null;
+
+            if (empty($data['user_id'])) {
+                $userPayload = [
+                    'first_name' => $data['first_name'],
+                    'last_name' => $data['last_name'],
+                    'email' => $data['email'],
+                    'password' => Hash::make($data['password']),
+                    'phone' => $data['phone'] ?? null,
+                    'gender' => $data['gender'] ?? null,
+                    'date_of_birth' => $data['date_of_birth'] ?? null,
+                    'address' => $data['address'] ?? null,
+                    'guardian_name' => $data['guardian_name'] ?? null,
+                    'guardian_phone' => $data['guardian_phone'] ?? null,
+                ];
+                $user = User::create($userPayload);
+                $data['user_id'] = $user->id;
+            }
+
+            // Remove user fields and extra enrollment fields
+            $fieldsToRemove = [
+                'first_name', 'last_name', 'email', 'password', 'phone',
+                'gender', 'date_of_birth', 'address', 'guardian_name',
+                'guardian_phone', 'class_section_id', 'academic_year_id'
             ];
-            $user = User::create($userPayload);
-            $data['user_id'] = $user->id;
-        }
-        unset($data['first_name'], $data['last_name'], $data['email'], $data['password'], $data['phone'], $data['gender'], $data['date_of_birth'], $data['address'], $data['guardian_name'], $data['guardian_phone']);
-        Student::create($data);
-        return back()->with('success', 'Student created');
+
+            foreach ($fieldsToRemove as $field) {
+                unset($data[$field]);
+            }
+
+            // If enrolling, set current_class_id
+            if ($classSectionId) {
+                $data['current_class_id'] = $classSectionId;
+            }
+
+            $student = Student::create($data);
+
+            // Handle automatic enrollment and billing
+            if ($classSectionId && $academicYearId) {
+                StudentEnrollment::create([
+                    'student_id' => $student->id,
+                    'class_section_id' => $classSectionId,
+                    'academic_year_id' => $academicYearId,
+                    'enrollment_date' => now(),
+                ]);
+
+                $academicYear = AcademicYear::find($academicYearId);
+                if ($academicYear) {
+                    $billingService->generateBill($student, $academicYear);
+                }
+
+                return back()->with('success', 'Student created, enrolled and billed successfully');
+            }
+
+            return back()->with('success', 'Student created');
+        });
     }
 
     public function update(UpdateStudentRequest $request, Student $student): RedirectResponse

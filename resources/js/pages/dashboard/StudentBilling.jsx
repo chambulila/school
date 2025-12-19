@@ -229,7 +229,7 @@ export default function StudentBillingPage() {
                                     {row.student ? studentLabel(row.student) : '—'}
                                 </TableCell>
                                 <TableCell>
-                                    {row.academicYear ? yearLabel(row.academicYear) : '—'}
+                                    {row.academic_year ? yearLabel(row.academic_year) : '—'}
                                 </TableCell>
                                 <TableCell>{row.total_amount}</TableCell>
                                 <TableCell>{row.paid_amount ?? '—'}</TableCell>

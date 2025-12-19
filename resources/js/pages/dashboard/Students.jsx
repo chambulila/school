@@ -18,6 +18,7 @@ export default function StudentsPage() {
     const students = useMemo(() => props.students ?? [], [props.students]);
     const users = useMemo(() => props.users ?? [], [props.users]);
     const sections = useMemo(() => props.sections ?? [], [props.sections]);
+    const years = useMemo(() => props.years ?? [], [props.years]);
     const errors = props.errors || {};
     const initialFilters = props.filters || {};
     const [search, setSearch] = useState(initialFilters.search || '');
@@ -37,6 +38,7 @@ export default function StudentsPage() {
     const [newAdmNum, setNewAdmNum] = useState('');
     const [newAdmDate, setNewAdmDate] = useState('');
     const [newClassId, setNewClassId] = useState('');
+    const [newAcademicYearId, setNewAcademicYearId] = useState('');
     const [isSaving, setIsSaving] = useState(false);
 
     const [editingId, setEditingId] = useState(null);
@@ -115,7 +117,8 @@ export default function StudentsPage() {
             guardian_phone: newGuardianPhone || null,
             admission_number: newAdmNum,
             admission_date: newAdmDate || null,
-            current_class_id: newClassId || null,
+            current_class_id: (newClassId && newClassId !== 'none') ? newClassId : null,
+            academic_year_id: (newAcademicYearId && newClassId && newClassId !== 'none') ? newAcademicYearId : null,
         }, {
             preserveState: true,
             preserveScroll: true,
@@ -276,12 +279,30 @@ export default function StudentsPage() {
                                                         {sec.section_name} {sec.grade ? `(${sec.grade.grade_name})` : ''}
                                                     </SelectItem>
                                                 ))}
-                                                <SelectItem >None</SelectItem>
+                                                <SelectItem value="none">None</SelectItem>
                                             </SelectContent>
                                         </Select>
                                         {errors.current_class_id && <div className="text-red-500 text-sm mt-1">{errors.current_class_id}</div>}
                                     </div>
                                 </div>
+                                {newClassId && newClassId !== 'none' && (
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Academic Year (Required for enrollment)</label>
+                                        <Select value={newAcademicYearId} onValueChange={setNewAcademicYearId}>
+                                            <SelectTrigger className="w-full">
+                                                <SelectValue placeholder="Select academic year" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {years.map((y) => (
+                                                    <SelectItem key={y.id} value={y.id}>
+                                                        {y.year_name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        {errors.academic_year_id && <div className="text-red-500 text-sm mt-1">{errors.academic_year_id}</div>}
+                                    </div>
+                                )}
                             </div>
                             <DialogFooter>
                                 <Button
@@ -291,7 +312,7 @@ export default function StudentsPage() {
                                         setNewFirstName(''); setNewLastName(''); setNewEmail(''); setNewPassword('');
                                         setNewPhone(''); setNewGender(''); setNewDob(''); setNewAddress('');
                                         setNewGuardianName(''); setNewGuardianPhone('');
-                                        setNewAdmNum(''); setNewAdmDate(''); setNewClassId('');
+                                        setNewAdmNum(''); setNewAdmDate(''); setNewClassId(''); setNewAcademicYearId('');
                                     }}
                                     disabled={isSaving}
                                 >
