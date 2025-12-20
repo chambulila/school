@@ -185,6 +185,12 @@ export function AppSidebar() {
                         isActive: url.startsWith('/dashboard/payment-receipts'),
                     },
                     {
+                        title: "Payment Reports",
+                        url: "/dashboard/reports/payments",
+                        isVisible: true,
+                        isActive: url.startsWith('/dashboard/reports/payments'),
+                    },
+                    {
                         title: "Fee Notifications",
                         url: "/dashboard/fee-notifications",
                         isVisible: true,

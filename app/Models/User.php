@@ -124,4 +124,13 @@ class User extends Authenticatable
     {
         return $this->roles()->with('permissions')->get()->pluck('permissions')->flatten();
     }
+
+    public function hasRole($roles): bool
+    {
+        if (is_string($roles)) {
+            $roles = [$roles];
+        }
+
+        return $this->roles()->whereIn('role_name', $roles)->exists();
+    }
 }

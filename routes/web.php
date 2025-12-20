@@ -130,5 +130,12 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
         Route::delete('fee-notifications/{feeNotification}', [\App\Http\Controllers\Admin\FeeNotificationController::class, 'destroy'])->name('admin.fee-notifications.destroy');
 
         Route::post('finance-demo-seed', [\App\Http\Controllers\Admin\FinanceDemoController::class, 'seed'])->name('admin.finance-demo.seed');
+
+        // Reports
+        Route::prefix('reports')->name('admin.reports.')->group(function () {
+            Route::get('payments', [\App\Http\Controllers\Admin\PaymentReportController::class, 'index'])->name('payments.index');
+            Route::get('payments/export/pdf', [\App\Http\Controllers\Admin\PaymentReportController::class, 'exportPdf'])->name('payments.export.pdf');
+            Route::get('payments/export/excel', [\App\Http\Controllers\Admin\PaymentReportController::class, 'exportExcel'])->name('payments.export.excel');
+        });
     });
 });
