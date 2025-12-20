@@ -197,4 +197,78 @@ class BillingPaymentTest extends TestCase
         $structure->refresh();
         $this->assertEquals(5000, $structure->amount);
     }
+
+    public function test_payment_amount_cannot_exceed_balance()
+    {
+        $role = Role::create(['role_name' => 'Admin']);
+        $user = User::factory()->create();
+        $user->roles()->attach($role->id);
+        $this->actingAs($user);
+
+        // Setup Bill
+        $year = AcademicYear::create(['year_name' => '2025-2026', 'start_date' => '2025-01-01', 'end_date' => '2025-12-31']);
+        $studentUser = User::factory()->create(['first_name' => 'John', 'last_name' => 'Doe']);
+        $student = Student::create(['user_id' => $studentUser->id, 'admission_number' => 'STU004', 'admission_date' => '2025-01-01']);
+        $bill = StudentBilling::create([
+            'student_id' => $student->id,
+            'academic_year_id' => $year->id,
+            'total_amount' => 1000,
+            'amount_paid' => 0,
+            'balance' => 1000,
+            'status' => 'Pending'
+        ]);
+
+        // Attempt overpayment
+        $response = $this->post(route('admin.payments.store'), [
+            'bill_id' => $bill->bill_id,
+            'student_id' => $student->id,
+            'payment_date' => '2025-02-01',
+            'amount_paid' => 1001,
+            'payment_method' => 'Cash',
+        ]);
+
+        $response->assertSessionHasErrors('amount_paid');
+    }
+
+    public function test_reference_required_for_non_cash_payments()
+    {
+        $role = Role::create(['role_name' => 'Admin']);
+        $user = User::factory()->create();
+        $user->roles()->attach($role->id);
+        $this->actingAs($user);
+
+        $year = AcademicYear::create(['year_name' => '2025-2026', 'start_date' => '2025-01-01', 'end_date' => '2025-12-31']);
+        $studentUser = User::factory()->create(['first_name' => 'Jane', 'last_name' => 'Doe']);
+        $student = Student::create(['user_id' => $studentUser->id, 'admission_number' => 'STU005', 'admission_date' => '2025-01-01']);
+        $bill = StudentBilling::create([
+            'student_id' => $student->id,
+            'academic_year_id' => $year->id,
+            'total_amount' => 1000,
+            'amount_paid' => 0,
+            'balance' => 1000,
+            'status' => 'Pending'
+        ]);
+
+        // Fail Bank payment without reference
+        $response = $this->post(route('admin.payments.store'), [
+            'bill_id' => $bill->bill_id,
+            'student_id' => $student->id,
+            'payment_date' => '2025-02-01',
+            'amount_paid' => 100,
+            'payment_method' => 'Bank',
+            'transaction_reference' => ''
+        ]);
+        $response->assertSessionHasErrors('transaction_reference');
+
+        // Success Bank payment with reference
+        $response = $this->post(route('admin.payments.store'), [
+            'bill_id' => $bill->bill_id,
+            'student_id' => $student->id,
+            'payment_date' => '2025-02-01',
+            'amount_paid' => 100,
+            'payment_method' => 'Bank',
+            'transaction_reference' => 'BANK-123'
+        ]);
+        $response->assertSessionHasNoErrors();
+    }
 }

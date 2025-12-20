@@ -51,6 +51,62 @@ class PaymentController extends Controller
         ]);
     }
 
+    public function searchStudents(Request $request)
+    {
+        $query = $request->input('query');
+
+        $students = Student::query()
+            ->with('user')
+            ->where('admission_number', 'like', "%{$query}%")
+            ->orWhereHas('user', function ($q) use ($query) {
+                $q->where('first_name', 'like', "%{$query}%")
+                  ->orWhere('last_name', 'like', "%{$query}%")
+                  ->orWhere('email', 'like', "%{$query}%");
+            })
+            ->limit(10)
+            ->get()
+            ->map(function ($student) {
+                return [
+                    'id' => $student->id,
+                    'admission_number' => $student->admission_number,
+                    'name' => $student->user ? "{$student->user->first_name} {$student->user->last_name}" : 'Unknown',
+                    'email' => $student->user->email ?? '',
+                ];
+            });
+
+        return response()->json($students);
+    }
+
+    public function getStudentBills(Student $student)
+    {
+        $bills = $student->bills()
+            ->whereIn('status', ['Pending', 'Partially Paid'])
+            ->with('academicYear')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($bill) {
+                return [
+                    'bill_id' => $bill->bill_id,
+                    'academic_year' => $bill->academicYear->year_name,
+                    'total_amount' => $bill->total_amount,
+                    'amount_paid' => $bill->amount_paid,
+                    'balance' => $bill->balance,
+                    'status' => $bill->status,
+                ];
+            });
+
+        return response()->json($bills);
+    }
+
+    public function generateReference()
+    {
+        do {
+            $reference = 'REF-' . strtoupper(Str::random(10));
+        } while (Payment::where('transaction_reference', $reference)->exists());
+
+        return response()->json(['reference' => $reference]);
+    }
+
     public function store(StorePaymentRequest $request)
     {
         $data = $request->validated();

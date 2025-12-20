@@ -108,6 +108,11 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
         Route::put('student-billing/{studentBilling}', [\App\Http\Controllers\Admin\StudentBillingController::class, 'update'])->name('admin.student-billing.update');
         Route::delete('student-billing/{studentBilling}', [\App\Http\Controllers\Admin\StudentBillingController::class, 'destroy'])->name('admin.student-billing.destroy');
 
+        // Payment Helper Routes (API-like)
+        Route::get('payments/search-students', [\App\Http\Controllers\Admin\PaymentController::class, 'searchStudents'])->name('admin.payments.search-students');
+        Route::get('payments/student-bills/{student}', [\App\Http\Controllers\Admin\PaymentController::class, 'getStudentBills'])->name('admin.payments.student-bills');
+        Route::get('payments/generate-reference', [\App\Http\Controllers\Admin\PaymentController::class, 'generateReference'])->name('admin.payments.generate-reference');
+
         Route::get('payments', [\App\Http\Controllers\Admin\PaymentController::class, 'index'])->name('admin.payments.index');
         Route::post('payments', [\App\Http\Controllers\Admin\PaymentController::class, 'store'])->name('admin.payments.store');
         Route::get('payments/{payment}/receipt', [\App\Http\Controllers\Admin\PaymentController::class, 'downloadReceipt'])->name('admin.payments.receipt');
