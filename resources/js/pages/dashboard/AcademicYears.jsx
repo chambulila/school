@@ -10,6 +10,9 @@ import Pagination from '@/components/ui/pagination';
 import { Pencil, Trash } from 'lucide-react';
 import { askConfirmation } from '@/utils/sweetAlerts';
 import { cleanParams } from '@/lib/utils';
+import AddButton from '@/components/buttons/AddButton';
+import EditButton from '@/components/buttons/EditButon';
+import DeleteButton from '@/components/buttons/DeleteButton';
 
 export default function AcademicYearsPage() {
     const { props } = usePage();
@@ -117,7 +120,7 @@ export default function AcademicYearsPage() {
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search by year name"
                         />
-                        <Button onClick={() => setIsAddOpen(true)}>Add New Academic Year</Button>
+                        <AddButton onClick={() => setIsAddOpen(true)}>Add New Academic Year</AddButton>
                     </div>
                     <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
                         <DialogContent>
@@ -222,16 +225,16 @@ export default function AcademicYearsPage() {
                                         y.is_active ? 'Yes' : 'No'
                                     )}
                                 </TableCell>
-                                <TableCell className="space-x-2">
+                                <TableCell className="space-x-2 flex">
                                     {editingId === y.id ? (
                                         <>
-                                            <Button size="sm" onClick={saveEdit}>Save</Button>
-                                            <Button size="sm" variant="outline" onClick={cancelEdit}>Cancel</Button>
+                                            <SaveButton onClick={saveEdit} />
+                                            <SecondaryButton onClick={cancelEdit}>Cancel</SecondaryButton>
                                         </>
                                     ) : (
                                         <div className="flex items-center gap-2">
-                                            <Pencil className="w-5 h-5 cursor-pointer" onClick={() => startEdit(y)} />
-                                            <Trash className="w-5 h-5 cursor-pointer text-red-800" onClick={() => deleteYear(y)} />
+                                            <EditButton onClick={() => startEdit(y)} />
+                                            <DeleteButton onClick={() => deleteYear(y)} />
                                         </div>
                                     )}
                                 </TableCell>

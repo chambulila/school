@@ -16,7 +16,7 @@ import {
 import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Folder, Home, Minus, Plus, User, Users } from 'lucide-react';
+import { BookOpen, Folder, Home, Minus, Plus, Settings, User, Users } from 'lucide-react';
 import AppLogo from './app-logo';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 

@@ -5,6 +5,10 @@ import { Button } from '@/components/ui/button';
 import AuthenticatedLayout from '@/layouts/authenticated-layout'
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table'
 import { askConfirmation } from '../../utils/sweetAlerts';
+import AddButton from '@/components/buttons/AddButton';
+import SaveButton from '@/components/buttons/SaveButton';
+import SecondaryButton from '@/components/buttons/SecondaryButton';
+import DeleteButton from '@/components/buttons/DeleteButton';
 
 export default function RolesIndex() {
     const { props } = usePage();
@@ -68,7 +72,7 @@ export default function RolesIndex() {
             <div className="p-6">
                 <div className="mb-6 flex items-start gap-4">
                     {!isAddingRole && (
-                        <Button onClick={() => setIsAddingRole(true)}>Add New Role</Button>
+                        <AddButton onClick={() => setIsAddingRole(true)}>Add New Role</AddButton>
                     )}
                     {isAddingRole && (
                         <div className="flex items-end gap-2">
@@ -79,8 +83,8 @@ export default function RolesIndex() {
                                     <div className="text-red-500 text-sm mt-1">{errors.role_name}</div>
                                 )}
                             </div>
-                            <Button onClick={handleAddRole} disabled={!newRoleName.trim()}>Save</Button>
-                            <Button variant="outline" onClick={() => { setIsAddingRole(false); setNewRoleName(''); }}>Cancel</Button>
+                            <SaveButton onClick={handleAddRole} disabled={!newRoleName.trim()}>Save</SaveButton>
+                            <SecondaryButton onClick={() => { setIsAddingRole(false); setNewRoleName(''); }}>Cancel</SecondaryButton>
                         </div>
                     )}
                 </div>
@@ -112,14 +116,14 @@ export default function RolesIndex() {
                                 </TableCell>
                                 <TableCell>
                                     {editingRoleId === role.id ? (
-                                        <div className="flex gap-2">
-                                            <Button size="sm" onClick={saveEditRole}>Save</Button>
-                                            <Button size="sm" variant="outline" onClick={cancelEditRole}>Cancel</Button>
+                                        <div className="flex gap-2 flex">
+                                            <SaveButton  onClick={saveEditRole} />
+                                            <SecondaryButton  onClick={cancelEditRole}>Cancel</SecondaryButton>
                                         </div>
                                     ) : (
                                         <div className="flex gap-2">
-                                            <Button size="sm" variant="outline" onClick={() => startEditRole(role)}>Edit</Button>
-                                            <Button size="sm" variant="destructive" onClick={() => deleteRole(role)}>Delete</Button>
+                                            <EditButton  onClick={() => startEditRole(role)} />
+                                            <DeleteButton onClick={() => deleteRole(role)} />
                                         </div>
                                     )}
                                 </TableCell>

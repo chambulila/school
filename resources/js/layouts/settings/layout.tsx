@@ -8,29 +8,35 @@ import { show } from '@/routes/two-factor';
 import { edit as editPassword } from '@/routes/user-password';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
+import { Key, Lock, Palette, Sun, User } from 'lucide-react';
 import { type PropsWithChildren } from 'react';
 
 const sidebarNavItems: NavItem[] = [
     {
         title: 'Profile',
         href: edit(),
-        icon: null,
+        icon: User,
     },
     {
         title: 'Password',
         href: editPassword(),
-        icon: null,
+        icon: Lock,
     },
     {
         title: 'Two-Factor Auth',
         href: show(),
-        icon: null,
+        icon: Key,
     },
     {
         title: 'Appearance',
         href: editAppearance(),
-        icon: null,
+        icon: Sun,
     },
+    {
+        title: 'System Theme',
+        href: '/dashboard/settings/theme',
+        icon: Palette
+    }
 ];
 
 export default function SettingsLayout({ children }: PropsWithChildren) {

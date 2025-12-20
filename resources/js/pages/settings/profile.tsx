@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import AuthenticatedLayout from '@/layouts/authenticated-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import { edit } from '@/routes/profile';
+import SaveButton from '@/components/buttons/SaveButton';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -117,12 +118,12 @@ export default function Profile({
                                     )}
 
                                 <div className="flex items-center gap-4">
-                                    <Button
+                                    <SaveButton
                                         disabled={processing}
                                         data-test="update-profile-button"
                                     >
                                         Save
-                                    </Button>
+                                    </SaveButton>
 
                                     <Transition
                                         show={recentlySuccessful}

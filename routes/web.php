@@ -137,5 +137,9 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
             Route::get('payments/export/pdf', [\App\Http\Controllers\Admin\PaymentReportController::class, 'exportPdf'])->name('payments.export.pdf');
             Route::get('payments/export/excel', [\App\Http\Controllers\Admin\PaymentReportController::class, 'exportExcel'])->name('payments.export.excel');
         });
+
+        // Settings
+        Route::get('settings/theme', [\App\Http\Controllers\Admin\GeneralSettingController::class, 'edit'])->name('settings.theme');
+        Route::put('settings/theme', [\App\Http\Controllers\Admin\GeneralSettingController::class, 'update'])->name('settings.theme.update');
     });
 });

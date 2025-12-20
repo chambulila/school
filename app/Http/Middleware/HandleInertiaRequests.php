@@ -4,7 +4,9 @@ namespace App\Http\Middleware;
 
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
+use App\Models\GeneralSetting;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -53,10 +55,16 @@ class HandleInertiaRequests extends Middleware
             return $msg ? ($msg.' '.$time) : null;
         };
 
+        // Cache settings for performance (1 hour)
+        $settings = Cache::remember('general_settings', 3600, function () {
+            return GeneralSetting::first();
+        });
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'quote' => ['message' => trim($message), 'author' => trim($author)],
+            'settings' => $settings,
             'auth' => [
                 // 'user' => $request->user(),
                 'user' => $request->user() ? [

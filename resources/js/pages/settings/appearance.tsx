@@ -7,11 +7,20 @@ import { type BreadcrumbItem } from '@/types';
 import AuthenticatedLayout from '@/layouts/authenticated-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import { edit as editAppearance } from '@/routes/appearance';
+import { dashboard } from '@/routes';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Appearance settings',
+        title: 'Settings',
+        href: dashboard().url,
+    },
+    {
+        title: 'Appearance',
         href: editAppearance().url,
+    },
+    {
+        title: 'Modes',
+        href: "#"
     },
 ];
 

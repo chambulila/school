@@ -203,12 +203,12 @@ export default function StudentBillingPage() {
                                 </div>
                             </div>
                             <DialogFooter>
-                                <Button variant="outline" onClick={() => { setIsAddOpen(false); setNewStudentId(''); setNewYearId(''); setNewTotal(''); setNewPaid(''); setNewStatus('unpaid'); setNewIssuedDate(''); }} disabled={isSaving}>
+                                <SecondaryButton onClick={() => { setIsAddOpen(false); setNewStudentId(''); setNewYearId(''); setNewTotal(''); setNewPaid(''); setNewStatus('unpaid'); setNewIssuedDate(''); }} disabled={isSaving}>
                                     Cancel
-                                </Button>
-                                <Button onClick={createBill} disabled={isSaving || !newStudentId || !newYearId || !newTotal || !newStatus}>
+                                </SecondaryButton>
+                                <SaveButton onClick={createBill} disabled={isSaving || !newStudentId || !newYearId || !newTotal || !newStatus}>
                                     {isSaving ? 'Saving' : 'Save'}
-                                </Button>
+                                </SaveButton>
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>

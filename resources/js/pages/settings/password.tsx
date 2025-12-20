@@ -12,17 +12,28 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { edit } from '@/routes/user-password';
+import settings from '@/routes/settings';
+import SaveButton from '@/components/buttons/SaveButton';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Password settings',
         href: edit().url,
     },
+    {
+        title: 'Settings',
+        href: settings.theme().url
+    },
+    {
+        title: 'Password',
+        href: '#'
+    },
 ];
 
 export default function Password() {
     const passwordInput = useRef<HTMLInputElement>(null);
     const currentPasswordInput = useRef<HTMLInputElement>(null);
+    console.log("the is ", settings);
 
     return (
         <AuthenticatedLayout breadcrumbs={breadcrumbs}>
@@ -60,7 +71,7 @@ export default function Password() {
                         {({ errors, processing, recentlySuccessful }) => (
                             <>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="current_password">
+                                    <Label className={""} htmlFor="current_password">
                                         Current password
                                     </Label>
 
@@ -80,7 +91,7 @@ export default function Password() {
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor="password">
+                                    <Label className={""} htmlFor="password">
                                         New password
                                     </Label>
 
@@ -98,7 +109,7 @@ export default function Password() {
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor="password_confirmation">
+                                    <Label className={""} htmlFor="password_confirmation">
                                         Confirm password
                                     </Label>
 
@@ -117,12 +128,12 @@ export default function Password() {
                                 </div>
 
                                 <div className="flex items-center gap-4">
-                                    <Button
+                                    <SaveButton
                                         disabled={processing}
                                         data-test="update-password-button"
                                     >
                                         Save password
-                                    </Button>
+                                    </SaveButton>
 
                                     <Transition
                                         show={recentlySuccessful}

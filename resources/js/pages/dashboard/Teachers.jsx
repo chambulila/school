@@ -12,6 +12,8 @@ import { askConfirmation } from '@/utils/sweetAlerts';
 import { cleanParams } from '@/lib/utils';
 import DeleteButton from '@/components/buttons/DeleteButton';
 import EditButton from '@/components/buttons/EditButon';
+import SaveButton from '@/components/buttons/SaveButton';
+import SecondaryButton from '@/components/buttons/SecondaryButton';
 
 export default function TeachersPage() {
     const { props } = usePage();
@@ -423,12 +425,12 @@ export default function TeachersPage() {
                             </div>
                         </div>
                         <DialogFooter>
-                            <Button variant="outline" onClick={cancelEdit} disabled={isEditSaving}>
+                            <SecondaryButton onClick={cancelEdit} disabled={isEditSaving}>
                                 Cancel
-                            </Button>
-                            <Button onClick={saveEdit} disabled={isEditSaving || !editEmp.trim() || !editFirstName.trim() || !editLastName.trim() || !editEmail.trim()}>
+                            </SecondaryButton>
+                            <SaveButton onClick={saveEdit} disabled={isEditSaving || !editEmp.trim() || !editFirstName.trim() || !editLastName.trim() || !editEmail.trim()}>
                                 {isEditSaving ? 'Saving' : 'Save Changes'}
-                            </Button>
+                            </SaveButton>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
