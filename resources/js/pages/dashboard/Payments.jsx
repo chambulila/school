@@ -7,9 +7,14 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Pagination from '@/components/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Pencil, Trash, Search, Check, RefreshCw } from 'lucide-react';
+import { Pencil, Trash, Search, Check, RefreshCw, Download } from 'lucide-react';
 import { cleanParams } from '@/lib/utils';
 import { askConfirmation } from '@/utils/sweetAlerts';
+import AddButton from '@/components/buttons/AddButton';
+import EditButton from '@/components/buttons/EditButon';
+import DeleteButton from '@/components/buttons/DeleteButton';
+import SaveButton from '@/components/buttons/SaveButton';
+import SecondaryButton from '@/components/buttons/SecondaryButton';
 
 export default function Payments() {
     const { payments, bills, students, users, filters } = usePage().props;
@@ -125,9 +130,11 @@ export default function Payments() {
         setNewReceivedBy('');
     };
 
-    const createPayment = () => {
-        if (!selectedBill || !selectedStudent) return;
+    const createPayment = async () => {
 
+        const confirmed = await askConfirmation('Are you sure you want to create this payment? This action cannot be undone.');
+        if (confirmed) {
+        if (!selectedBill || !selectedStudent) return;
         setIsSaving(true);
         setErrors({});
 
@@ -151,6 +158,7 @@ export default function Payments() {
                 setIsSaving(false);
             }
         });
+        }
     };
 
     const startEdit = (row) => {
@@ -166,6 +174,8 @@ export default function Payments() {
 
     const saveEdit = async (row) => {
         setIsEditSaving(true);
+        const confirmed = await askConfirmation('Are you sure you want to update this payment? This action cannot be undone.');
+        if (!confirmed) return;
         try {
             await router.put(`/dashboard/payments/${row.payment_id || row.id}`, {
                 bill_id: editBillId,
@@ -197,10 +207,12 @@ export default function Payments() {
                 <div className="mb-6">
                     <div className="flex items-center justify-between gap-2">
                         <Input className="w-64" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by student or reference" />
-                        <Button onClick={() => { setIsAddOpen(true); resetNewFields(); }}>Add Payment</Button>
+                        <AddButton onClick={() => { setIsAddOpen(true); resetNewFields(); }}>Add Payment</AddButton>
                     </div>
 
-                    <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+                    <Dialog open={isAddOpen}
+                    // onOpenChange={setIsAddOpen}
+                    >
                         <DialogContent className="max-w-2xl">
                             <DialogHeader>
                                 <DialogTitle>
@@ -453,16 +465,25 @@ export default function Payments() {
                                         row.payment_date
                                     )}
                                 </TableCell>
-                                <TableCell className="space-x-2">
+                                <TableCell className="space-x-2 flex items-center">
                                     {editingId === (row.payment_id || row.id) ? (
                                         <>
-                                            <Button onClick={() => saveEdit(row)} disabled={isEditSaving}>Save</Button>
-                                            <Button variant="outline" onClick={() => setEditingId(null)} disabled={isEditSaving}>Cancel</Button>
+                                            <SaveButton onClick={() => saveEdit(row)} disabled={isEditSaving} />
+                                            <SecondaryButton variant="outline" onClick={() => setEditingId(null)} disabled={isEditSaving}>Cancel</SecondaryButton>
                                         </>
                                     ) : (
                                         <>
-                                            <Button size="icon" variant="ghost" onClick={() => startEdit(row)}><Pencil className="size-4" /></Button>
-                                            <Button size="icon" variant="ghost" onClick={() => removePayment(row)}><Trash className="size-4" /></Button>
+                                            <Button
+                                                size="icon"
+                                                variant="ghost"
+                                                title="Download Receipt"
+                                                onClick={() => window.open(`/dashboard/payments/${row.payment_id || row.id}/receipt`, '_blank')}
+                                                disabled={!row.receipt}
+                                            >
+                                                <Download className="size-4" />
+                                            </Button>
+                                            <EditButton size="icon" variant="ghost" onClick={() => startEdit(row)} />
+                                            <DeleteButton size="icon" variant="ghost" onClick={() => removePayment(row)} />
                                         </>
                                     )}
                                 </TableCell>

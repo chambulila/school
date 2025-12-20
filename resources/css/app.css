@@ -141,3 +141,14 @@
         @apply bg-background text-foreground;
     }
 }
+
+/* Ensure SweetAlert2 is clickable when open over Radix Dialogs */
+body.swal2-shown > [aria-hidden="true"] {
+    transition: 0.1s opacity;
+    opacity: 1;
+}
+
+.swal2-container {
+    z-index: 100000 !important;
+    pointer-events: auto !important;
+}
