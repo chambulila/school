@@ -36,6 +36,10 @@ const footerNavItems: NavItem[] = [
 export function AppSidebar() {
     const { url } = usePage();
 
+    const checkIsActive = (href: string) => {
+        return url === href || url.startsWith(href + '/') || url.startsWith(href + '?');
+    };
+
     const data = {
         navMain: [
             {
@@ -48,25 +52,25 @@ export function AppSidebar() {
                         title: "Users",
                         url: "/dashboard/users",
                         isVisible: true,
-                        isActive: url.startsWith('/dashboard/users'),
+                        isActive: checkIsActive('/dashboard/users'),
                     },
                     {
                         title: "Roles",
                         url: "/dashboard/roles",
                         isVisible: true,
-                        isActive: url.startsWith('/dashboard/roles'),
+                        isActive: checkIsActive('/dashboard/roles'),
                     },
                     {
                         title: "Teachers",
                         url: "/dashboard/teachers",
                         isVisible: true,
-                        isActive: url.startsWith('/dashboard/teachers'),
+                        isActive: checkIsActive('/dashboard/teachers'),
                     },
                     {
                         title: "Students",
                         url: "/dashboard/students",
                         isVisible: true,
-                        isActive: url.startsWith('/dashboard/students'),
+                        isActive: checkIsActive('/dashboard/students'),
                     },
                 ],
             },
@@ -80,13 +84,13 @@ export function AppSidebar() {
                         title: "Grades",
                         url: "/dashboard/grades",
                         isVisible: true,
-                        isActive: url.startsWith('/dashboard/grades'),
+                        isActive: checkIsActive('/dashboard/grades'),
                     },
                     {
                         title: "Class Sections",
                         url: "/dashboard/sections",
                         isVisible: true,
-                        isActive: url.startsWith('/dashboard/sections'),
+                        isActive: checkIsActive('/dashboard/sections'),
                     },
                 ],
             },
@@ -100,25 +104,25 @@ export function AppSidebar() {
                         title: "Academic Years",
                         url: "/dashboard/academic-years",
                         isVisible: true,
-                        isActive: url.startsWith('/dashboard/academic-years'),
+                        isActive: checkIsActive('/dashboard/academic-years'),
                     },
                     {
                         title: "Subjects",
                         url: "/dashboard/subjects",
                         isVisible: true,
-                        isActive: url.startsWith('/dashboard/subjects'),
+                        isActive: checkIsActive('/dashboard/subjects'),
                     },
                     {
                         title: "Teacher Subjects",
                         url: "/dashboard/teacher-subject-assignments",
                         isVisible: true,
-                        isActive: url.startsWith('/dashboard/teacher-subject-assignments'),
+                        isActive: checkIsActive('/dashboard/teacher-subject-assignments'),
                     },
                     {
                         title: "Student Enrollments",
                         url: "/dashboard/student-enrollments",
                         isVisible: true,
-                        isActive: url.startsWith('/dashboard/student-enrollments'),
+                        isActive: checkIsActive('/dashboard/student-enrollments'),
                     },
                 ],
             },
@@ -132,19 +136,19 @@ export function AppSidebar() {
                         title: "Exams",
                         url: "/dashboard/exams",
                         isVisible: true,
-                        isActive: url.startsWith('/dashboard/exams'),
+                        isActive: checkIsActive('/dashboard/exams'),
                     },
                     {
                         title: "Exam Results",
                         url: "/dashboard/exam-results",
                         isVisible: true,
-                        isActive: url.startsWith('/dashboard/exam-results'),
+                        isActive: checkIsActive('/dashboard/exam-results'),
                     },
                     {
                         title: "Published Results",
                         url: "/dashboard/published-results",
                         isVisible: true,
-                        isActive: url.startsWith('/dashboard/published-results'),
+                        isActive: checkIsActive('/dashboard/published-results'),
                     },
                 ],
             },
@@ -158,43 +162,43 @@ export function AppSidebar() {
                         title: "Fee Categories",
                         url: "/dashboard/fee-categories",
                         isVisible: true,
-                        isActive: url.startsWith('/dashboard/fee-categories'),
+                        isActive: checkIsActive('/dashboard/fee-categories'),
                     },
                     {
                         title: "Fee Structures",
                         url: "/dashboard/fee-structures",
                         isVisible: true,
-                        isActive: url.startsWith('/dashboard/fee-structures'),
+                        isActive: checkIsActive('/dashboard/fee-structures'),
                     },
                     {
                         title: "Student Billing",
                         url: "/dashboard/student-billing",
                         isVisible: true,
-                        isActive: url.startsWith('/dashboard/student-billing'),
+                        isActive: checkIsActive('/dashboard/student-billing'),
                     },
                     {
                         title: "Payments",
                         url: "/dashboard/payments",
                         isVisible: true,
-                        isActive: url.startsWith('/dashboard/payments'),
+                        isActive: checkIsActive('/dashboard/payments'),
                     },
                     {
                         title: "Payment Receipts",
                         url: "/dashboard/payment-receipts",
                         isVisible: true,
-                        isActive: url.startsWith('/dashboard/payment-receipts'),
+                        isActive: checkIsActive('/dashboard/payment-receipts'),
                     },
                     {
                         title: "Payment Reports",
                         url: "/dashboard/reports/payments",
                         isVisible: true,
-                        isActive: url.startsWith('/dashboard/reports/payments'),
+                        isActive: checkIsActive('/dashboard/reports/payments'),
                     },
                     {
                         title: "Fee Notifications",
                         url: "/dashboard/fee-notifications",
                         isVisible: true,
-                        isActive: url.startsWith('/dashboard/fee-notifications'),
+                        isActive: checkIsActive('/dashboard/fee-notifications'),
                     },
                 ],
             },
@@ -208,7 +212,7 @@ export function AppSidebar() {
                         title: "Permissions",
                         url: "/dashboard/permissions",
                         isVisible: true,
-                        isActive: url.startsWith('/dashboard/permissions'),
+                        isActive: checkIsActive('/dashboard/permissions'),
                     },
                 ],
             },
@@ -234,7 +238,7 @@ export function AppSidebar() {
                     <SidebarMenu>
                         {/* Dashboard as first item */}
                         <SidebarMenuItem>
-                            <SidebarMenuButton asChild isActive={url === '/dashboard'}>
+                            <SidebarMenuButton asChild isActive={url === '/dashboard' || url.startsWith('/dashboard?')}>
                                 <Link href="/dashboard" className="flex items-center gap-2 ">
                                     <Home />
                                     <span>Dashboard</span>
@@ -244,12 +248,17 @@ export function AppSidebar() {
                         {data.navMain
                             .filter(item => item.isVisible)?.map((item) => {
                                 const Icon = item.icon;
+                                const isGroupActive = item.items?.some(it => it?.isActive);
 
                                 return (
-                                    <Collapsible key={item.title} defaultOpen={item.items?.filter(it => it?.isActive)?.length > 0} className="group/collapsible">
+                                    <Collapsible
+                                        key={item.title + (isGroupActive ? '-active' : '')}
+                                        defaultOpen={isGroupActive}
+                                        className="group/collapsible"
+                                    >
                                         <SidebarMenuItem>
                                             <CollapsibleTrigger asChild>
-                                                <SidebarMenuButton>
+                                                <SidebarMenuButton isActive={isGroupActive}>
                                                     {Icon && <Icon />}
                                                     {item.title}
                                                     <Plus className="ml-auto group-data-[state=open]/collapsible:hidden" />
