@@ -109,10 +109,11 @@ export default function Payments() {
 
     const studentLabel = (s) => (s.user ? `${s.user.first_name} ${s.user.last_name}` : '—');
     const userLabel = (u) => u.name || `${u.first_name} ${u.last_name}`;
-    const billLabel = (b) => {
-         const s = b.student?.user ? `${b.student.user.first_name} ${b.student.user.last_name}` : '—';
-         const y = b.academicYear?.year_name ?? '—';
-         return `${s} • ${y} • ${b.total_amount}`;
+    const billLabel = (b, student) => {
+        console.log(b)
+         const s = b.student?.user ? `${b.student.user?.first_name} ${b.student?.user?.last_name}` : '—';
+         const y = b.academic_year?.year_name ?? '—';
+         return `${student?.name} • ${y} • ${b.total_amount}`;
     };
 
     const resetNewFields = () => {
@@ -412,7 +413,7 @@ export default function Payments() {
                         {(payments.data ?? payments).map((row) => (
                             <TableRow key={row.payment_id || row.id}>
                                 <TableCell>{row.student ? studentLabel(row.student) : '—'}</TableCell>
-                                <TableCell>{row.bill ? billLabel(row.bill) : '—'}</TableCell>
+                                <TableCell>{row.bill ? billLabel(row.bill, row.student?.user) : '—'}</TableCell>
                                 <TableCell>
                                     {editingId === (row.payment_id || row.id) ? (
                                         <Input disabled={isEditSaving} type="number" value={editAmountPaid} onChange={(e) => setEditAmountPaid(e.target.value)} />
@@ -452,7 +453,7 @@ export default function Payments() {
                                             </SelectContent>
                                         </Select>
                                     ) : (
-                                        row.receivedBy ? userLabel(row.receivedBy) : '—'
+                                        row.received_by ? userLabel(row.received_by) : '—'
                                     )}
                                 </TableCell>
                                 <TableCell>
