@@ -26,6 +26,7 @@ export default function Payments() {
     const [selectedStudent, setSelectedStudent] = useState(null);
     const [studentBills, setStudentBills] = useState([]);
     const [selectedBill, setSelectedBill] = useState(null);
+    const [errors, setErrors] = useState({});
 
     // Form State
     const [newPaymentDate, setNewPaymentDate] = useState(new Date().toISOString().split('T')[0]);
@@ -111,6 +112,7 @@ export default function Payments() {
 
     const resetNewFields = () => {
         setWizardStep(1);
+        setErrors({});
         setStudentQuery('');
         setFoundStudents([]);
         setSelectedStudent(null);
@@ -123,26 +125,32 @@ export default function Payments() {
         setNewReceivedBy('');
     };
 
-    const createPayment = async () => {
+    const createPayment = () => {
         if (!selectedBill || !selectedStudent) return;
 
         setIsSaving(true);
-        try {
-            await router.post('/dashboard/payments', {
-                bill_id: selectedBill.bill_id,
-                student_id: selectedStudent.id,
-                payment_date: newPaymentDate,
-                amount_paid: newAmountPaid,
-                payment_method: newMethod || null,
-                transaction_reference: newReference || null,
-                received_by: newReceivedBy || null,
-            });
-            setIsAddOpen(false);
-            resetNewFields();
-            // No reload needed as Inertia handles it, but verify if state persistence affects list
-        } finally {
-            setIsSaving(false);
-        }
+        setErrors({});
+
+        router.post('/dashboard/payments', {
+            bill_id: selectedBill.bill_id,
+            student_id: selectedStudent.id,
+            payment_date: newPaymentDate,
+            amount_paid: newAmountPaid,
+            payment_method: newMethod || null,
+            transaction_reference: newReference || null,
+            received_by: newReceivedBy || null,
+        }, {
+            onSuccess: () => {
+                setIsAddOpen(false);
+                resetNewFields();
+            },
+            onError: (err) => {
+                setErrors(err);
+            },
+            onFinish: () => {
+                setIsSaving(false);
+            }
+        });
     };
 
     const startEdit = (row) => {
@@ -298,10 +306,12 @@ export default function Payments() {
                                                 placeholder="0.00"
                                                 max={selectedBill?.balance}
                                             />
+                                            {errors.amount_paid && <div className="text-red-500 text-sm mt-1">{errors.amount_paid}</div>}
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium mb-1">Payment Date</label>
                                             <Input type="date" value={newPaymentDate} onChange={(e) => setNewPaymentDate(e.target.value)} />
+                                            {errors.payment_date && <div className="text-red-500 text-sm mt-1">{errors.payment_date}</div>}
                                         </div>
                                     </div>
 
@@ -315,6 +325,7 @@ export default function Payments() {
                                                 <SelectItem value="Mobile Money">Mobile Money</SelectItem>
                                             </SelectContent>
                                         </Select>
+                                        {errors.payment_method && <div className="text-red-500 text-sm mt-1">{errors.payment_method}</div>}
                                     </div>
 
                                     {newMethod === 'Cash' ? (
@@ -336,6 +347,7 @@ export default function Payments() {
                                                 placeholder={newMethod ? "Enter reference number" : "Select method first"}
                                                 disabled={!newMethod}
                                             />
+                                            {errors.transaction_reference && <div className="text-red-500 text-sm mt-1">{errors.transaction_reference}</div>}
                                         </div>
                                     )}
 
@@ -349,6 +361,7 @@ export default function Payments() {
                                                 ))}
                                             </SelectContent>
                                         </Select>
+                                        {errors.received_by && <div className="text-red-500 text-sm mt-1">{errors.received_by}</div>}
                                     </div>
                                 </div>
                             )}
