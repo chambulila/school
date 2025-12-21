@@ -33,7 +33,7 @@ export default function PaymentReports() {
         Object.keys(params).forEach(key => {
             if (params[key] === 'all') delete params[key];
         });
-        
+
         router.get('/dashboard/reports/payments', cleanParams(params), { preserveState: true, replace: true });
     };
 
@@ -61,6 +61,17 @@ export default function PaymentReports() {
         window.open(`/dashboard/reports/payments/export/pdf?${queryString}`, '_blank');
     };
 
+    const previewPdf = () => {
+        const params = cleanParams({ ...queryParams });
+        // Remove 'all'
+        Object.keys(params).forEach(key => {
+            if (params[key] === 'all') delete params[key];
+        });
+        params.preview = true;
+        const queryString = new URLSearchParams(params).toString();
+        window.open(`/dashboard/reports/payments/export/pdf?${queryString}`, '_blank');
+    };
+
     const exportExcel = () => {
         const params = cleanParams({ ...queryParams });
         Object.keys(params).forEach(key => {
@@ -82,7 +93,7 @@ export default function PaymentReports() {
         <AuthenticatedLayout breadcrumbs={[{ title: 'Dashboard', href: '/dashboard' }, { title: 'Payment Reports', href: '/dashboard/reports/payments' }]}>
             <Head title="Payment Reports" />
             <div className="p-6 space-y-6">
-                
+
                 {/* Filters Section */}
                 <div className="bg-white p-4 rounded-lg border shadow-sm space-y-4">
                     <div className="flex justify-between items-center">
@@ -92,7 +103,7 @@ export default function PaymentReports() {
                             <Button size="sm" onClick={applyFilters}><Search className="size-4 mr-2"/> Apply Filters</Button>
                         </div>
                     </div>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div>
                             <label className="text-sm font-medium">Academic Year</label>
@@ -135,37 +146,37 @@ export default function PaymentReports() {
 
                         <div>
                             <label className="text-sm font-medium">Receipt Number</label>
-                            <Input 
-                                placeholder="Search Receipt..." 
-                                value={queryParams.receipt_number} 
-                                onChange={(e) => handleFilterChange('receipt_number', e.target.value)} 
+                            <Input
+                                placeholder="Search Receipt..."
+                                value={queryParams.receipt_number}
+                                onChange={(e) => handleFilterChange('receipt_number', e.target.value)}
                             />
                         </div>
 
                         <div>
                             <label className="text-sm font-medium">Reference</label>
-                            <Input 
-                                placeholder="Search Reference..." 
-                                value={queryParams.transaction_reference} 
-                                onChange={(e) => handleFilterChange('transaction_reference', e.target.value)} 
+                            <Input
+                                placeholder="Search Reference..."
+                                value={queryParams.transaction_reference}
+                                onChange={(e) => handleFilterChange('transaction_reference', e.target.value)}
                             />
                         </div>
 
                         <div>
                             <label className="text-sm font-medium">Date From</label>
-                            <Input 
-                                type="date" 
-                                value={queryParams.date_from} 
-                                onChange={(e) => handleFilterChange('date_from', e.target.value)} 
+                            <Input
+                                type="date"
+                                value={queryParams.date_from}
+                                onChange={(e) => handleFilterChange('date_from', e.target.value)}
                             />
                         </div>
 
                         <div>
                             <label className="text-sm font-medium">Date To</label>
-                            <Input 
-                                type="date" 
-                                value={queryParams.date_to} 
-                                onChange={(e) => handleFilterChange('date_to', e.target.value)} 
+                            <Input
+                                type="date"
+                                value={queryParams.date_to}
+                                onChange={(e) => handleFilterChange('date_to', e.target.value)}
                             />
                         </div>
                     </div>
@@ -180,6 +191,9 @@ export default function PaymentReports() {
                         <div className="flex gap-2">
                             <Button variant="outline" size="sm" onClick={exportExcel}>
                                 <FileSpreadsheet className="size-4 mr-2" /> Export Excel
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={previewPdf}>
+                                <Search className="size-4 mr-2" /> Preview
                             </Button>
                             <Button variant="outline" size="sm" onClick={exportPdf}>
                                 <Download className="size-4 mr-2" /> Export PDF
@@ -216,7 +230,7 @@ export default function PaymentReports() {
                                     <TableCell>{row.student ? studentLabel(row.student) : '—'}</TableCell>
                                     <TableCell>{row.student?.admission_number || '—'}</TableCell>
                                     <TableCell>{row.bill?.academic_year?.year_name || '—'}</TableCell>
-                                    <TableCell>{row.student?.current_class?.grade?.name || '—'}</TableCell>
+                                    <TableCell>{row.student?.current_class?.grade?.grade_name || '—'}</TableCell>
                                     <TableCell>{row.amount_paid}</TableCell>
                                     <TableCell>{row.payment_method || '—'}</TableCell>
                                     <TableCell>{row.transaction_reference || '—'}</TableCell>
@@ -226,7 +240,7 @@ export default function PaymentReports() {
                             ))}
                         </TableBody>
                     </Table>
-                    
+
                     {payments.links && (
                         <div className="p-4 border-t">
                             <Pagination links={payments.links} filters={queryParams} />

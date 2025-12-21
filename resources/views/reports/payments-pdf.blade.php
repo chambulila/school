@@ -20,7 +20,7 @@
 <body>
     <div class="header">
         <div style="float:left">
-            <div class="logo">{{ $school_name }}</div>
+            <div class="logo">{{ setting('app_name') }}</div>
             <div>{{ $title }}</div>
         </div>
         <div style="float:right; text-align:right">
@@ -30,7 +30,7 @@
         <div style="clear:both"></div>
     </div>
 
-    <div class="filters">
+    {{-- <div class="filters">
         <strong>Applied Filters:</strong><br>
         @foreach($filters as $key => $value)
             @if($value && $value !== 'all')
@@ -39,7 +39,7 @@
                 </span>
             @endif
         @endforeach
-    </div>
+    </div> --}}
 
     <table>
         <thead>
@@ -48,7 +48,6 @@
                 <th>Student</th>
                 <th>Adm No</th>
                 <th>Year</th>
-                <th>Grade</th>
                 <th>Method</th>
                 <th>Reference</th>
                 <th>Date</th>
@@ -63,7 +62,6 @@
                 <td>{{ $payment->student->user->first_name ?? '' }} {{ $payment->student->user->last_name ?? '' }}</td>
                 <td>{{ $payment->student->admission_number ?? '-' }}</td>
                 <td>{{ $payment->bill->academicYear->year_name ?? '-' }}</td>
-                <td>{{ $payment->student->currentClass->grade->name ?? '-' }}</td>
                 <td>{{ $payment->payment_method }}</td>
                 <td>{{ $payment->transaction_reference }}</td>
                 <td>{{ $payment->payment_date }}</td>

@@ -72,6 +72,10 @@ class PaymentReportController extends Controller
         $pdf = Pdf::loadView('reports.payments-pdf', $data);
         $pdf->setPaper('a4', 'landscape');
 
+        if ($request->has('preview') && $request->preview == 'true') {
+            return $pdf->stream('payments-report-' . now()->format('YmdHis') . '.pdf');
+        }
+
         return $pdf->download('payments-report-' . now()->format('YmdHis') . '.pdf');
     }
 
