@@ -32,7 +32,28 @@ export default function Payments() {
         max_amount: filters?.max_amount || '',
     });
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-    const isFirstRun = useRef(true);
+
+    // Helper to clean params for API
+    const getEffectiveParams = (qParams) => {
+        const params = cleanParams(qParams);
+        Object.keys(params).forEach(key => {
+            if (params[key] === 'all') delete params[key];
+        });
+        return params;
+    };
+
+    // Track previous params to prevent initial/redundant fetches
+    const prevParamsString = useRef(JSON.stringify(getEffectiveParams({
+        search: filters?.search || '',
+        date_from: filters?.date_from || '',
+        date_to: filters?.date_to || '',
+        academic_year_id: filters?.academic_year_id || 'all',
+        payment_method: filters?.payment_method || 'all',
+        received_by: filters?.received_by || 'all',
+        grade_id: filters?.grade_id || 'all',
+        min_amount: filters?.min_amount || '',
+        max_amount: filters?.max_amount || '',
+    })));
 
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -41,19 +62,18 @@ export default function Payments() {
 
     // Debounced Search & Filter Effect
     useEffect(() => {
-        if (isFirstRun.current) {
-            isFirstRun.current = false;
+        const effectiveParams = getEffectiveParams(queryParams);
+        const paramString = JSON.stringify(effectiveParams);
+
+        // If params haven't effectively changed, do nothing
+        if (paramString === prevParamsString.current) {
             return;
         }
 
         const timeoutId = setTimeout(() => {
-            const params = cleanParams(queryParams);
-            // Remove 'all' values
-            Object.keys(params).forEach(key => {
-                if (params[key] === 'all') delete params[key];
-            });
+            prevParamsString.current = paramString;
 
-            router.get('/dashboard/payments', params, {
+            router.get('/dashboard/payments', effectiveParams, {
                 replace: true,
                 preserveState: true,
                 preserveScroll: true,
