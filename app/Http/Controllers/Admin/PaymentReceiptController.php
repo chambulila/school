@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StorePaymentReceiptRequest;
 use App\Http\Requests\Admin\UpdatePaymentReceiptRequest;
+use App\Models\AcademicYear;
+use App\Models\Grade;
 use App\Models\Payment;
 use App\Models\PaymentReceipt;
 use App\Models\User;
@@ -22,29 +24,21 @@ class PaymentReceiptController extends Controller
 
         $receipts = PaymentReceipt::query()
             ->with(['payment.student.user', 'payment.bill', 'generatedBy'])
-            ->when($search !== '', function ($q) use ($search) {
-                $q->where('receipt_number', 'like', '%'.$search.'%')
-                    ->orWhereHas('payment', function ($pq) use ($search) {
-                        $pq->where('transaction_reference', 'like', '%'.$search.'%');
-                    })
-                    ->orWhereHas('payment.student.user', function ($uq) use ($search) {
-                        $uq->where('first_name', 'like', '%'.$search.'%')
-                            ->orWhere('last_name', 'like', '%'.$search.'%')
-                            ->orWhere('email', 'like', '%'.$search.'%');
-                    });
+            ->whereHas('payment', function ($q) use ($request) {
+                $q->applyFilters($request);
             })
             ->orderBy('issued_at', 'desc')
             ->paginate($perPage)
             ->withQueryString();
 
+
         return Inertia::render('dashboard/PaymentReceipts', [
             'receipts' => $receipts,
             'payments' => Payment::query()->with(['student.user', 'bill'])->orderBy('payment_date', 'desc')->get(),
             'users' => User::query()->orderBy('first_name')->select(['id', 'first_name', 'last_name'])->get(),
-            'filters' => [
-                'search' => $search,
-                'perPage' => $perPage,
-            ],
+            'academicYears' => AcademicYear::orderBy('year_name', 'desc')->get(),
+            'grades' => Grade::orderBy('grade_name')->get(),
+            'filters' => $request->all(),
         ]);
     }
 
@@ -70,4 +64,3 @@ class PaymentReceiptController extends Controller
         return back()->with('success', 'Receipt deleted');
     }
 }
-

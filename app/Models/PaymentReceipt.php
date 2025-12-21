@@ -35,4 +35,37 @@ class PaymentReceipt extends Model
     {
         return $this->belongsTo(User::class, 'generated_by');
     }
+
+    public function scopeFilter($query, $request)
+    {
+        $search = $request->input('search');
+        return $query->when($search !== '', function ($q) use ($search, $request) {
+            $q->where('receipt_number', 'like', '%' . $search . '%')
+                ->orWhereHas('payment', function ($pq) use ($search) {
+                    $pq->where('transaction_reference', 'like', '%' . $search . '%');
+                })
+                ->orWhereHas('payment.student.user', function ($uq) use ($search) {
+                    $uq->where('first_name', 'like', '%' . $search . '%')
+                        ->orWhere('last_name', 'like', '%' . $search . '%')
+                        ->orWhere('email', 'like', '%' . $search . '%');
+                })
+                ->when($request->input('min_amount'), function ($q, $min) {
+                    $q->where('amount_paid', '>=', $min);
+                })
+                ->when($request->input('max_amount'), function ($q, $max) {
+                    $q->where('amount_paid', '<=', $max);
+                })
+                ->when($request->input('academic_year_id'), function ($q, $yearId) {
+                    $q->whereHas('bill', function ($bq) use ($yearId) {
+                        $bq->where('academic_year_id', $yearId);
+                    });
+                })
+                ->when($request->input('date_from'), function ($q, $date) {
+                    $q->whereDate('issued_at', '>=', $date);
+                })
+                ->when($request->input('date_to'), function ($q, $date) {
+                    $q->whereDate('issued_at', '<=', $date);
+                });
+        });
+    }
 }

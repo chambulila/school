@@ -48,16 +48,9 @@ class Payment extends Model
         return $this->hasOne(PaymentReceipt::class, 'payment_id', 'payment_id');
     }
 
-    public function scopeFilter($query, $request)
+    public function scopeApplyFilters($query, $request)
     {
-        return $query->with([
-            'student.user',
-            'student.currentClass.grade',
-            'bill.academicYear',
-            'receivedBy',
-            'receipt'
-        ])
-            ->when($request->input('search'), function ($q, $search) {
+        return $query->when($request->input('search'), function ($q, $search) {
                 $q->where(function ($subQ) use ($search) {
                     $subQ->whereHas('student.user', function ($uq) use ($search) {
                         $uq->where('first_name', 'like', "%{$search}%")
@@ -96,7 +89,6 @@ class Payment extends Model
                 $q->where('student_id', $id);
             })
             ->when($request->input('grade_id'), function ($q, $gradeId) {
-                // Assuming we filter by current grade for now, or we'd need to join enrollments
                 $q->whereHas('student.currentClass', function ($cq) use ($gradeId) {
                     $cq->where('grade_id', $gradeId);
                 });
@@ -104,7 +96,6 @@ class Payment extends Model
             ->when($request->input('payment_method'), function ($q, $method) {
                 $q->where('payment_method', $method);
             })
-            // Individual filters for specific columns (kept for backward compatibility or specific usage)
             ->when($request->input('receipt_number'), function ($q, $number) {
                 $q->whereHas('receipt', function ($rq) use ($number) {
                     $rq->where('receipt_number', 'like', "%{$number}%");
@@ -112,7 +103,19 @@ class Payment extends Model
             })
             ->when($request->input('transaction_reference'), function ($q, $ref) {
                 $q->where('transaction_reference', 'like', "%{$ref}%");
-            })
+            });
+    }
+
+    public function scopeFilter($query, $request)
+    {
+        return $query->with([
+            'student.user',
+            'student.currentClass.grade',
+            'bill.academicYear',
+            'receivedBy',
+            'receipt'
+        ])
+            ->applyFilters($request)
             ->orderBy('payment_date', 'desc')
             ->orderBy('created_at', 'desc');
     }
