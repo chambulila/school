@@ -24,7 +24,6 @@ class GeneralSettingController extends Controller
 
     public function update(Request $request)
     {
-        dd($request->all());
         $request->validate([
             'theme_color' => 'nullable|string|regex:/^#[a-fA-F0-9]{6}$/',
             'app_name' => 'nullable|string|max:255',
@@ -41,7 +40,7 @@ class GeneralSettingController extends Controller
             foreach (['app_logo_light', 'app_logo_dark', 'app_favicon'] as $fileKey) {
                 if ($request->hasFile($fileKey)) {
                     // Delete old file if exists
-                    $oldPath = GlobalSetting::where('key', str_replace('_', '.', $fileKey))->value('value');
+                    $oldPath = GlobalSetting::where('key', $fileKey)->value('value');
                     if ($oldPath && Storage::disk('public')->exists($oldPath)) {
                         Storage::disk('public')->delete($oldPath);
                     }
@@ -57,10 +56,10 @@ class GeneralSettingController extends Controller
             foreach ($input as $key => $value) {
                 if ($value === null) continue;
 
-                $dbKey = str_replace('_', '.', $key); // theme_primary_color -> theme.primary_color
+                // $dbKey = str_replace('_', '.', $key); // theme_primary_color -> theme.primary_color
 
                 GlobalSetting::updateOrCreate(
-                    ['key' => $dbKey],
+                    ['key' => $key],
                     ['value' => $value]
                 );
             }

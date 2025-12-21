@@ -19,6 +19,7 @@ const PRESET_COLORS = [
 
 export default function Settings({ settings }) {
     const { data, setData, post, processing, errors } = useForm({
+        _method: 'PUT',
         theme_color: settings.theme_color || '#000000',
         app_name: settings.app_name || '',
         app_short_name: settings.app_short_name || '',
@@ -27,19 +28,14 @@ export default function Settings({ settings }) {
         app_favicon: null,
     });
 
-    // We use POST with _method: 'PUT' simulation handled by Inertia or just POST to the same route if it allows,
-    // but here we are sending files, so POST is safer. Wait, our route is PUT.
-    // Inertia converts `put` with files to POST + _method: PUT automatically?
-    // Yes, since Inertia v0.8.0.
-    // However, explicit POST with _method: PUT is clearer when debugging.
-    // Actually, let's use router.post with _method: 'PUT' in data.
+    const handleFileChange = (e, field) => {
+        setData(field, e.target.files[0]);
+    };
 
     const submit = (e) => {
         e.preventDefault();
-        router.put('/dashboard/settings/theme', data, {
-            onSuccess: () => {
-                // reset();
-            },
+        post('/dashboard/settings/theme', {
+            forceFormData: true,
         });
     };
 
@@ -93,7 +89,7 @@ export default function Settings({ settings }) {
                                             id="app_logo_light"
                                             type="file"
                                             accept="image/*"
-                                            onChange={(e) => setData('app_logo_light', e.target.files[0])}
+                                            onChange={(e) => handleFileChange(e, 'app_logo_light')}
                                         />
                                         {settings.app_logo_light && (
                                             <div className="mt-2 p-2 bg-gray-100 rounded border">
@@ -109,7 +105,7 @@ export default function Settings({ settings }) {
                                             id="app_logo_dark"
                                             type="file"
                                             accept="image/*"
-                                            onChange={(e) => setData('app_logo_dark', e.target.files[0])}
+                                            onChange={(e) => handleFileChange(e, 'app_logo_dark')}
                                         />
                                          {settings.app_logo_dark && (
                                             <div className="mt-2 p-2 bg-gray-900 rounded border">
@@ -125,7 +121,7 @@ export default function Settings({ settings }) {
                                             id="app_favicon"
                                             type="file"
                                             accept=".ico,.png"
-                                            onChange={(e) => setData('app_favicon', e.target.files[0])}
+                                            onChange={(e) => handleFileChange(e, 'app_favicon')}
                                         />
                                          {settings.app_favicon && (
                                             <div className="mt-2">

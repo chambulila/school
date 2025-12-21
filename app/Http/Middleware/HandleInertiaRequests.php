@@ -65,8 +65,7 @@ class HandleInertiaRequests extends Middleware
         $settingsObject = [];
         foreach ($settings as $key => $value) {
             // Convert dot notation to underscore for JS usage: theme.primary_color -> theme_primary_color
-            $jsKey = str_replace('.', '_', $key);
-            $settingsObject[$jsKey] = $value;
+            $settingsObject[$key] = $value;
         }
 
         return [
