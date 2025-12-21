@@ -10,9 +10,9 @@ function AuthenticatedLayout({ children, breadcrumbs }) {
     const settings = props.settings;
 
     useEffect(() => {
-        if (settings?.theme_primary_color) {
+        if (settings?.theme_color) {
             const root = document.documentElement;
-            const color = settings.theme_primary_color;
+            const color = settings.theme_color;
             
             // Apply theme color to CSS variables
             // We use the hex color directly. Tailwind 4/Modern CSS handles this well for background-color, etc.

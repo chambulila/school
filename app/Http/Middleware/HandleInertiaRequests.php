@@ -6,7 +6,7 @@ use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
-use App\Models\GeneralSetting;
+use App\Models\GlobalSetting;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -56,15 +56,24 @@ class HandleInertiaRequests extends Middleware
         };
 
         // Cache settings for performance (1 hour)
-        $settings = Cache::remember('general_settings', 3600, function () {
-            return GeneralSetting::first();
+        $settings = Cache::remember('global_settings_all', 3600, function () {
+            return GlobalSetting::all()->pluck('value', 'key');
         });
+
+        // Transform settings into a cleaner object structure if needed, or pass flat
+        // Passing flat with dot notation keys is fine, but object is nicer for JS
+        $settingsObject = [];
+        foreach ($settings as $key => $value) {
+            // Convert dot notation to underscore for JS usage: theme.primary_color -> theme_primary_color
+            $jsKey = str_replace('.', '_', $key);
+            $settingsObject[$jsKey] = $value;
+        }
 
         return [
             ...parent::share($request),
-            'name' => config('app.name'),
+            'name' => $settings['app.name'] ?? config('app.name'),
             'quote' => ['message' => trim($message), 'author' => trim($author)],
-            'settings' => $settings,
+            'settings' => $settingsObject,
             'auth' => [
                 // 'user' => $request->user(),
                 'user' => $request->user() ? [
