@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Request;
 
 class Payment extends Model
 {
@@ -45,5 +46,74 @@ class Payment extends Model
     public function receipt(): HasOne
     {
         return $this->hasOne(PaymentReceipt::class, 'payment_id', 'payment_id');
+    }
+
+    public function scopeFilter($query, $request)
+    {
+        return $query->with([
+            'student.user',
+            'student.currentClass.grade',
+            'bill.academicYear',
+            'receivedBy',
+            'receipt'
+        ])
+            ->when($request->input('search'), function ($q, $search) {
+                $q->where(function ($subQ) use ($search) {
+                    $subQ->whereHas('student.user', function ($uq) use ($search) {
+                        $uq->where('first_name', 'like', "%{$search}%")
+                            ->orWhere('last_name', 'like', "%{$search}%");
+                    })
+                        ->orWhereHas('student', function ($sq) use ($search) {
+                            $sq->where('admission_number', 'like', "%{$search}%");
+                        })
+                        ->orWhereHas('receipt', function ($rq) use ($search) {
+                            $rq->where('receipt_number', 'like', "%{$search}%");
+                        })
+                        ->orWhere('transaction_reference', 'like', "%{$search}%");
+                });
+            })
+            ->when($request->input('academic_year_id'), function ($q, $yearId) {
+                $q->whereHas('bill', function ($bq) use ($yearId) {
+                    $bq->where('academic_year_id', $yearId);
+                });
+            })
+            ->when($request->input('date_from'), function ($q, $date) {
+                $q->whereDate('payment_date', '>=', $date);
+            })
+            ->when($request->input('date_to'), function ($q, $date) {
+                $q->whereDate('payment_date', '<=', $date);
+            })
+            ->when($request->input('min_amount'), function ($q, $min) {
+                $q->where('amount_paid', '>=', $min);
+            })
+            ->when($request->input('max_amount'), function ($q, $max) {
+                $q->where('amount_paid', '<=', $max);
+            })
+            ->when($request->input('received_by'), function ($q, $userId) {
+                $q->where('received_by', $userId);
+            })
+            ->when($request->input('student_id'), function ($q, $id) {
+                $q->where('student_id', $id);
+            })
+            ->when($request->input('grade_id'), function ($q, $gradeId) {
+                // Assuming we filter by current grade for now, or we'd need to join enrollments
+                $q->whereHas('student.currentClass', function ($cq) use ($gradeId) {
+                    $cq->where('grade_id', $gradeId);
+                });
+            })
+            ->when($request->input('payment_method'), function ($q, $method) {
+                $q->where('payment_method', $method);
+            })
+            // Individual filters for specific columns (kept for backward compatibility or specific usage)
+            ->when($request->input('receipt_number'), function ($q, $number) {
+                $q->whereHas('receipt', function ($rq) use ($number) {
+                    $rq->where('receipt_number', 'like', "%{$number}%");
+                });
+            })
+            ->when($request->input('transaction_reference'), function ($q, $ref) {
+                $q->where('transaction_reference', 'like', "%{$ref}%");
+            })
+            ->orderBy('payment_date', 'desc')
+            ->orderBy('created_at', 'desc');
     }
 }

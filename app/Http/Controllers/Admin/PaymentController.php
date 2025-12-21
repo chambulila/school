@@ -11,6 +11,10 @@ use App\Models\Student;
 use App\Models\User;
 use App\Models\PaymentReceipt;
 use App\Services\ReceiptService;
+use App\Services\PaymentReportService;
+use App\Models\AcademicYear;
+use App\Models\Grade;
+use App\Services\PaymentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -20,34 +24,23 @@ use Illuminate\Support\Str;
 
 class PaymentController extends Controller
 {
+
     public function index(Request $request): Response
     {
-        $search = (string) $request->input('search', '');
         $perPage = (int) $request->input('perPage', 10);
 
-        $payments = Payment::query()
-            ->with(['bill.academicYear', 'student.user', 'receivedBy', 'receipt'])
-            ->when($search !== '', function ($q) use ($search) {
-                $q->whereHas('student.user', function ($uq) use ($search) {
-                    $uq->where('first_name', 'like', '%'.$search.'%')
-                        ->orWhere('last_name', 'like', '%'.$search.'%')
-                        ->orWhere('email', 'like', '%'.$search.'%');
-                })
-                ->orWhere('transaction_reference', 'like', '%'.$search.'%');
-            })
-            ->orderBy('payment_date', 'desc')
-            ->paginate($perPage)
-            ->withQueryString();
+        $query = PaymentService::getPayments($request);
+
+        $payments = $query->paginate($perPage)->withQueryString();
 
         return Inertia::render('dashboard/Payments', [
             'payments' => $payments,
             'bills' => StudentBilling::query()->with(['student.user', 'academicYear'])->orderBy('created_at', 'desc')->get(),
             'students' => Student::query()->with('user')->orderBy('admission_number')->get(),
             'users' => User::query()->orderBy('first_name')->get(),
-            'filters' => [
-                'search' => $search,
-                'perPage' => $perPage,
-            ],
+            'academicYears' => AcademicYear::orderBy('year_name', 'desc')->get(),
+            'grades' => Grade::orderBy('grade_name')->get(),
+            'filters' => $request->all(),
         ]);
     }
 

@@ -7,7 +7,7 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Pagination from '@/components/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Pencil, Trash, Search, Check, RefreshCw, Download } from 'lucide-react';
+import { Pencil, Trash, Search, Check, RefreshCw, Download, ChevronDown, ChevronUp } from 'lucide-react';
 import { cleanParams } from '@/lib/utils';
 import { askConfirmation } from '@/utils/sweetAlerts';
 import AddButton from '@/components/buttons/AddButton';
@@ -17,14 +17,69 @@ import SaveButton from '@/components/buttons/SaveButton';
 import SecondaryButton from '@/components/buttons/SecondaryButton';
 
 export default function Payments() {
-    const { payments, bills, students, users, filters } = usePage().props;
-    const [search, setSearch] = useState(filters?.search ?? '');
+    const { payments, bills, students, users, academicYears, grades, filters } = usePage().props;
+
+    // Filter State
+    const [queryParams, setQueryParams] = useState({
+        search: filters?.search || '',
+        date_from: filters?.date_from || '',
+        date_to: filters?.date_to || '',
+        academic_year_id: filters?.academic_year_id || 'all',
+        payment_method: filters?.payment_method || 'all',
+        received_by: filters?.received_by || 'all',
+        grade_id: filters?.grade_id || 'all',
+        min_amount: filters?.min_amount || '',
+        max_amount: filters?.max_amount || '',
+    });
+    const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+    const isFirstRun = useRef(true);
+
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [isEditSaving, setIsEditSaving] = useState(false);
 
-    // Wizard State
+    // Debounced Search & Filter Effect
+    useEffect(() => {
+        if (isFirstRun.current) {
+            isFirstRun.current = false;
+            return;
+        }
+
+        const timeoutId = setTimeout(() => {
+            const params = cleanParams(queryParams);
+            // Remove 'all' values
+            Object.keys(params).forEach(key => {
+                if (params[key] === 'all') delete params[key];
+            });
+
+            router.get('/dashboard/payments', params, {
+                replace: true,
+                preserveState: true,
+                preserveScroll: true,
+            });
+        }, 500); // 500ms debounce
+
+        return () => clearTimeout(timeoutId);
+    }, [queryParams]);
+
+    const handleFilterChange = (key, value) => {
+        setQueryParams(prev => ({ ...prev, [key]: value }));
+    };
+
+    const resetFilters = () => {
+        setQueryParams({
+            search: '',
+            date_from: '',
+            date_to: '',
+            academic_year_id: 'all',
+            payment_method: 'all',
+            received_by: 'all',
+            grade_id: 'all',
+            min_amount: '',
+            max_amount: '',
+        });
+    };
     const [wizardStep, setWizardStep] = useState(1);
     const [studentQuery, setStudentQuery] = useState('');
     const [foundStudents, setFoundStudents] = useState([]);
@@ -47,13 +102,6 @@ export default function Payments() {
     const [editMethod, setEditMethod] = useState('');
     const [editReference, setEditReference] = useState('');
     const [editReceivedBy, setEditReceivedBy] = useState('');
-
-    useEffect(() => {
-        const delay = setTimeout(() => {
-            router.get('/dashboard/payments', cleanParams({ search }), { replace: true, preserveState: true });
-        }, 400);
-        return () => clearTimeout(delay);
-    }, [search]);
 
     // Student Search Debounce
     useEffect(() => {
@@ -205,10 +253,100 @@ export default function Payments() {
         <AuthenticatedLayout breadcrumbs={[{ title: 'Dashboard', href: '/dashboard' }, { title: 'Payments', href: '/dashboard/payments' }]}>
             <Head title="Payments" />
             <div className="p-6">
-                <div className="mb-6">
-                    <div className="flex items-center justify-between gap-2">
-                        <Input className="w-64" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by student or reference" />
-                        <AddButton onClick={() => { setIsAddOpen(true); resetNewFields(); }}>Add Payment</AddButton>
+                <div className="mb-6 space-y-4">
+                    {/* Filter Controls */}
+                    <div className="flex flex-col gap-4">
+                        {/* Row 1: Search & Actions */}
+                        <div className="flex items-center justify-between gap-4">
+                            <Input
+                                className="w-96"
+                                placeholder="Search student, receipt, reference..."
+                                value={queryParams.search}
+                                onChange={(e) => handleFilterChange('search', e.target.value)}
+                            />
+                            <div className="flex items-center gap-2">
+                                <Button variant="outline" onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}>
+                                    <ChevronDown className={`size-4 mr-2 transition-transform ${showAdvancedFilters ? 'rotate-180' : ''}`} />
+                                    {showAdvancedFilters ? 'Less Filters' : 'More Filters'}
+                                </Button>
+                                <Button variant="ghost" onClick={resetFilters}>Reset</Button>
+                                <AddButton onClick={() => { setIsAddOpen(true); resetNewFields(); }}>Add Payment</AddButton>
+                            </div>
+                        </div>
+
+                        {/* Row 2: Primary Filters */}
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                             <div>
+                                <label className="text-xs font-medium mb-1 block text-gray-500">From Date</label>
+                                <Input type="date" value={queryParams.date_from} onChange={(e) => handleFilterChange('date_from', e.target.value)} />
+                             </div>
+                             <div>
+                                <label className="text-xs font-medium mb-1 block text-gray-500">To Date</label>
+                                <Input type="date" value={queryParams.date_to} onChange={(e) => handleFilterChange('date_to', e.target.value)} />
+                             </div>
+                             <div>
+                                <label className="text-xs font-medium mb-1 block text-gray-500">Academic Year</label>
+                                <Select value={queryParams.academic_year_id} onValueChange={(v) => handleFilterChange('academic_year_id', v)}>
+                                    <SelectTrigger><SelectValue placeholder="All Years" /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Years</SelectItem>
+                                        {academicYears?.map(y => (
+                                            <SelectItem key={y.id} value={y.id}>{y.year_name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                             </div>
+                             <div>
+                                <label className="text-xs font-medium mb-1 block text-gray-500">Method</label>
+                                <Select value={queryParams.payment_method} onValueChange={(v) => handleFilterChange('payment_method', v)}>
+                                    <SelectTrigger><SelectValue placeholder="All Methods" /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Methods</SelectItem>
+                                        <SelectItem value="Cash">Cash</SelectItem>
+                                        <SelectItem value="Bank">Bank</SelectItem>
+                                        <SelectItem value="Mobile Money">Mobile Money</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                             </div>
+                        </div>
+
+                        {/* Row 3: Advanced Filters */}
+                        {showAdvancedFilters && (
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg border border-dashed">
+                                 <div>
+                                    <label className="text-xs font-medium mb-1 block text-gray-500">Grade</label>
+                                    <Select value={queryParams.grade_id} onValueChange={(v) => handleFilterChange('grade_id', v)}>
+                                        <SelectTrigger><SelectValue placeholder="All Grades" /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">All Grades</SelectItem>
+                                            {grades?.map(g => (
+                                                <SelectItem key={g.id} value={g.id}>{g.grade_name || g.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                 </div>
+                                 <div>
+                                    <label className="text-xs font-medium mb-1 block text-gray-500">Received By</label>
+                                    <Select value={queryParams.received_by} onValueChange={(v) => handleFilterChange('received_by', v)}>
+                                        <SelectTrigger><SelectValue placeholder="All Staff" /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">All Staff</SelectItem>
+                                            {users?.map(u => (
+                                                <SelectItem key={u.id} value={u.id}>{userLabel(u)}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                 </div>
+                                 <div>
+                                    <label className="text-xs font-medium mb-1 block text-gray-500">Min Amount</label>
+                                    <Input type="number" placeholder="0.00" value={queryParams.min_amount} onChange={(e) => handleFilterChange('min_amount', e.target.value)} />
+                                 </div>
+                                 <div>
+                                    <label className="text-xs font-medium mb-1 block text-gray-500">Max Amount</label>
+                                    <Input type="number" placeholder="0.00" value={queryParams.max_amount} onChange={(e) => handleFilterChange('max_amount', e.target.value)} />
+                                 </div>
+                            </div>
+                        )}
                     </div>
 
                     <Dialog open={isAddOpen}
@@ -494,7 +632,7 @@ export default function Payments() {
                 </Table>
                 {payments.links && (
                     <div className="mt-4">
-                        <Pagination links={payments.links} filters={cleanParams({ search })} />
+                        <Pagination links={payments.links} filters={cleanParams(queryParams)} />
                     </div>
                 )}
             </div>
