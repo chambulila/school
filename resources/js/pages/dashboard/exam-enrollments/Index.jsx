@@ -27,7 +27,7 @@ export default function ExamEnrollmentIndex() {
         if (score === '' || score === null) return { grade: '', remarks: '' };
         const s = parseFloat(score);
         if (isNaN(s)) return { grade: '', remarks: '' };
-        
+
         if (s >= 80) return { grade: 'A', remarks: 'Excellent' };
         if (s >= 70) return { grade: 'B', remarks: 'Very Good' };
         if (s >= 60) return { grade: 'C', remarks: 'Good' };
@@ -54,8 +54,8 @@ export default function ExamEnrollmentIndex() {
     const saveRow = (row) => {
         if (!row.isDirty) return;
         setSavingRows(prev => [...prev, row.id]);
-        
-        router.post(route('admin.exam-enrollments.update-scores'), {
+
+        router.post('/dashboard/exams/enrollments/update-scores', {
             results: [{ id: row.id, score: row.score }]
         }, {
             preserveScroll: true,
@@ -70,7 +70,7 @@ export default function ExamEnrollmentIndex() {
     const saveAll = () => {
         const dirtyRows = localResults.filter(r => r.isDirty);
         if (dirtyRows.length === 0) return;
-        
+
         setIsSavingAll(true);
         router.post(route('admin.exam-enrollments.update-scores'), {
             results: dirtyRows.map(r => ({ id: r.id, score: r.score }))
@@ -96,7 +96,7 @@ export default function ExamEnrollmentIndex() {
     const handleFilterChange = (key, value) => {
         const newParams = { ...filterParams, [key]: value };
         setFilterParams(newParams);
-        
+
         router.get(route('admin.exam-enrollments.show', { exam: exam.id }), cleanParams(newParams), {
             preserveState: true,
             preserveScroll: true,
@@ -106,7 +106,7 @@ export default function ExamEnrollmentIndex() {
 
     return (
         <AuthenticatedLayout breadcrumbs={[
-            { title: 'Dashboard', href: '/dashboard' }, 
+            { title: 'Dashboard', href: '/dashboard' },
             { title: 'Exam Results', href: route('admin.exam-results.index') },
             { title: exam.exam_name, href: '' }
         ]}>
@@ -114,9 +114,9 @@ export default function ExamEnrollmentIndex() {
             <div className="p-6">
                 <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center mb-6">
                     <div className="flex gap-2 items-center">
-                        <Input 
-                            placeholder="Search students..." 
-                            className="w-64" 
+                        <Input
+                            placeholder="Search students..."
+                            className="w-64"
                             value={filterParams.search}
                             onChange={(e) => handleFilterChange('search', e.target.value)}
                         />
@@ -144,7 +144,7 @@ export default function ExamEnrollmentIndex() {
                         </Select>
                     </div>
                     <div className="flex gap-2">
-                        <Button variant="outline" onClick={() => router.get(route('admin.exam-enrollments.create'))}>
+                        <Button variant="outline" onClick={() => router.get('/dashboard/exams/enrollments/create')}>
                             Enroll Students
                         </Button>
                         <Button onClick={saveAll} disabled={!hasChanges || isSavingAll}>
@@ -181,11 +181,11 @@ export default function ExamEnrollmentIndex() {
                                         <TableCell>{row.subject?.subject_name}</TableCell>
                                         <TableCell>{row.classSection?.section_name}</TableCell>
                                         <TableCell>
-                                            <Input 
-                                                type="number" 
-                                                min="0" 
-                                                max="100" 
-                                                value={row.score ?? ''} 
+                                            <Input
+                                                type="number"
+                                                min="0"
+                                                max="100"
+                                                value={row.score ?? ''}
                                                 onChange={(e) => handleScoreChange(row.id, e.target.value)}
                                                 className={row.isDirty ? 'border-amber-500' : ''}
                                             />
@@ -193,10 +193,10 @@ export default function ExamEnrollmentIndex() {
                                         <TableCell>{row.grade}</TableCell>
                                         <TableCell>{row.remarks}</TableCell>
                                         <TableCell>
-                                            <Button 
-                                                size="sm" 
-                                                variant="ghost" 
-                                                onClick={() => saveRow(row)} 
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                onClick={() => saveRow(row)}
                                                 disabled={!row.isDirty || savingRows.includes(row.id)}
                                                 className={row.isDirty ? 'text-amber-600 hover:text-amber-700' : 'text-gray-400'}
                                             >
@@ -209,7 +209,7 @@ export default function ExamEnrollmentIndex() {
                         </TableBody>
                     </Table>
                 </div>
-                
+
                 {results.links && (
                     <div className="mt-4">
                         <Pagination links={results.links} filters={filterParams} />

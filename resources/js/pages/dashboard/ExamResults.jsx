@@ -192,7 +192,7 @@ export default function ExamResultsPage() {
                         />
                         <div className="flex items-center gap-2">
                             <Button onClick={() => setIsAddOpen(true)}>Add Result</Button>
-                            <Button variant="outline" onClick={() => router.get(route('admin.exam-enrollments.create'))}>Enroll Students</Button>
+                            <Button variant="outline" onClick={() => router.get('/dashboard/exams/enrollments/create')}>Enroll Students</Button>
                         </div>
                     </div>
                     <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>

@@ -113,15 +113,18 @@ class ExamResultController extends Controller
 
     public function create(Request $request): Response
     {
-        $sections = ClassSection::with('grade')->orderBy('section_name')->get();
-        $subjects = Subject::orderBy('subject_name')->get();
-        $exams = Exam::with('academicYear')->orderBy('start_date', 'desc')->get();
+        $sections = ClassSection::with('grade:id,grade_name')->orderBy('section_name')->select('id', 'section_name', 'grade_id')->get();
+        $subjects = Subject::query()->orderBy('subject_name')->select('id', 'subject_name', 'subject_code')->get();
+        $exams = Exam::query()->orderBy('start_date', 'desc')->select('id', 'exam_name')->get();
 
         $students = [];
         if ($request->has('class_section_id')) {
             $students = Student::with('user')
-                ->where('class_section_id', $request->input('class_section_id'))
+                ->whereHas('enrollments', function ($q) use ($request) {
+                    $q->where('class_section_id', $request->input('class_section_id'));
+                })
                 ->orderBy('admission_number')
+                ->select('id', 'admission_number', 'user_id')
                 ->get()
                 ->map(function ($student) {
                     return [

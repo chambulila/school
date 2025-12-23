@@ -24,10 +24,10 @@ export default function CreateEnrollment() {
     // Fetch students when class_section_id changes
     const handleSectionChange = (val) => {
         setForm(prev => ({ ...prev, class_section_id: val }));
-        router.get(route('admin.exam-enrollments.create'), { 
-            class_section_id: val, 
-            subject_id: form.subject_id, 
-            exam_id: form.exam_id 
+        router.get('/dashboard/exams/enrollments/create', {
+            class_section_id: val,
+            subject_id: form.subject_id,
+            exam_id: form.exam_id
         }, {
             preserveState: true,
             replace: true,
@@ -40,14 +40,14 @@ export default function CreateEnrollment() {
     const handleFilterChange = (key, val) => {
         setForm(prev => ({ ...prev, [key]: val }));
         // Optional: Update URL params for persistence if needed, but not strictly required for subject/exam unless we want to filter them too.
-        // For now, we only trigger fetch on section change as per requirement "Once all three are selected... fetch". 
-        // But actually, usually fetching students only depends on Section. 
-        // The prompt says "Once all three are selected... fetch". 
+        // For now, we only trigger fetch on section change as per requirement "Once all three are selected... fetch".
+        // But actually, usually fetching students only depends on Section.
+        // The prompt says "Once all three are selected... fetch".
         // But if I fetch on section change, it's better UX.
         // I'll stick to fetching on section change for now, but I'll update URL params for all to keep state on refresh.
-        router.get(route('admin.exam-enrollments.create'), { 
-            ...form, 
-            [key]: val 
+        router.get(route('admin.exam-enrollments.create'), {
+            ...form,
+            [key]: val
         }, {
             preserveState: true,
             replace: true,
@@ -60,8 +60,8 @@ export default function CreateEnrollment() {
         if (!fetchedStudents) return [];
         if (!searchQuery) return fetchedStudents;
         const lower = searchQuery.toLowerCase();
-        return fetchedStudents.filter(s => 
-            s.name.toLowerCase().includes(lower) || 
+        return fetchedStudents.filter(s =>
+            s.name.toLowerCase().includes(lower) ||
             s.admission_number.toLowerCase().includes(lower)
         );
     }, [fetchedStudents, searchQuery]);
@@ -86,7 +86,7 @@ export default function CreateEnrollment() {
     const handleSubmit = () => {
         if (!form.subject_id || !form.exam_id || !form.class_section_id || selectedStudents.length === 0) return;
         setIsSubmitting(true);
-        router.post(route('admin.exam-enrollments.store'), {
+        router.post('/dashboard/exams/enrollments/store', {
             ...form,
             students: selectedStudents
         }, {
@@ -96,15 +96,15 @@ export default function CreateEnrollment() {
 
     return (
         <AuthenticatedLayout breadcrumbs={[
-            { title: 'Dashboard', href: '/dashboard' }, 
-            { title: 'Exam Results', href: route('admin.exam-results.index') },
-            { title: 'Enroll Students', href: route('admin.exam-enrollments.create') }
+            { title: 'Dashboard', href: '/dashboard' },
+            { title: 'Exam Results', href: '/dashboard/exam-results' },
+            { title: 'Enroll Students', href: '/dashboard/exams/enrollments/create' }
         ]}>
             <Head title="Enroll Students" />
-            <div className="p-6 max-w-4xl mx-auto">
+            <div className="p-6">
                 <div className="bg-white p-6 rounded-lg shadow-sm border space-y-6">
                     <h2 className="text-lg font-semibold">Exam Enrollment</h2>
-                    
+
                     {/* Selectors */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
@@ -157,9 +157,9 @@ export default function CreateEnrollment() {
                                 <h3 className="font-medium">Students ({selectedStudents.length} selected)</h3>
                                 <div className="relative w-64">
                                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                                    <Input 
-                                        placeholder="Search students..." 
-                                        className="pl-8" 
+                                    <Input
+                                        placeholder="Search students..."
+                                        className="pl-8"
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                     />
@@ -168,8 +168,8 @@ export default function CreateEnrollment() {
 
                             <div className="border rounded-md">
                                 <div className="flex items-center p-3 border-b bg-gray-50">
-                                    <input 
-                                        type="checkbox" 
+                                    <input
+                                        type="checkbox"
                                         className="mr-3 h-4 w-4 rounded border-gray-300"
                                         checked={isAllVisibleSelected}
                                         onChange={(e) => handleSelectAll(e.target.checked)}
@@ -182,8 +182,8 @@ export default function CreateEnrollment() {
                                     ) : (
                                         filteredStudents.map(student => (
                                             <div key={student.id} className="flex items-center p-3 hover:bg-gray-50">
-                                                <input 
-                                                    type="checkbox" 
+                                                <input
+                                                    type="checkbox"
                                                     className="mr-3 h-4 w-4 rounded border-gray-300"
                                                     checked={selectedStudents.includes(student.id)}
                                                     onChange={() => {
@@ -211,13 +211,13 @@ export default function CreateEnrollment() {
                             </div>
                         </div>
                     )}
-                    
+
                     {(!fetchedStudents || fetchedStudents.length === 0) && form.class_section_id && (
                          <div className="text-center py-10 text-gray-500">
                              No students found in this section.
                          </div>
                     )}
-                    
+
                     {!form.class_section_id && (
                         <div className="text-center py-10 text-gray-500">
                             Select a Class Section to view students.
