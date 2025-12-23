@@ -239,6 +239,9 @@ export default function ExamsPage() {
                                         </>
                                     ) : (
                                         <>
+                                            <Button size="sm" variant="outline" onClick={() => router.get(route('admin.exam-enrollments.show', { exam: row.id }))}>
+                                                <ListChecks className="mr-1 h-4 w-4" /> Results
+                                            </Button>
                                             <Button size="sm" variant="outline" onClick={() => startEdit(row)}>
                                                 <Pencil className="mr-1 h-4 w-4" /> Edit
                                             </Button>

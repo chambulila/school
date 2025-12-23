@@ -108,4 +108,139 @@ class ExamResultController extends Controller
         $examResult->delete();
         return back()->with('success', 'Exam result deleted');
     }
+
+    // New Methods
+
+    public function create(Request $request): Response
+    {
+        $sections = ClassSection::with('grade')->orderBy('section_name')->get();
+        $subjects = Subject::orderBy('subject_name')->get();
+        $exams = Exam::with('academicYear')->orderBy('start_date', 'desc')->get();
+
+        $students = [];
+        if ($request->has('class_section_id')) {
+            $students = Student::with('user')
+                ->where('class_section_id', $request->input('class_section_id'))
+                ->orderBy('admission_number')
+                ->get()
+                ->map(function ($student) {
+                    return [
+                        'id' => $student->id,
+                        'name' => $student->user->name ?? $student->user->first_name . ' ' . $student->user->last_name,
+                        'admission_number' => $student->admission_number,
+                    ];
+                });
+        }
+
+        return Inertia::render('dashboard/exam-enrollments/Create', [
+            'classSections' => $sections,
+            'subjects' => $subjects,
+            'exams' => $exams,
+            'fetchedStudents' => $students,
+            'filters' => $request->only(['class_section_id', 'subject_id', 'exam_id']),
+        ]);
+    }
+
+    public function storeEnrollments(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'subject_id' => ['required', 'uuid', 'exists:subjects,id'],
+            'exam_id' => ['required', 'uuid', 'exists:exams,id'],
+            'class_section_id' => ['required', 'uuid', 'exists:class_sections,id'],
+            'students' => ['required', 'array', 'min:1'],
+            'students.*' => ['uuid', 'exists:students,id'],
+        ]);
+
+        $count = 0;
+        foreach ($data['students'] as $studentId) {
+            $exists = ExamResult::where('student_id', $studentId)
+                ->where('subject_id', $data['subject_id'])
+                ->where('exam_id', $data['exam_id'])
+                ->exists();
+
+            if (!$exists) {
+                ExamResult::create([
+                    'student_id' => $studentId,
+                    'subject_id' => $data['subject_id'],
+                    'exam_id' => $data['exam_id'],
+                    'class_section_id' => $data['class_section_id'],
+                    'score' => null,
+                    'grade' => null,
+                    'remarks' => null,
+                ]);
+                $count++;
+            }
+        }
+
+        return redirect()->route('admin.exam-enrollments.show', ['exam' => $data['exam_id']])
+            ->with('success', "$count students enrolled successfully.");
+    }
+
+    public function showEnrollments(Request $request, Exam $exam): Response
+    {
+        $perPage = (int) $request->input('perPage', 50); // Higher default for tabular entry
+        $search = $request->input('search');
+        $subjectId = $request->input('subject_id');
+        $sectionId = $request->input('class_section_id');
+
+        $query = ExamResult::with(['student.user', 'subject', 'classSection'])
+            ->where('exam_id', $exam->id);
+
+        if ($subjectId) {
+            $query->where('subject_id', $subjectId);
+        }
+        if ($sectionId) {
+            $query->where('class_section_id', $sectionId);
+        }
+        if ($search) {
+            $query->whereHas('student.user', function ($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('name', 'like', "%{$search}%");
+            })->orWhereHas('student', function($q) use ($search){
+                $q->where('admission_number', 'like', "%{$search}%");
+            });
+        }
+
+        $results = $query->orderBy('class_section_id')
+            ->orderBy('student_id') // Consistent ordering
+            ->paginate($perPage)
+            ->withQueryString();
+
+        return Inertia::render('dashboard/exam-enrollments/Index', [
+            'exam' => $exam->load('academicYear'),
+            'results' => $results,
+            'subjects' => Subject::orderBy('subject_name')->get(), // For filtering
+            'classSections' => ClassSection::orderBy('section_name')->get(), // For filtering
+            'filters' => $request->all(),
+        ]);
+    }
+
+    public function updateScores(UpdateExamScoresRequest $request): RedirectResponse
+    {
+        $data = $request->validated();
+        $count = 0;
+
+        foreach ($data['results'] as $item) {
+            $result = ExamResult::find($item['id']);
+            if ($result) {
+                $score = isset($item['score']) ? (float) $item['score'] : null;
+
+                $updateData = ['score' => $score];
+                if (!is_null($score)) {
+                    $gradeInfo = GradeCalculatorService::calculate($score);
+                    $updateData['grade'] = $gradeInfo['grade'];
+                    $updateData['remarks'] = $gradeInfo['remarks'];
+                } else {
+                    $updateData['grade'] = null;
+                    $updateData['remarks'] = null;
+                }
+
+                $result->update($updateData);
+                $count++;
+            }
+        }
+
+        return back()->with('success', "$count scores updated successfully.");
+    }
 }

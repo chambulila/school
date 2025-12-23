@@ -68,6 +68,13 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
         Route::delete('exams/{exam}', [\App\Http\Controllers\Admin\ExamController::class, 'destroy'])->name('admin.exams.destroy');
 
         Route::get('exam-results', [\App\Http\Controllers\Admin\ExamResultController::class, 'index'])->name('admin.exam-results.index');
+        
+        // New Enrollment Routes
+        Route::get('exams/enrollments/create', [\App\Http\Controllers\Admin\ExamResultController::class, 'create'])->name('admin.exam-enrollments.create');
+        Route::post('exams/enrollments/store', [\App\Http\Controllers\Admin\ExamResultController::class, 'storeEnrollments'])->name('admin.exam-enrollments.store');
+        Route::get('exams/enrollments/{exam}', [\App\Http\Controllers\Admin\ExamResultController::class, 'showEnrollments'])->name('admin.exam-enrollments.show');
+        Route::post('exams/enrollments/update-scores', [\App\Http\Controllers\Admin\ExamResultController::class, 'updateScores'])->name('admin.exam-enrollments.update-scores');
+
         Route::post('exam-results', [\App\Http\Controllers\Admin\ExamResultController::class, 'store'])->name('admin.exam-results.store');
         Route::post('exam-results/bulk', [\App\Http\Controllers\Admin\ExamResultController::class, 'storeBulk'])->name('admin.exam-results.store-bulk');
         Route::put('exam-results/{examResult}', [\App\Http\Controllers\Admin\ExamResultController::class, 'update'])->name('admin.exam-results.update');
