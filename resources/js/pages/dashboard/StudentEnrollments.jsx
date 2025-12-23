@@ -10,6 +10,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Pencil, Trash } from 'lucide-react';
 import { askConfirmation } from '@/utils/sweetAlerts';
 import { cleanParams } from '@/lib/utils';
+import AddButton from '@/components/buttons/AddButton';
+import SecondaryButton from '@/components/buttons/SecondaryButton';
+import SaveButton from '@/components/buttons/SaveButton';
+import EditButton from '@/components/buttons/EditButon';
+import DeleteButton from '@/components/buttons/DeleteButton';
 
 export default function StudentEnrollmentsPage() {
     const { props } = usePage();
@@ -123,7 +128,7 @@ export default function StudentEnrollmentsPage() {
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search by student, section, or academic year"
                         />
-                        <Button onClick={() => setIsAddOpen(true)}>Add Enrollment</Button>
+                        <AddButton onClick={() => setIsAddOpen(true)}>Add Enrollment</AddButton>
                     </div>
                     <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
                         <DialogContent>
@@ -261,20 +266,16 @@ export default function StudentEnrollmentsPage() {
                                         row.enrollment_date || '—'
                                     )}
                                 </TableCell>
-                                <TableCell className="space-x-2">
+                                <TableCell className="space-x-2 flex">
                                     {editingId === row.id ? (
                                         <>
-                                            <Button size="sm" variant="outline" onClick={cancelEdit}>Cancel</Button>
-                                            <Button size="sm" onClick={saveEdit} disabled={!editStudentId || !editSectionId || !editYearId}>Save</Button>
+                                            <SecondaryButton onClick={cancelEdit}>Cancel</SecondaryButton>
+                                            <SaveButton  onClick={saveEdit} disabled={!editStudentId || !editSectionId || !editYearId}>Save</SaveButton>
                                         </>
                                     ) : (
                                         <>
-                                            <Button size="sm" variant="outline" onClick={() => startEdit(row)}>
-                                                <Pencil className="mr-1 h-4 w-4" /> Edit
-                                            </Button>
-                                            <Button size="sm" variant="destructive" onClick={() => deleteEnrollment(row)}>
-                                                <Trash className="mr-1 h-4 w-4" /> Delete
-                                            </Button>
+                                            <EditButton size="sm" variant="outline" onClick={() => startEdit(row)} />
+                                            <DeleteButton size="sm" variant="destructive" onClick={() => deleteEnrollment(row)} />
                                         </>
                                     )}
                                 </TableCell>

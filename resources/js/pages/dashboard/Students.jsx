@@ -14,6 +14,7 @@ import DeleteButton from '@/components/buttons/DeleteButton';
 import EditButton from '@/components/buttons/EditButon';
 import SaveButton from '@/components/buttons/SaveButton';
 import SecondaryButton from '@/components/buttons/SecondaryButton';
+import AddButton from '@/components/buttons/AddButton';
 
 export default function StudentsPage() {
     const { props } = usePage();
@@ -182,7 +183,7 @@ export default function StudentsPage() {
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search by name, email, or admission #"
                         />
-                        <Button onClick={() => setIsAddOpen(true)}>Add Student</Button>
+                        <AddButton onClick={() => setIsAddOpen(true)}>Add Student</AddButton>
                     </div>
                     <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
                         <DialogContent className="w-full max-w-[95vw] md:max-w-3xl lg:max-w-6xl">
@@ -307,8 +308,7 @@ export default function StudentsPage() {
                                 )}
                             </div>
                             <DialogFooter>
-                                <Button
-                                    variant="outline"
+                                <SecondaryButton
                                     onClick={() => {
                                         setIsAddOpen(false);
                                         setNewFirstName(''); setNewLastName(''); setNewEmail(''); setNewPassword('');
@@ -319,10 +319,10 @@ export default function StudentsPage() {
                                     disabled={isSaving}
                                 >
                                     Cancel
-                                </Button>
-                                <Button onClick={createStudent} disabled={isSaving || !newFirstName.trim() || !newLastName.trim() || !newEmail.trim() || !newPassword || !newAdmNum.trim()}>
+                                </SecondaryButton>
+                                <SaveButton onClick={createStudent} disabled={isSaving || !newFirstName.trim() || !newLastName.trim() || !newEmail.trim() || !newPassword || !newAdmNum.trim()}>
                                     {isSaving ? 'Saving' : 'Save'}
-                                </Button>
+                                </SaveButton>
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>

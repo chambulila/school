@@ -34,7 +34,7 @@ const footerNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
-    const { url } = usePage();
+    const { url, props } = usePage();
 
     const checkIsActive = (href: string) => {
         return url === href || url.startsWith(href + '/') || url.startsWith(href + '?');
@@ -220,8 +220,8 @@ export function AppSidebar() {
     }
 
     return (
-        <Sidebar collapsible="icon" variant="inset">
-            <SidebarHeader>
+        <Sidebar style={{backgroundColor: `${props?.settings?.theme_color}` }} collapsible="icon" variant="inset">
+            <SidebarHeader style={{backgroundColor: `${props?.settings?.theme_color}` }}>
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
@@ -233,12 +233,12 @@ export function AppSidebar() {
                 </SidebarMenu>
             </SidebarHeader>
 
-            <SidebarContent >
+            <SidebarContent style={{backgroundColor: `${props?.settings?.theme_color}` }} >
                 <SidebarGroup>
                     <SidebarMenu>
                         {/* Dashboard as first item */}
                         <SidebarMenuItem>
-                            <SidebarMenuButton asChild isActive={url === '/dashboard' || url.startsWith('/dashboard?')}>
+                            <SidebarMenuButton  className="text-white" asChild isActive={url === '/dashboard' || url.startsWith('/dashboard?')}>
                                 <Link href="/dashboard" className="flex items-center gap-2 ">
                                     <Home />
                                     <span>Dashboard</span>
@@ -258,7 +258,7 @@ export function AppSidebar() {
                                     >
                                         <SidebarMenuItem>
                                             <CollapsibleTrigger asChild>
-                                                <SidebarMenuButton isActive={isGroupActive}>
+                                                <SidebarMenuButton isActive={isGroupActive} className="text-white">
                                                     {Icon && <Icon />}
                                                     {item.title}
                                                     <Plus className="ml-auto group-data-[state=open]/collapsible:hidden" />
@@ -270,7 +270,7 @@ export function AppSidebar() {
                                                     <SidebarMenuSub>
                                                         {item.items?.filter(it => it.isVisible)?.map((subItem) => (
                                                             <SidebarMenuSubItem key={subItem.title}>
-                                                                <SidebarMenuSubButton asChild isActive={subItem.isActive}>
+                                                                <SidebarMenuSubButton asChild isActive={subItem.isActive}  className="text-white">
                                                                     <Link href={subItem.url}>{subItem.title}</Link>
                                                                 </SidebarMenuSubButton>
                                                             </SidebarMenuSubItem>
@@ -287,7 +287,7 @@ export function AppSidebar() {
                 </SidebarGroup>
             </SidebarContent>
 
-            <SidebarFooter>
+            <SidebarFooter style={{backgroundColor: `${props?.settings?.theme_color}` }}>
                 <NavFooter items={footerNavItems} className="mt-auto" />
                 <NavUser />
             </SidebarFooter>

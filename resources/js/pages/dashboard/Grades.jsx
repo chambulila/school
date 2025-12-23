@@ -10,6 +10,7 @@ import PrimaryButton from '@/components/buttons/PrimaryButton';
 import { Pencil, Trash } from 'lucide-react';
 import { cleanParams } from '@/lib/utils';
 import { askConfirmation } from '@/utils/sweetAlerts';
+import AddButton from '@/components/buttons/AddButton';
 
 export default function GradesPage() {
     const { props } = usePage();
@@ -88,7 +89,7 @@ export default function GradesPage() {
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search by name"
                         />
-                        <PrimaryButton onClick={() => setIsAddOpen(true)}>Add New Grade</PrimaryButton>
+                        <AddButton onClick={() => setIsAddOpen(true)}>Add New Grade</AddButton>
                     </div>
                     <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
                         <DialogContent>

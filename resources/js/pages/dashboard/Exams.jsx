@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Pencil, Trash } from 'lucide-react';
 import { askConfirmation } from '@/utils/sweetAlerts';
 import { cleanParams } from '@/lib/utils';
+import AddButton from '@/components/buttons/AddButton';
 
 export default function ExamsPage() {
     const { props } = usePage();
@@ -115,7 +116,7 @@ export default function ExamsPage() {
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search by exam, term, or year"
                         />
-                        <Button onClick={() => setIsAddOpen(true)}>Add Exam</Button>
+                        <AddButton onClick={() => setIsAddOpen(true)}>Add Exam</AddButton>
                     </div>
                     <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
                         <DialogContent>
