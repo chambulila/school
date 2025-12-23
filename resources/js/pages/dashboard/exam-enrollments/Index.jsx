@@ -72,7 +72,7 @@ export default function ExamEnrollmentIndex() {
         if (dirtyRows.length === 0) return;
 
         setIsSavingAll(true);
-        router.post(route('admin.exam-enrollments.update-scores'), {
+        router.post('/dashboard/exams/enrollments/update-scores', {
             results: dirtyRows.map(r => ({ id: r.id, score: r.score }))
         }, {
             preserveScroll: true,
@@ -97,7 +97,7 @@ export default function ExamEnrollmentIndex() {
         const newParams = { ...filterParams, [key]: value };
         setFilterParams(newParams);
 
-        router.get(route('admin.exam-enrollments.show', { exam: exam.id }), cleanParams(newParams), {
+        router.get('/dashboard/exams/enrollments/show', cleanParams(newParams), {
             preserveState: true,
             preserveScroll: true,
             replace: true
@@ -107,7 +107,7 @@ export default function ExamEnrollmentIndex() {
     return (
         <AuthenticatedLayout breadcrumbs={[
             { title: 'Dashboard', href: '/dashboard' },
-            { title: 'Exam Results', href: route('admin.exam-results.index') },
+            { title: 'Exam Results', href: '/dashboard/exams/enrollments/index' },
             { title: exam.exam_name, href: '' }
         ]}>
             <Head title={`Results: ${exam.exam_name}`} />

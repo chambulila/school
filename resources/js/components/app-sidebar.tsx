@@ -140,9 +140,16 @@ export function AppSidebar() {
                     },
                     {
                         title: "Exam Enrollments",
-                        url: "/dashboard/exam-results",
+                        // url: "/dashboard/exam-results",
+                        url: "/dashboard/exams/enrollments/create",
                         isVisible: true,
-                        isActive: checkIsActive('/dashboard/exam-results'),
+                        isActive: checkIsActive('/dashboard/exams/enrollments/create'),
+                    },
+                    {
+                        title: "Exam Results",
+                        url: "/dashboard/exams/enrollments/results",
+                        isVisible: true,
+                        isActive: checkIsActive('/dashboard/exams/enrollments/results'),
                     },
                     {
                         title: "Published Results",
@@ -220,8 +227,8 @@ export function AppSidebar() {
     }
 
     return (
-        <Sidebar style={{backgroundColor: `${props?.settings?.theme_color}` }} collapsible="icon" variant="inset">
-            <SidebarHeader style={{backgroundColor: `${props?.settings?.theme_color}` }}>
+        <Sidebar style={{ backgroundColor: `${props?.settings?.theme_color}` }} collapsible="icon" variant="inset">
+            <SidebarHeader style={{ backgroundColor: `${props?.settings?.theme_color}` }}>
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
@@ -233,12 +240,12 @@ export function AppSidebar() {
                 </SidebarMenu>
             </SidebarHeader>
 
-            <SidebarContent style={{backgroundColor: `${props?.settings?.theme_color}` }} >
+            <SidebarContent style={{ backgroundColor: `${props?.settings?.theme_color}` }} >
                 <SidebarGroup>
                     <SidebarMenu>
                         {/* Dashboard as first item */}
                         <SidebarMenuItem>
-                            <SidebarMenuButton  className="text-white" asChild isActive={url === '/dashboard' || url.startsWith('/dashboard?')}>
+                            <SidebarMenuButton className="text-white" asChild isActive={url === '/dashboard' || url.startsWith('/dashboard?')}>
                                 <Link href="/dashboard" className="flex items-center gap-2 ">
                                     <Home />
                                     <span>Dashboard</span>
@@ -270,7 +277,7 @@ export function AppSidebar() {
                                                     <SidebarMenuSub>
                                                         {item.items?.filter(it => it.isVisible)?.map((subItem) => (
                                                             <SidebarMenuSubItem key={subItem.title}>
-                                                                <SidebarMenuSubButton asChild isActive={subItem.isActive}  className="text-white">
+                                                                <SidebarMenuSubButton asChild isActive={subItem.isActive} className="text-white">
                                                                     <Link href={subItem.url}>{subItem.title}</Link>
                                                                 </SidebarMenuSubButton>
                                                             </SidebarMenuSubItem>
@@ -287,7 +294,7 @@ export function AppSidebar() {
                 </SidebarGroup>
             </SidebarContent>
 
-            <SidebarFooter style={{backgroundColor: `${props?.settings?.theme_color}` }}>
+            <SidebarFooter style={{ backgroundColor: `${props?.settings?.theme_color}` }}>
                 <NavFooter items={footerNavItems} className="mt-auto" />
                 <NavUser />
             </SidebarFooter>

@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreExamResultRequest;
 use App\Http\Requests\Admin\UpdateExamResultRequest;
+use App\Http\Requests\Admin\UpdateExamScoresRequest;
 use App\Models\ClassSection;
 use App\Models\Exam;
 use App\Models\ExamResult;
 use App\Models\Student;
 use App\Models\Subject;
+use App\Services\GradeCalculatorService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -119,11 +121,19 @@ class ExamResultController extends Controller
 
         $students = [];
         if ($request->has('class_section_id')) {
-            $students = Student::with('user')
+            $query = Student::with('user')
                 ->whereHas('enrollments', function ($q) use ($request) {
                     $q->where('class_section_id', $request->input('class_section_id'));
-                })
-                ->orderBy('admission_number')
+                });
+
+            if ($request->filled('subject_id') && $request->filled('exam_id')) {
+                $query->whereDoesntHave('examResults', function ($q) use ($request) {
+                    $q->where('subject_id', $request->input('subject_id'))
+                      ->where('exam_id', $request->input('exam_id'));
+                });
+            }
+
+            $students = $query->orderBy('admission_number')
                 ->select('id', 'admission_number', 'user_id')
                 ->get()
                 ->map(function ($student) {

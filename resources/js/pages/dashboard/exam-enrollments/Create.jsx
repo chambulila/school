@@ -45,7 +45,7 @@ export default function CreateEnrollment() {
         // The prompt says "Once all three are selected... fetch".
         // But if I fetch on section change, it's better UX.
         // I'll stick to fetching on section change for now, but I'll update URL params for all to keep state on refresh.
-        router.get(route('admin.exam-enrollments.create'), {
+        router.get('/dashboard/exams/enrollments/create', {
             ...form,
             [key]: val
         }, {
