@@ -240,7 +240,7 @@ export default function StudentEnrollmentsPage() {
                                             </SelectContent>
                                         </Select>
                                     ) : (
-                                        row.classSection ? sectionLabel(row.classSection) : '—'
+                                        row.class_section ? sectionLabel(row.class_section) : '—'
                                     )}
                                 </TableCell>
                                 <TableCell>
@@ -256,7 +256,7 @@ export default function StudentEnrollmentsPage() {
                                             </SelectContent>
                                         </Select>
                                     ) : (
-                                        row.academicYear ? row.academicYear.year_name : '—'
+                                        row.academic_year ? row.academic_year.year_name : '—'
                                     )}
                                 </TableCell>
                                 <TableCell>

@@ -391,7 +391,7 @@ export default function ExamResultsPage() {
                             <TableHead>Exam</TableHead>
                             <TableHead>Section</TableHead>
                             <TableHead>Score</TableHead>
-                            <TableHead>Grade</TableHead>
+                            <TableHead>GradeScore</TableHead>
                             <TableHead>Remarks</TableHead>
                             <TableHead>Actions</TableHead>
                         </TableRow>

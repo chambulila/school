@@ -139,7 +139,7 @@ export function AppSidebar() {
                         isActive: checkIsActive('/dashboard/exams'),
                     },
                     {
-                        title: "Exam Results",
+                        title: "Exam Enrollments",
                         url: "/dashboard/exam-results",
                         isVisible: true,
                         isActive: checkIsActive('/dashboard/exam-results'),
