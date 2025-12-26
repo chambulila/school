@@ -11,17 +11,24 @@ import SecondaryButton from '@/components/buttons/SecondaryButton';
 import DeleteButton from '@/components/buttons/DeleteButton';
 import Pagination from '@/components/ui/pagination';
 import { cleanParams } from '@/lib/utils';
+import EditButton from '@/components/buttons/EditButon';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export default function RolesIndex() {
     const { props } = usePage();
-    const { auth, roles } = props;
+    const { auth, roles, url } = props;
+
     const errors = props.errors || {};
     const [isAddingRole, setIsAddingRole] = useState(false);
     const [newRoleName, setNewRoleName] = useState('');
     const [editingRoleId, setEditingRoleId] = useState(null);
     const [editName, setEditName] = useState('');
     const [editDescription, setEditDescription] = useState('');
-
+    const [queryParams, setQueryParams] = useState({
+        search: '',
+    });
+    const prevParamsString = useRef(JSON.stringify(queryParams));
+    const isMounted = useRef(false);
     const handleAddRole = async () => {
         const confirmed = await askConfirmation('Add this role?');
         if (!confirmed) return;
@@ -68,15 +75,53 @@ export default function RolesIndex() {
         });
     };
 
+    const handleFilterChange = (e, key) => {
+        setQueryParams(prev => ({
+            ...prev, [key]: e.target.value,
+        }))
+    }
+
+    useEffect(() => {
+     const params = cleanParams(queryParams);
+        Object.keys(params).forEach(key => {
+            if (params[key] === 'all') delete params[key];
+        });
+        const paramString = JSON.stringify(params);
+
+        if (!isMounted.current) {
+            isMounted.current = true;
+            prevParamsString.current = paramString;
+            return;
+        }
+
+        if (paramString === prevParamsString.current) return;
+
+        const timeout = setTimeout(() => {
+            prevParamsString.current = paramString;
+            router.get('/dashboard/roles', params, { replace: true, preserveState: true, preserveScroll: true });
+        }, 500);
+        return () => clearTimeout(timeout);    }, [queryParams]);
     return (
         <AuthenticatedLayout breadcrumbs={[{ title: 'Admin', href: '/admin' }, { title: 'Roles', href: '/admin/roles' }]}>
             <Head title="Roles" />
             <div className="p-6">
-                <div className="mb-6 flex items-start gap-4">
+                         <div className="flex items-center justify-between gap-2">
+                        <Input
+                            className="w-64"
+                            value={queryParams.search}
+                            onChange={(e) => handleFilterChange(e, 'search')}
+                            placeholder="Search here.."
+                        />
                     {!isAddingRole && (
                         <AddButton onClick={() => setIsAddingRole(true)}>Add New Role</AddButton>
                     )}
-                    {isAddingRole && (
+                    </div>
+
+                    <Dialog open={isAddingRole} >
+                        <DialogHeader>
+                            <DialogTitle>Role Name</DialogTitle>
+                        </DialogHeader>
+                        <DialogContent>
                         <div className="flex items-end gap-2">
                             <div>
                                 <label className="block text-sm font-medium mb-1">Role Name</label>
@@ -88,8 +133,8 @@ export default function RolesIndex() {
                             <SaveButton onClick={handleAddRole} disabled={!newRoleName.trim()}>Save</SaveButton>
                             <SecondaryButton onClick={() => { setIsAddingRole(false); setNewRoleName(''); }}>Cancel</SecondaryButton>
                         </div>
-                    )}
-                </div>
+                        </DialogContent>
+                    </Dialog>
 
                 <Table>
                     <TableHeader>
@@ -100,7 +145,7 @@ export default function RolesIndex() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {roles.map(role => (
+                        {roles?.data?.map(role => (
                             <TableRow key={role.id}>
                                 <TableCell>
                                     {editingRoleId === role.id ? (
@@ -133,11 +178,11 @@ export default function RolesIndex() {
                         ))}
                     </TableBody>
                 </Table>
-                {roles.links && (
+                {/* {roles.links && (
                     <div className="mt-4">
-                        <Pagination links={roles.links} filters={cleanParams(queryParams)} />
+                        <Pagination links={roles.links} filters={filters} />
                     </div>
-                )}
+                )} */}
             </div>
         </AuthenticatedLayout>
     );
