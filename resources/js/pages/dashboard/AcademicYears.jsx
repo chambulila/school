@@ -7,20 +7,28 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Pagination from '@/components/ui/pagination';
-import { Pencil, Trash } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { askConfirmation } from '@/utils/sweetAlerts';
 import { cleanParams } from '@/lib/utils';
 import AddButton from '@/components/buttons/AddButton';
 import EditButton from '@/components/buttons/EditButon';
 import DeleteButton from '@/components/buttons/DeleteButton';
+import SaveButton from '@/components/buttons/SaveButton';
+import SecondaryButton from '@/components/buttons/SecondaryButton';
 
 export default function AcademicYearsPage() {
     const { props } = usePage();
     const years = useMemo(() => props.years ?? [], [props.years]);
     const errors = props.errors || {};
     const initialFilters = props.filters || {};
-    const [search, setSearch] = useState(initialFilters.search || '');
-    const isFirstSearchEffect = useRef(true);
+
+    // Unified Filter State
+    const [queryParams, setQueryParams] = useState({
+        search: initialFilters.search || '',
+        is_active: initialFilters.is_active || 'all',
+    });
+
+    const prevParamsString = useRef(JSON.stringify(queryParams));
 
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [newName, setNewName] = useState('');
@@ -35,17 +43,40 @@ export default function AcademicYearsPage() {
     const [editEnd, setEditEnd] = useState('');
     const [editActive, setEditActive] = useState(false);
 
+    const handleFilterChange = (key, value) => {
+        setQueryParams(prev => ({ ...prev, [key]: value }));
+    };
+
+    const resetFilters = () => {
+        setQueryParams({
+            search: '',
+            is_active: 'all',
+        });
+    };
+
+    const isMounted = useRef(false);
+
     useEffect(() => {
-        if (isFirstSearchEffect.current) {
-            isFirstSearchEffect.current = false;
+        const params = cleanParams(queryParams);
+        Object.keys(params).forEach(key => {
+            if (params[key] === 'all') delete params[key];
+        });
+        const paramString = JSON.stringify(params);
+
+        if (!isMounted.current) {
+            isMounted.current = true;
+            prevParamsString.current = paramString;
             return;
         }
+
+        if (paramString === prevParamsString.current) return;
+
         const timeout = setTimeout(() => {
-            const params = cleanParams({ search });
+            prevParamsString.current = paramString;
             router.get('/dashboard/academic-years', params, { replace: true, preserveState: true, preserveScroll: true });
-        }, 2000);
+        }, 500);
         return () => clearTimeout(timeout);
-    }, [search]);
+    }, [queryParams]);
 
     const startEdit = (year) => {
         setEditingId(year.id);
@@ -112,16 +143,30 @@ export default function AcademicYearsPage() {
         <AuthenticatedLayout breadcrumbs={[{ title: 'Dashboard', href: '/dashboard' }, { title: 'Academic Years', href: '/dashboard/academic-years' }]}>
             <Head title="Academic Years" />
             <div className="p-6">
-                <div className="mb-6">
-                    <div className="flex items-center justify-between gap-2">
-                        <Input
-                            className="w-64"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Search by year name"
-                        />
+                <div className="mb-6 space-y-4">
+                    <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+                        <div className="flex gap-2 flex-1 flex-wrap items-center">
+                            <Input
+                                className="w-64"
+                                value={queryParams.search}
+                                onChange={(e) => handleFilterChange('search', e.target.value)}
+                                placeholder="Search by year name"
+                            />
+                             <Select value={queryParams.is_active} onValueChange={(v) => handleFilterChange('is_active', v)}>
+                                <SelectTrigger className="w-48">
+                                    <SelectValue placeholder="Status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Status</SelectItem>
+                                    <SelectItem value="active">Active</SelectItem>
+                                    <SelectItem value="inactive">Inactive</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <Button variant="ghost" onClick={resetFilters}>Reset</Button>
+                        </div>
                         <AddButton onClick={() => setIsAddOpen(true)}>Add New Academic Year</AddButton>
                     </div>
+
                     <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
                         <DialogContent>
                             <DialogHeader>
@@ -244,7 +289,7 @@ export default function AcademicYearsPage() {
                 </Table>
                 {years.links && (
                     <div className="mt-4">
-                        <Pagination links={years.links} filters={cleanParams({ search })} />
+                        <Pagination links={years.links} filters={cleanParams(queryParams)} />
                     </div>
                 )}
             </div>

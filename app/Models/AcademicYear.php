@@ -45,6 +45,21 @@ class AcademicYear extends Model
         return $this->hasMany(StudentBilling::class);
     }
 
+    public function scopeFilter($query, $request)
+    {
+        return $query->when($request->input('search'), function ($q, $search) {
+                $q->where('year_name', 'like', '%'.$search.'%');
+            })
+            ->when($request->input('is_active'), function ($q, $isActive) {
+                 if ($isActive === 'active') {
+                     $q->where('is_active', true);
+                 } elseif ($isActive === 'inactive') {
+                     $q->where('is_active', false);
+                 }
+            })
+            ->orderBy('year_name');
+    }
+
     public function scopeActive($query)
     {
         return $query->where('is_active', true);

@@ -16,26 +16,17 @@ class SubjectController extends Controller
 {
     public function index(Request $request): Response
     {
-        $search = (string) $request->input('search', '');
         $perPage = (int) $request->input('perPage', 10);
 
         $subjects = Subject::query()
-            ->with('grade')
-            ->when($search !== '', function ($q) use ($search) {
-                $q->where('subject_name', 'like', '%'.$search.'%')
-                  ->orWhere('subject_code', 'like', '%'.$search.'%');
-            })
-            ->orderBy('subject_name')
+            ->filter($request)
             ->paginate($perPage)
             ->withQueryString();
 
         return Inertia::render('dashboard/Subjects', [
             'subjects' => $subjects,
             'grades' => Grade::query()->orderBy('grade_name')->get(),
-            'filters' => [
-                'search' => $search,
-                'perPage' => $perPage,
-            ],
+            'filters' => $request->all(),
         ]);
     }
 

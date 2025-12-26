@@ -15,23 +15,16 @@ class AcademicYearController extends Controller
 {
     public function index(Request $request): Response
     {
-        $search = (string) $request->input('search', '');
         $perPage = (int) $request->input('perPage', 10);
 
         $years = AcademicYear::query()
-            ->when($search !== '', function ($q) use ($search) {
-                $q->where('year_name', 'like', '%'.$search.'%');
-            })
-            ->orderBy('year_name')
+            ->filter($request)
             ->paginate($perPage)
             ->withQueryString();
 
         return Inertia::render('dashboard/AcademicYears', [
             'years' => $years,
-            'filters' => [
-                'search' => $search,
-                'perPage' => $perPage,
-            ],
+            'filters' => $request->all(),
         ]);
     }
 

@@ -19,29 +19,10 @@ class StudentEnrollmentController extends Controller
 {
     public function index(Request $request): Response
     {
-        $search = (string) $request->input('search', '');
         $perPage = (int) $request->input('perPage', 10);
 
         $enrollments = StudentEnrollment::query()
-            ->with(['student.user', 'classSection.grade', 'academicYear'])
-            ->when($search !== '', function ($q) use ($search) {
-                $q->whereHas('student', function ($sq) use ($search) {
-                    $sq->where('admission_number', 'like', '%'.$search.'%')
-                        ->orWhereHas('user', function ($uq) use ($search) {
-                            $uq->where('name', 'like', '%'.$search.'%')
-                               ->orWhere('first_name', 'like', '%'.$search.'%')
-                               ->orWhere('last_name', 'like', '%'.$search.'%')
-                               ->orWhere('email', 'like', '%'.$search.'%');
-                        });
-                })
-                ->orWhereHas('classSection', function ($cq) use ($search) {
-                    $cq->where('section_name', 'like', '%'.$search.'%');
-                })
-                ->orWhereHas('academicYear', function ($yq) use ($search) {
-                    $yq->where('year_name', 'like', '%'.$search.'%');
-                });
-            })
-            ->orderBy('created_at', 'desc')
+            ->filter($request)
             ->paginate($perPage)
             ->withQueryString();
 
@@ -50,10 +31,7 @@ class StudentEnrollmentController extends Controller
             'students' => Student::query()->with('user')->orderBy('admission_number')->get(),
             'sections' => ClassSection::query()->with('grade')->orderBy('section_name')->get(),
             'years' => AcademicYear::query()->orderBy('year_name')->get(),
-            'filters' => [
-                'search' => $search,
-                'perPage' => $perPage,
-            ],
+            'filters' => $request->all(),
         ]);
     }
 

@@ -48,16 +48,15 @@ export default function Settings({ settings }) {
         >
             <Head title="General Settings" />
             <SettingsLayout>
-                <div className="flex flex-col gap-6 p-4 md:p-6">
                     {/* Application Branding Card */}
-                    <Card>
+                    <Card className="w-full">
                         <CardHeader>
                             <CardTitle>Application Branding</CardTitle>
                             <CardDescription>
                                 Configure the global application name, logos, and favicon.
                             </CardDescription>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="w-full">
                             <form onSubmit={submit} className="space-y-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
@@ -172,7 +171,6 @@ export default function Settings({ settings }) {
                             </form>
                         </CardContent>
                     </Card>
-                </div>
             </SettingsLayout>
 
         </AuthenticatedLayout>

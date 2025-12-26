@@ -18,26 +18,10 @@ class TeacherSubjectAssignmentController extends Controller
 {
     public function index(Request $request): Response
     {
-        $search = (string) $request->input('search', '');
         $perPage = (int) $request->input('perPage', 10);
 
         $assignments = TeacherSubjectAssignment::query()
-            ->with(['teacher.user', 'subject', 'classSection.grade'])
-            ->when($search !== '', function ($q) use ($search) {
-                $q->whereHas('teacher.user', function ($uq) use ($search) {
-                    $uq->where('name', 'like', '%'.$search.'%')
-                       ->orWhere('first_name', 'like', '%'.$search.'%')
-                       ->orWhere('last_name', 'like', '%'.$search.'%');
-                })
-                ->orWhereHas('subject', function ($sq) use ($search) {
-                    $sq->where('subject_name', 'like', '%'.$search.'%')
-                       ->orWhere('subject_code', 'like', '%'.$search.'%');
-                })
-                ->orWhereHas('classSection', function ($cq) use ($search) {
-                    $cq->where('section_name', 'like', '%'.$search.'%');
-                });
-            })
-            ->orderBy('created_at', 'desc')
+            ->filter($request)
             ->paginate($perPage)
             ->withQueryString();
 
@@ -46,10 +30,7 @@ class TeacherSubjectAssignmentController extends Controller
             'teachers' => Teacher::query()->with('user')->orderBy('employee_number')->get(),
             'subjects' => Subject::query()->orderBy('subject_name')->get(),
             'sections' => ClassSection::query()->with('grade')->orderBy('section_name')->get(),
-            'filters' => [
-                'search' => $search,
-                'perPage' => $perPage,
-            ],
+            'filters' => $request->all(),
         ]);
     }
 

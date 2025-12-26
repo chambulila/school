@@ -39,4 +39,35 @@ class StudentEnrollment extends Model
     {
         return $this->belongsTo(AcademicYear::class);
     }
+
+    public function scopeFilter($query, $request)
+    {
+        return $query->with(['student.user', 'classSection.grade', 'academicYear'])
+            ->when($request->input('search'), function ($q, $search) {
+                $q->whereHas('student', function ($sq) use ($search) {
+                    $sq->where('admission_number', 'like', '%'.$search.'%')
+                        ->orWhereHas('user', function ($uq) use ($search) {
+                            $uq->where('first_name', 'like', '%'.$search.'%')
+                               ->orWhere('last_name', 'like', '%'.$search.'%')
+                               ->orWhere('email', 'like', '%'.$search.'%');
+                        });
+                })
+                ->orWhereHas('classSection', function ($cq) use ($search) {
+                    $cq->where('section_name', 'like', '%'.$search.'%');
+                })
+                ->orWhereHas('academicYear', function ($yq) use ($search) {
+                    $yq->where('year_name', 'like', '%'.$search.'%');
+                });
+            })
+            ->when($request->input('academic_year_id'), function ($q, $yearId) {
+                $q->where('academic_year_id', $yearId);
+            })
+            ->when($request->input('class_section_id'), function ($q, $sectionId) {
+                $q->where('class_section_id', $sectionId);
+            })
+            ->when($request->input('student_id'), function ($q, $studentId) {
+                $q->where('student_id', $studentId);
+            })
+            ->orderBy('created_at', 'desc');
+    }
 }

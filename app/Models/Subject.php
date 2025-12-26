@@ -40,4 +40,17 @@ class Subject extends Model
     {
         return $this->hasMany(ExamResult::class);
     }
+
+    public function scopeFilter($query, $request)
+    {
+        return $query->with('grade')
+            ->when($request->input('search'), function ($q, $search) {
+                $q->where('subject_name', 'like', '%'.$search.'%')
+                  ->orWhere('subject_code', 'like', '%'.$search.'%');
+            })
+            ->when($request->input('grade_id'), function ($q, $gradeId) {
+                $q->where('grade_id', $gradeId);
+            })
+            ->orderBy('subject_name');
+    }
 }

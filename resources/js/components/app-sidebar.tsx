@@ -16,7 +16,7 @@ import {
 import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Folder, Home, Minus, Plus, Settings, User, Users } from 'lucide-react';
+import { BookOpen, ChevronDown, ChevronRight, Folder, Home, Minus, Plus, Settings, User, Users } from 'lucide-react';
 import AppLogo from './app-logo';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 
@@ -265,16 +265,16 @@ export function AppSidebar() {
                                     >
                                         <SidebarMenuItem>
                                             <CollapsibleTrigger asChild>
-                                                <SidebarMenuButton isActive={isGroupActive} className="text-white">
+                                                <SidebarMenuButton isActive={isGroupActive} className="text-white mb-1">
                                                     {Icon && <Icon />}
                                                     {item.title}
-                                                    <Plus className="ml-auto group-data-[state=open]/collapsible:hidden" />
-                                                    <Minus className="ml-auto group-data-[state=closed]/collapsible:hidden" />
+                                                    <ChevronRight className="ml-auto group-data-[state=open]/collapsible:hidden" />
+                                                    <ChevronDown className="ml-auto group-data-[state=closed]/collapsible:hidden" />
                                                 </SidebarMenuButton>
                                             </CollapsibleTrigger>
                                             {item.items?.length ? (
                                                 <CollapsibleContent >
-                                                    <SidebarMenuSub>
+                                                    <SidebarMenuSub className=' space-y-1'>
                                                         {item.items?.filter(it => it.isVisible)?.map((subItem) => (
                                                             <SidebarMenuSubItem key={subItem.title}>
                                                                 <SidebarMenuSubButton asChild isActive={subItem.isActive} className="text-white">

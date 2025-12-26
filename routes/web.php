@@ -71,6 +71,7 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
         
         // New Enrollment Routes
         Route::get('exams/enrollments/create', [\App\Http\Controllers\Admin\ExamResultController::class, 'create'])->name('admin.exam-enrollments.create');
+        Route::get('exams/enrollments/results', [\App\Http\Controllers\Admin\ExamResultController::class, 'resultsIndex'])->name('admin.exam-enrollments.results-index');
         Route::post('exams/enrollments/store', [\App\Http\Controllers\Admin\ExamResultController::class, 'storeEnrollments'])->name('admin.exam-enrollments.store');
         Route::get('exams/enrollments/{exam}', [\App\Http\Controllers\Admin\ExamResultController::class, 'showEnrollments'])->name('admin.exam-enrollments.show');
         Route::post('exams/enrollments/update-scores', [\App\Http\Controllers\Admin\ExamResultController::class, 'updateScores'])->name('admin.exam-enrollments.update-scores');

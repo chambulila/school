@@ -40,4 +40,17 @@ class Exam extends Model
     {
         return $this->hasMany(PublishedResult::class);
     }
+
+    public function scopeFilter($query, $request)
+    {
+        return $query->with('academicYear')
+            ->when($request->input('search'), function ($q, $search) {
+                $q->where('exam_name', 'like', '%'.$search.'%')
+                  ->orWhere('term_name', 'like', '%'.$search.'%');
+            })
+            ->when($request->input('academic_year_id'), function ($q, $yearId) {
+                $q->where('academic_year_id', $yearId);
+            })
+            ->orderBy('start_date', 'desc');
+    }
 }

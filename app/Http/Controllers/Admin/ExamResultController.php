@@ -154,6 +154,23 @@ class ExamResultController extends Controller
         ]);
     }
 
+    public function resultsIndex(Request $request): Response
+    {
+        $perPage = (int) $request->input('perPage', 10);
+
+        $exams = Exam::query()
+            ->withCount('results')
+            ->filter($request)
+            ->paginate($perPage)
+            ->withQueryString();
+
+        return Inertia::render('dashboard/exam-enrollments/ResultsList', [
+            'exams' => $exams,
+            'academicYears' => \App\Models\AcademicYear::orderBy('year_name', 'desc')->get(),
+            'filters' => $request->all(),
+        ]);
+    }
+
     public function storeEnrollments(Request $request): RedirectResponse
     {
         $data = $request->validate([
@@ -205,13 +222,19 @@ class ExamResultController extends Controller
         if ($sectionId) {
             $query->where('class_section_id', $sectionId);
         }
-        if ($search) {
-            $query->whereHas('student.user', function ($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('name', 'like', "%{$search}%");
-            })->orWhereHas('student', function($q) use ($search){
-                $q->where('admission_number', 'like', "%{$search}%");
+        if ($search !== '') {
+            $query->whereHas('student', function ($sq) use ($search) {
+                $sq->whereHas('subject', function ($sq) use ($search) {
+                    $sq->where('subject_name', 'like', '%'.$search.'%')
+                       ->orWhere('subject_code', 'like', '%'.$search.'%');
+                })
+                ->orWhereHas('exam', function ($eq) use ($search) {
+                    $eq->where('exam_name', 'like', '%'.$search.'%')
+                       ->orWhere('term_name', 'like', '%'.$search.'%');
+                })
+                ->orWhereHas('classSection', function ($cq) use ($search) {
+                    $cq->where('section_name', 'like', '%'.$search.'%');
+                });
             });
         }
 

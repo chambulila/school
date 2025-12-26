@@ -7,7 +7,6 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Pagination from '@/components/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Pencil, Trash } from 'lucide-react';
 import { askConfirmation } from '@/utils/sweetAlerts';
 import { cleanParams } from '@/lib/utils';
 import AddButton from '@/components/buttons/AddButton';
@@ -24,8 +23,16 @@ export default function StudentEnrollmentsPage() {
     const years = useMemo(() => props.years ?? [], [props.years]);
     const errors = props.errors || {};
     const initialFilters = props.filters || {};
-    const [search, setSearch] = useState(initialFilters.search || '');
-    const isFirstSearchEffect = useRef(true);
+
+    // Unified Filter State
+    const [queryParams, setQueryParams] = useState({
+        search: initialFilters.search || '',
+        academic_year_id: initialFilters.academic_year_id || 'all',
+        class_section_id: initialFilters.class_section_id || 'all',
+        student_id: initialFilters.student_id || 'all',
+    });
+
+    const prevParamsString = useRef(JSON.stringify(queryParams));
 
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [newStudentId, setNewStudentId] = useState('');
@@ -40,17 +47,43 @@ export default function StudentEnrollmentsPage() {
     const [editYearId, setEditYearId] = useState('');
     const [editEnrollDate, setEditEnrollDate] = useState('');
 
+    const handleFilterChange = (key, value) => {
+        setQueryParams(prev => ({ ...prev, [key]: value }));
+    };
+
+    const resetFilters = () => {
+        setQueryParams({
+            search: '',
+            academic_year_id: 'all',
+            class_section_id: 'all',
+            student_id: 'all',
+        });
+    };
+
+    const isMounted = useRef(false);
+
     useEffect(() => {
-        if (isFirstSearchEffect.current) {
-            isFirstSearchEffect.current = false;
+        const params = cleanParams(queryParams);
+        Object.keys(params).forEach(key => {
+            if (params[key] === 'all') delete params[key];
+        });
+        const paramString = JSON.stringify(params);
+
+        if (!isMounted.current) {
+            isMounted.current = true;
+            prevParamsString.current = paramString;
             return;
         }
+
+        if (paramString === prevParamsString.current) return;
+
         const timeout = setTimeout(() => {
-            const params = cleanParams({ search });
+            prevParamsString.current = paramString;
             router.get('/dashboard/student-enrollments', params, { replace: true, preserveState: true, preserveScroll: true });
-        }, 2000);
+        }, 500);
         return () => clearTimeout(timeout);
-    }, [search]);
+    }, [queryParams]);
+
 
     const startEdit = (row) => {
         setEditingId(row.id);
@@ -120,16 +153,42 @@ export default function StudentEnrollmentsPage() {
         <AuthenticatedLayout breadcrumbs={[{ title: 'Dashboard', href: '/dashboard' }, { title: 'Student Enrollments', href: '/dashboard/student-enrollments' }]}>
             <Head title="Student Enrollments" />
             <div className="p-6">
-                <div className="mb-6">
-                    <div className="flex items-center justify-between gap-2">
-                        <Input
-                            className="w-64"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Search by student, section, or academic year"
-                        />
+                <div className="mb-6 space-y-4">
+                    <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+                        <div className="flex gap-2 flex-1 flex-wrap items-center">
+                             <Input
+                                className="w-64"
+                                value={queryParams.search}
+                                onChange={(e) => handleFilterChange('search', e.target.value)}
+                                placeholder="Search..."
+                            />
+                            <Select value={queryParams.academic_year_id} onValueChange={(v) => handleFilterChange('academic_year_id', v)}>
+                                <SelectTrigger className="w-48">
+                                    <SelectValue placeholder="Academic Year" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Years</SelectItem>
+                                    {years.map(y => (
+                                        <SelectItem key={y.id} value={y.id}>{y.year_name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <Select value={queryParams.class_section_id} onValueChange={(v) => handleFilterChange('class_section_id', v)}>
+                                <SelectTrigger className="w-48">
+                                    <SelectValue placeholder="Class Section" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Sections</SelectItem>
+                                    {sections.map(s => (
+                                        <SelectItem key={s.id} value={s.id}>{sectionLabel(s)}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <Button variant="ghost" onClick={resetFilters}>Reset</Button>
+                        </div>
                         <AddButton onClick={() => setIsAddOpen(true)}>Add Enrollment</AddButton>
                     </div>
+
                     <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
                         <DialogContent>
                             <DialogHeader>
@@ -286,7 +345,7 @@ export default function StudentEnrollmentsPage() {
 
                 {enrollments.links && (
                     <div className="mt-4">
-                        <Pagination links={enrollments.links} filters={cleanParams({ search })} />
+                        <Pagination links={enrollments.links} filters={cleanParams(queryParams)} />
                     </div>
                 )}
             </div>

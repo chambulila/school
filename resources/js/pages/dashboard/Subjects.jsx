@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Pencil, Trash } from 'lucide-react';
 import { askConfirmation } from '@/utils/sweetAlerts';
 import { cleanParams } from '@/lib/utils';
+import AddButton from '@/components/buttons/AddButton';
 
 export default function SubjectsPage() {
     const { props } = usePage();
@@ -17,8 +18,14 @@ export default function SubjectsPage() {
     const grades = useMemo(() => props.grades ?? [], [props.grades]);
     const errors = props.errors || {};
     const initialFilters = props.filters || {};
-    const [search, setSearch] = useState(initialFilters.search || '');
-    const isFirstSearchEffect = useRef(true);
+
+    // Unified Filter State
+    const [queryParams, setQueryParams] = useState({
+        search: initialFilters.search || '',
+        grade_id: initialFilters.grade_id || 'all',
+    });
+
+    const prevParamsString = useRef(JSON.stringify(queryParams));
 
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [newName, setNewName] = useState('');
@@ -31,17 +38,40 @@ export default function SubjectsPage() {
     const [editCode, setEditCode] = useState('');
     const [editGradeId, setEditGradeId] = useState('');
 
+    const handleFilterChange = (key, value) => {
+        setQueryParams(prev => ({ ...prev, [key]: value }));
+    };
+
+    const resetFilters = () => {
+        setQueryParams({
+            search: '',
+            grade_id: 'all',
+        });
+    };
+
+    const isMounted = useRef(false);
+
     useEffect(() => {
-        if (isFirstSearchEffect.current) {
-            isFirstSearchEffect.current = false;
+        const params = cleanParams(queryParams);
+        Object.keys(params).forEach(key => {
+            if (params[key] === 'all') delete params[key];
+        });
+        const paramString = JSON.stringify(params);
+
+        if (!isMounted.current) {
+            isMounted.current = true;
+            prevParamsString.current = paramString;
             return;
         }
+
+        if (paramString === prevParamsString.current) return;
+
         const timeout = setTimeout(() => {
-            const params = cleanParams({ search });
+            prevParamsString.current = paramString;
             router.get('/dashboard/subjects', params, { replace: true, preserveState: true, preserveScroll: true });
-        }, 2000);
+        }, 500);
         return () => clearTimeout(timeout);
-    }, [search]);
+    }, [queryParams]);
 
     const startEdit = (subject) => {
         setEditingId(subject.id);
@@ -103,16 +133,31 @@ export default function SubjectsPage() {
         <AuthenticatedLayout breadcrumbs={[{ title: 'Dashboard', href: '/dashboard' }, { title: 'Subjects', href: '/dashboard/subjects' }]}>
             <Head title="Subjects" />
             <div className="p-6">
-                <div className="mb-6">
-                    <div className="flex items-center justify-between gap-2">
-                        <Input
-                            className="w-64"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Search by name or code"
-                        />
-                        <Button onClick={() => setIsAddOpen(true)}>Add New Subject</Button>
+                <div className="mb-6 space-y-4">
+                    <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+                        <div className="flex gap-2 flex-1 flex-wrap items-center">
+                            <Input
+                                className="w-64"
+                                value={queryParams.search}
+                                onChange={(e) => handleFilterChange('search', e.target.value)}
+                                placeholder="Search by name or code"
+                            />
+                            <Select value={queryParams.grade_id} onValueChange={(v) => handleFilterChange('grade_id', v)}>
+                                <SelectTrigger className="w-48">
+                                    <SelectValue placeholder="Grade" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Grades</SelectItem>
+                                    {grades.map(g => (
+                                        <SelectItem key={g.id} value={g.id}>{g.grade_name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <Button variant="ghost" onClick={resetFilters}>Reset</Button>
+                        </div>
+                        <AddButton onClick={() => setIsAddOpen(true)}>Add New Subject</AddButton>
                     </div>
+
                     <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
                         <DialogContent>
                             <DialogHeader>
@@ -151,7 +196,7 @@ export default function SubjectsPage() {
                                             {grades.map((g) => (
                                                 <SelectItem key={g.id} value={g.id}>{g.grade_name}</SelectItem>
                                             ))}
-                                            <SelectItem >None</SelectItem>
+                                            <SelectItem value="">None</SelectItem>
                                         </SelectContent>
                                     </Select>
                                     {errors.grade_id && (
@@ -207,7 +252,7 @@ export default function SubjectsPage() {
                                                 {grades.map((g) => (
                                                     <SelectItem key={g.id} value={g.id}>{g.grade_name}</SelectItem>
                                                 ))}
-                                                <SelectItem >None</SelectItem>
+                                                <SelectItem value="">None</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     ) : (
@@ -233,7 +278,7 @@ export default function SubjectsPage() {
                 </Table>
                 {subjects.links && (
                     <div className="mt-4">
-                        <Pagination links={subjects.links} filters={cleanParams({ search })} />
+                        <Pagination links={subjects.links} filters={cleanParams(queryParams)} />
                     </div>
                 )}
             </div>
