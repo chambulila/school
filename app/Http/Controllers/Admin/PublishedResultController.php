@@ -29,13 +29,13 @@ class PublishedResultController extends Controller
                 })
                 ->orWhereHas('classSection', function ($cq) use ($search) {
                     $cq->where('section_name', 'like', '%'.$search.'%');
-                })
-                ->orWhereHas('publishedBy', function ($pq) use ($search) {
-                    $pq->where('name', 'like', '%'.$search.'%')
-                       ->orWhere('first_name', 'like', '%'.$search.'%')
-                       ->orWhere('last_name', 'like', '%'.$search.'%')
-                       ->orWhere('email', 'like', '%'.$search.'%');
                 });
+                // ->orWhereHas('publishedBy', function ($pq) use ($search) {
+                //     $pq->where('name', 'like', '%'.$search.'%')
+                //        ->orWhere('first_name', 'like', '%'.$search.'%')
+                //        ->orWhere('last_name', 'like', '%'.$search.'%')
+                //        ->orWhere('email', 'like', '%'.$search.'%');
+                // });
             })
             ->orderBy('published_at', 'desc')
             ->paginate($perPage)

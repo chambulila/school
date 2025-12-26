@@ -224,17 +224,11 @@ class ExamResultController extends Controller
         }
         if ($search !== '') {
             $query->whereHas('student', function ($sq) use ($search) {
-                $sq->whereHas('subject', function ($sq) use ($search) {
-                    $sq->where('subject_name', 'like', '%'.$search.'%')
-                       ->orWhere('subject_code', 'like', '%'.$search.'%');
-                })
-                ->orWhereHas('exam', function ($eq) use ($search) {
-                    $eq->where('exam_name', 'like', '%'.$search.'%')
-                       ->orWhere('term_name', 'like', '%'.$search.'%');
-                })
-                ->orWhereHas('classSection', function ($cq) use ($search) {
-                    $cq->where('section_name', 'like', '%'.$search.'%');
-                });
+                $sq->whereHas('user', function ($uq) use ($search) {
+                    $uq->where('name', 'like', '%'.$search.'%')
+                       ->orWhere('first_name', 'like', '%'.$search.'%')
+                       ->orWhere('last_name', 'like', '%'.$search.'%');
+                })->orWhere('admission_number', 'like', '%'.$search.'%');
             });
         }
 
