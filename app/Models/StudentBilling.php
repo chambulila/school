@@ -48,4 +48,19 @@ class StudentBilling extends Model
         return $this->hasMany(FeeNotification::class, 'bill_id', 'bill_id');
     }
 
+    public function scopeFilter($query, array $filters)
+    {
+        $query->when($filters['search'] ?? null, function ($query, $search) {
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('student.user', function ($uq) use ($search) {
+                    $uq->where('first_name', 'like', '%' . $search . '%')
+                        ->orWhere('last_name', 'like', '%' . $search . '%')
+                        ->orWhere('email', 'like', '%' . $search . '%');
+                })
+                ->orWhereHas('academicYear', function ($yq) use ($search) {
+                    $yq->where('year_name', 'like', '%' . $search . '%');
+                });
+            });
+        });
+    }
 }

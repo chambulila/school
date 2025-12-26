@@ -60,4 +60,24 @@ class Student extends Model
     {
         return $this->hasMany(FeeNotification::class);
     }
+
+    public function scopeFilter($query, $request)
+    {
+        return $query->with(['user', 'currentClass.grade'])
+            ->when($request->input('search'), function ($q, $search) {
+                $q->where('admission_number', 'like', '%'.$search.'%')
+                  ->orWhereHas('user', function ($uq) use ($search) {
+                      $uq->where('first_name', 'like', '%'.$search.'%')
+                         ->orWhere('last_name', 'like', '%'.$search.'%')
+                         ->orWhere('email', 'like', '%'.$search.'%');
+                  })
+                  ->orWhereHas('currentClass', function ($cq) use ($search) {
+                      $cq->where('section_name', 'like', '%'.$search.'%');
+                  });
+            })
+            ->when($request->input('class_section_id'), function ($q, $sectionId) {
+                $q->where('current_class_id', $sectionId);
+            })
+            ->orderBy('admission_number');
+    }
 }

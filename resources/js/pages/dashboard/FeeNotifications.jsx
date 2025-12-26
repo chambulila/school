@@ -1,5 +1,5 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import AuthenticatedLayout from '@/layouts/authenticated-layout';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,12 @@ import { askConfirmation } from '@/utils/sweetAlerts';
 
 export default function FeeNotifications() {
     const { notifications, students, bills, filters } = usePage().props;
-    const [search, setSearch] = useState(filters?.search ?? '');
+    const [queryParams, setQueryParams] = useState({
+        search: filters?.search || ''
+    });
+    const prevParamsString = useRef(JSON.stringify(queryParams));
+    const isMounted = useRef(false);
+
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [editingId, setEditingId] = useState(null);
@@ -30,11 +35,34 @@ export default function FeeNotifications() {
     const [editSentAt, setEditSentAt] = useState('');
 
     useEffect(() => {
-        const delay = setTimeout(() => {
-            router.get('/dashboard/fee-notifications', cleanParams({ search }), { replace: true, preserveState: true });
-        }, 400);
-        return () => clearTimeout(delay);
-    }, [search]);
+        const params = cleanParams(queryParams);
+        Object.keys(params).forEach(key => {
+            if (params[key] === 'all') delete params[key];
+        });
+        const paramString = JSON.stringify(params);
+
+        if (!isMounted.current) {
+            isMounted.current = true;
+            prevParamsString.current = paramString;
+            return;
+        }
+
+        if (paramString === prevParamsString.current) return;
+
+        const timeout = setTimeout(() => {
+            prevParamsString.current = paramString;
+            router.get('/dashboard/fee-notifications', params, {
+                replace: true,
+                preserveState: true,
+                preserveScroll: true,
+            });
+        }, 500);
+        return () => clearTimeout(timeout);
+    }, [queryParams]);
+
+    const handleFilterChange = (key, value) => {
+        setQueryParams(prev => ({ ...prev, [key]: value }));
+    };
 
     const studentLabel = (s) => (s.user ? `${s.user.first_name} ${s.user.last_name}` : '—');
     const billLabel = (b) => {
@@ -104,7 +132,12 @@ export default function FeeNotifications() {
             <div className="p-6">
                 <div className="mb-6">
                     <div className="flex items-center justify-between gap-2">
-                        <Input className="w-64" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by student or message" />
+                        <Input
+                            className="w-64"
+                            value={queryParams.search}
+                            onChange={(e) => handleFilterChange('search', e.target.value)}
+                            placeholder="Search by student or message"
+                        />
                         <Button onClick={() => setIsAddOpen(true)}>Add Notification</Button>
                     </div>
                     <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
@@ -208,7 +241,7 @@ export default function FeeNotifications() {
                 </Table>
                 {notifications.links && (
                     <div className="mt-4">
-                        <Pagination links={notifications.links} filters={cleanParams({ search })} />
+                        <Pagination links={notifications.links} filters={cleanParams(queryParams)} />
                     </div>
                 )}
             </div>

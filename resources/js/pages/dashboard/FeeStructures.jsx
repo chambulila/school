@@ -24,8 +24,10 @@ export default function FeeStructuresPage() {
     const years = useMemo(() => props.years ?? [], [props.years]);
     const errors = props.errors || {};
     const initialFilters = props.filters || {};
-    const [search, setSearch] = useState(initialFilters.search || '');
-    const isFirstSearchEffect = useRef(true);
+    const [queryParams, setQueryParams] = useState({
+        search: initialFilters.search || ''
+    });
+    const isMounted = useRef(false);
 
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [newCategoryId, setNewCategoryId] = useState('');
@@ -42,17 +44,29 @@ export default function FeeStructuresPage() {
     const [editAmount, setEditAmount] = useState('');
     const [editDueDate, setEditDueDate] = useState('');
 
+    const prevParamsString = useRef(JSON.stringify(queryParams));
+
     useEffect(() => {
-        if (isFirstSearchEffect.current) {
-            isFirstSearchEffect.current = false;
+        const params = cleanParams(queryParams);
+        Object.keys(params).forEach(key => {
+            if (params[key] === 'all') delete params[key];
+        });
+        const paramString = JSON.stringify(params);
+
+        if (!isMounted.current) {
+            isMounted.current = true;
+            prevParamsString.current = paramString;
             return;
         }
+
+        if (paramString === prevParamsString.current) return;
+
         const timeout = setTimeout(() => {
-            const params = cleanParams({ search });
+            prevParamsString.current = paramString;
             router.get('/dashboard/fee-structures', params, { replace: true, preserveState: true, preserveScroll: true });
-        }, 2000);
+        }, 500);
         return () => clearTimeout(timeout);
-    }, [search]);
+    }, [queryParams]);
 
     const startEdit = (row) => {
         setEditingId(row.fee_structure_id || row.id);
@@ -125,8 +139,8 @@ export default function FeeStructuresPage() {
                     <div className="flex items-center justify-between gap-2">
                         <Input
                             className="w-64"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
+                            value={queryParams.search}
+                            onChange={(e) => setQueryParams({ ...queryParams, search: e.target.value })}
                             placeholder="Search by category, grade, or year"
                         />
                         <AddButton onClick={() => setIsAddOpen(true)}>Add Fee Structure</AddButton>
@@ -301,7 +315,7 @@ export default function FeeStructuresPage() {
                 </Table>
                 {structures.links && (
                     <div className="mt-4">
-                        <Pagination links={structures.links} filters={cleanParams({ search })} />
+                        <Pagination links={structures.links} filters={cleanParams(queryParams)} />
                     </div>
                 )}
             </div>

@@ -17,30 +17,17 @@ class TeacherController extends Controller
 {
     public function index(Request $request): Response
     {
-        $search = (string) $request->input('search', '');
-        $perPage = (int) $request->input('perPage', 10);
-
         $teachers = Teacher::query()
             ->with('user')
-            ->when($search !== '', function ($q) use ($search) {
-                $q->where('employee_number', 'like', '%'.$search.'%')
-                  ->orWhereHas('user', function ($uq) use ($search) {
-                         $uq->where('first_name', 'like', '%'.$search.'%')
-                         ->orWhere('last_name', 'like', '%'.$search.'%')
-                         ->orWhere('email', 'like', '%'.$search.'%');
-                  });
-            })
+            ->filter($request->only('search'))
             ->orderBy('employee_number')
-            ->paginate($perPage)
+            ->paginate($request->input('perPage', 10))
             ->withQueryString();
 
         return Inertia::render('dashboard/Teachers', [
             'teachers' => $teachers,
             'users' => User::query()->orderBy('first_name')->get(),
-            'filters' => [
-                'search' => $search,
-                'perPage' => $perPage,
-            ],
+            'filters' => $request->only('search'),
         ]);
     }
 

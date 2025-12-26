@@ -30,4 +30,11 @@ class FeeCategory extends Model
     {
         return $this->hasMany(FeeStructure::class, 'fee_category_id', 'fee_category_id');
     }
+
+    public function scopeFilter($query, array $filters)
+    {
+        $query->when($filters['search'] ?? null, function ($query, $search) {
+            $query->where('category_name', 'like', '%' . $search . '%');
+        });
+    }
 }

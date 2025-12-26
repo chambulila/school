@@ -16,29 +16,17 @@ class ExamController extends Controller
 {
     public function index(Request $request): Response
     {
-        $search = (string) $request->input('search', '');
-        $perPage = (int) $request->input('perPage', 10);
-
         $exams = Exam::query()
             ->with('academicYear')
-            ->when($search !== '', function ($q) use ($search) {
-                $q->where('exam_name', 'like', '%'.$search.'%')
-                  ->orWhere('term_name', 'like', '%'.$search.'%')
-                  ->orWhereHas('academicYear', function ($yq) use ($search) {
-                      $yq->where('year_name', 'like', '%'.$search.'%');
-                  });
-            })
+            ->filter($request->only('search'))
             ->orderBy('start_date', 'desc')
-            ->paginate($perPage)
+            ->paginate($request->input('perPage', 10))
             ->withQueryString();
 
         return Inertia::render('dashboard/Exams', [
             'exams' => $exams,
             'years' => AcademicYear::query()->orderBy('year_name')->get(),
-            'filters' => [
-                'search' => $search,
-                'perPage' => $perPage,
-            ],
+            'filters' => $request->only('search'),
         ]);
     }
 

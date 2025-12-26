@@ -119,6 +119,11 @@ export default function UsersPage({ users, roles }) {
           ))}
         </tbody>
       </table>
+      {users.links && (
+        <div className="mt-4">
+            <Pagination links={users.links} filters={cleanParams(queryParams)} />
+        </div>
+      )}
     </div>
     </AuthenticatedLayout>
   )

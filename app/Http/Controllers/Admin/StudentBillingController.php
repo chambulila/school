@@ -17,23 +17,11 @@ class StudentBillingController extends Controller
 {
     public function index(Request $request): Response
     {
-        $search = (string) $request->input('search', '');
-        $perPage = (int) $request->input('perPage', 10);
-
         $bills = StudentBilling::query()
             ->with(['student.user:id,first_name,last_name,email', 'academicYear:id,year_name,is_active'])
-            ->when($search !== '', function ($q) use ($search) {
-                $q->whereHas('student.user', function ($uq) use ($search) {
-                    $uq->where('first_name', 'like', '%'.$search.'%')
-                       ->orWhere('last_name', 'like', '%'.$search.'%')
-                       ->orWhere('email', 'like', '%'.$search.'%');
-                })
-                ->orWhereHas('academicYear', function ($yq) use ($search) {
-                    $yq->where('year_name', 'like', '%'.$search.'%');
-                });
-            })
+            ->filter($request->only('search'))
             ->orderBy('created_at', 'desc')
-            ->paginate($perPage)
+            ->paginate($request->input('perPage', 10))
             ->withQueryString()
             ->through(fn($bill) => [
                 'bill_id' => $bill->bill_id,
@@ -67,10 +55,7 @@ class StudentBillingController extends Controller
             'bills' => $bills,
             'students' => Student::query()->with('user:id,first_name,last_name,email')->orderBy('admission_number')->select('id', 'admission_number', 'user_id')->get(),
             'years' => AcademicYear::query()->orderBy('year_name')->active()->select('id', 'year_name', 'is_active')->get(),
-            'filters' => [
-                'search' => $search,
-                'perPage' => $perPage,
-            ],
+            'filters' => $request->only('search'),
         ]);
     }
 

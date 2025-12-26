@@ -17,26 +17,18 @@ class ClassSectionController extends Controller
 {
     public function index(Request $request): Response
     {
-        $search = (string) $request->input('search', '');
-        $perPage = (int) $request->input('perPage', 10);
-
         $sections = ClassSection::query()
             ->with('grade')
-            ->when($search !== '', function ($q) use ($search) {
-                $q->where('section_name', 'like', '%'.$search.'%');
-            })
+            ->filter($request->only('search'))
             ->orderBy('section_name')
-            ->paginate($perPage)
+            ->paginate($request->input('perPage', 10))
             ->withQueryString();
 
         return Inertia::render('dashboard/Sections', [
             'sections' => $sections,
             'grades' => Grade::query()->orderBy('grade_name')->get(),
             'teachers' => Teacher::query()->with('user')->orderBy('employee_number')->get(),
-            'filters' => [
-                'search' => $search,
-                'perPage' => $perPage,
-            ],
+            'filters' => $request->only('search'),
         ]);
     }
 

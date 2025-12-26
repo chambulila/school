@@ -40,4 +40,21 @@ class FeeStructure extends Model
     {
         return $this->belongsTo(FeeCategory::class, 'fee_category_id', 'fee_category_id');
     }
+
+    public function scopeFilter($query, array $filters)
+    {
+        $query->when($filters['search'] ?? null, function ($query, $search) {
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('feeCategory', function ($cq) use ($search) {
+                    $cq->where('category_name', 'like', '%' . $search . '%');
+                })
+                ->orWhereHas('grade', function ($gq) use ($search) {
+                    $gq->where('grade_name', 'like', '%' . $search . '%');
+                })
+                ->orWhereHas('academicYear', function ($yq) use ($search) {
+                    $yq->where('year_name', 'like', '%' . $search . '%');
+                });
+            });
+        });
+    }
 }

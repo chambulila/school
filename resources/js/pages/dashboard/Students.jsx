@@ -7,7 +7,6 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Pagination from '@/components/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Pencil, Trash } from 'lucide-react';
 import { askConfirmation } from '@/utils/sweetAlerts';
 import { cleanParams } from '@/lib/utils';
 import DeleteButton from '@/components/buttons/DeleteButton';
@@ -24,8 +23,14 @@ export default function StudentsPage() {
     const years = useMemo(() => props.years ?? [], [props.years]);
     const errors = props.errors || {};
     const initialFilters = props.filters || {};
-    const [search, setSearch] = useState(initialFilters.search || '');
-    const isFirstSearchEffect = useRef(true);
+    
+    // Unified Filter State
+    const [queryParams, setQueryParams] = useState({
+        search: initialFilters.search || '',
+        class_section_id: initialFilters.class_section_id || 'all',
+    });
+    
+    const prevParamsString = useRef(JSON.stringify(queryParams));
 
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [newFirstName, setNewFirstName] = useState('');
@@ -62,17 +67,40 @@ export default function StudentsPage() {
     const [editClassId, setEditClassId] = useState('');
     const [isEditSaving, setIsEditSaving] = useState(false);
 
+    const handleFilterChange = (key, value) => {
+        setQueryParams(prev => ({ ...prev, [key]: value }));
+    };
+
+    const resetFilters = () => {
+        setQueryParams({
+            search: '',
+            class_section_id: 'all',
+        });
+    };
+
+    const isMounted = useRef(false);
+
     useEffect(() => {
-        if (isFirstSearchEffect.current) {
-            isFirstSearchEffect.current = false;
+        const params = cleanParams(queryParams);
+        Object.keys(params).forEach(key => {
+            if (params[key] === 'all') delete params[key];
+        });
+        const paramString = JSON.stringify(params);
+
+        if (!isMounted.current) {
+            isMounted.current = true;
+            prevParamsString.current = paramString;
             return;
         }
+
+        if (paramString === prevParamsString.current) return;
+
         const timeout = setTimeout(() => {
-            const params = cleanParams({ search });
+            prevParamsString.current = paramString;
             router.get('/dashboard/students', params, { replace: true, preserveState: true, preserveScroll: true });
-        }, 2000);
+        }, 500);
         return () => clearTimeout(timeout);
-    }, [search]);
+    }, [queryParams]);
 
     const startEdit = (row) => {
         setEditingId(row.id);
@@ -175,16 +203,33 @@ export default function StudentsPage() {
         <AuthenticatedLayout breadcrumbs={[{ title: 'Dashboard', href: '/dashboard' }, { title: 'Students', href: '/dashboard/students' }]}>
             <Head title="Students" />
             <div className="p-6">
-                <div className="mb-6">
-                    <div className="flex items-center justify-between gap-2">
-                        <Input
-                            className="w-64"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Search by name, email, or admission #"
-                        />
+                <div className="mb-6 space-y-4">
+                    <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+                        <div className="flex gap-2 flex-1 flex-wrap items-center">
+                            <Input
+                                className="w-64"
+                                value={queryParams.search}
+                                onChange={(e) => handleFilterChange('search', e.target.value)}
+                                placeholder="Search by name, email, or admission #"
+                            />
+                            <Select value={queryParams.class_section_id} onValueChange={(v) => handleFilterChange('class_section_id', v)}>
+                                <SelectTrigger className="w-48">
+                                    <SelectValue placeholder="Current Class" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Classes</SelectItem>
+                                    {sections.map(sec => (
+                                        <SelectItem key={sec.id} value={sec.id}>
+                                            {sec.section_name} {sec.grade ? `(${sec.grade.grade_name})` : ''}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <Button variant="ghost" onClick={resetFilters}>Reset</Button>
+                        </div>
                         <AddButton onClick={() => setIsAddOpen(true)}>Add Student</AddButton>
                     </div>
+                    
                     <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
                         <DialogContent className="w-full max-w-[95vw] md:max-w-3xl lg:max-w-6xl">
                             <DialogHeader>
@@ -365,7 +410,7 @@ export default function StudentsPage() {
                 </Table>
                 {students.links && (
                     <div className="mt-4">
-                        <Pagination links={students.links} filters={cleanParams({ search })} />
+                        <Pagination links={students.links} filters={cleanParams(queryParams)} />
                     </div>
                 )}
 
@@ -466,7 +511,7 @@ export default function StudentsPage() {
                                                     {sec.section_name} {sec.grade ? `(${sec.grade.grade_name})` : ''}
                                                 </SelectItem>
                                             ))}
-                                            <SelectItem >None</SelectItem>
+                                            <SelectItem value="none">None</SelectItem>
                                         </SelectContent>
                                     </Select>
                                     {errors.current_class_id && <div className="text-red-500 text-sm mt-1">{errors.current_class_id}</div>}

@@ -40,4 +40,16 @@ class Teacher extends Model
     {
         return $this->hasMany(ClassSection::class, 'class_teacher_id');
     }
+
+    public function scopeFilter($query, array $filters)
+    {
+        $query->when($filters['search'] ?? null, function ($query, $search) {
+            $query->where('employee_number', 'like', '%' . $search . '%')
+                ->orWhereHas('user', function ($q) use ($search) {
+                    $q->where('first_name', 'like', '%' . $search . '%')
+                        ->orWhere('last_name', 'like', '%' . $search . '%')
+                        ->orWhere('email', 'like', '%' . $search . '%');
+                });
+        });
+    }
 }

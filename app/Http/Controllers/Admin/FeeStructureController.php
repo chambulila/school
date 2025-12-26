@@ -20,24 +20,11 @@ class FeeStructureController extends Controller
 {
     public function index(Request $request): Response
     {
-        $search = (string) $request->input('search', '');
-        $perPage = (int) $request->input('perPage', 10);
-
         $structures = FeeStructure::query()
             ->with(['feeCategory', 'grade', 'academicYear'])
-            ->when($search !== '', function ($q) use ($search) {
-                $q->whereHas('feeCategory', function ($cq) use ($search) {
-                    $cq->where('category_name', 'like', '%'.$search.'%');
-                })
-                ->orWhereHas('grade', function ($gq) use ($search) {
-                    $gq->where('grade_name', 'like', '%'.$search.'%');
-                })
-                ->orWhereHas('academicYear', function ($yq) use ($search) {
-                    $yq->where('year_name', 'like', '%'.$search.'%');
-                });
-            })
+            ->filter($request->only('search'))
             ->orderBy('created_at', 'desc')
-            ->paginate($perPage)
+            ->paginate($request->input('perPage', 10))
             ->withQueryString();
 
         return Inertia::render('dashboard/FeeStructures', [
@@ -45,10 +32,7 @@ class FeeStructureController extends Controller
             'categories' => FeeCategory::query()->orderBy('category_name')->get(),
             'grades' => Grade::query()->orderBy('grade_name')->get(),
             'years' => AcademicYear::query()->orderBy('year_name')->get(),
-            'filters' => [
-                'search' => $search,
-                'perPage' => $perPage,
-            ],
+            'filters' => $request->only('search'),
         ]);
     }
 

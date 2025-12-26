@@ -39,4 +39,11 @@ class Grade extends Model
     {
         return $this->hasMany(FeeStructure::class);
     }
+
+    public function scopeFilter($query, array $filters)
+    {
+        $query->when($filters['search'] ?? null, function ($query, $search) {
+            $query->where('grade_name', 'like', '%' . $search . '%');
+        });
+    }
 }

@@ -39,4 +39,19 @@ class PublishedResult extends Model
     {
         return $this->belongsTo(User::class, 'published_by');
     }
+
+    public function scopeFilter($query, array $filters)
+    {
+        $query->when($filters['search'] ?? null, function ($query, $search) {
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('exam', function ($eq) use ($search) {
+                    $eq->where('exam_name', 'like', '%' . $search . '%')
+                        ->orWhere('term_name', 'like', '%' . $search . '%');
+                })
+                ->orWhereHas('classSection', function ($cq) use ($search) {
+                    $cq->where('section_name', 'like', '%' . $search . '%');
+                });
+            });
+        });
+    }
 }

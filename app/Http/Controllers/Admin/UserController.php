@@ -14,11 +14,16 @@ use Inertia\Response;
 
 class UserController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        return Inertia::render('dashboard/users', [
-            'users' => User::query()->with('roles')->orderBy('first_name')->get(),
+        $users = User::filter($request)
+            ->paginate((int) $request->input('perPage', 10))
+            ->withQueryString();
+
+        return Inertia::render('dashboard/users', [ // Note: Ensure the view path matches your actual file structure (admin/users vs dashboard/users)
+            'users' => $users,
             'roles' => Role::query()->orderBy('role_name')->get(),
+            'filters' => $request->all(),
         ]);
     }
 

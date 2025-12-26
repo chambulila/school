@@ -18,8 +18,10 @@ export default function SectionsPage() {
     const teachers = useMemo(() => props.teachers ?? [], [props.teachers]);
     const errors = props.errors || {};
     const initialFilters = props.filters || {};
-    const [search, setSearch] = useState(initialFilters.search || '');
-    const isFirstSearchEffect = useRef(true);
+    const [queryParams, setQueryParams] = useState({
+        search: initialFilters.search || ''
+    });
+    const isMounted = useRef(false);
 
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [newGradeId, setNewGradeId] = useState('');
@@ -31,17 +33,29 @@ export default function SectionsPage() {
     const [editGradeId, setEditGradeId] = useState('');
     const [editSectionName, setEditSectionName] = useState('');
 
+    const prevParamsString = useRef(JSON.stringify(queryParams));
+
     useEffect(() => {
-        if (isFirstSearchEffect.current) {
-            isFirstSearchEffect.current = false;
+        const params = cleanParams(queryParams);
+        Object.keys(params).forEach(key => {
+            if (params[key] === 'all') delete params[key];
+        });
+        const paramString = JSON.stringify(params);
+
+        if (!isMounted.current) {
+            isMounted.current = true;
+            prevParamsString.current = paramString;
             return;
         }
+
+        if (paramString === prevParamsString.current) return;
+
         const timeout = setTimeout(() => {
-            const params = cleanParams({ search });
+            prevParamsString.current = paramString;
             router.get('/dashboard/sections', params, { replace: true, preserveState: true, preserveScroll: true });
-        }, 2000);
+        }, 500);
         return () => clearTimeout(timeout);
-    }, [search]);
+    }, [queryParams]);
 
     const [editTeacherId, setEditTeacherId] = useState('');
     const startEdit = (section) => {
@@ -99,8 +113,8 @@ export default function SectionsPage() {
                     <div className="flex items-center justify-between gap-2">
                         <Input
                             className="w-64"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
+                            value={queryParams.search}
+                            onChange={(e) => setQueryParams({ ...queryParams, search: e.target.value })}
                             placeholder="Search by section name"
                         />
                         <Button onClick={() => setIsAddOpen(true)}>Add New Section</Button>
@@ -236,7 +250,7 @@ export default function SectionsPage() {
                 </Table>
                 {sections.links && (
                     <div className="mt-4">
-                        <Pagination links={sections.links} filters={cleanParams({ search })} />
+                        <Pagination links={sections.links} filters={cleanParams(queryParams)} />
                     </div>
                 )}
             </div>

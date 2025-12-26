@@ -17,38 +17,18 @@ class PublishedResultController extends Controller
 {
     public function index(Request $request): Response
     {
-        $search = (string) $request->input('search', '');
-        $perPage = (int) $request->input('perPage', 10);
-
         $published = PublishedResult::query()
             ->with(['exam.academicYear', 'classSection.grade', 'publishedBy'])
-            ->when($search !== '', function ($q) use ($search) {
-                $q->whereHas('exam', function ($eq) use ($search) {
-                    $eq->where('exam_name', 'like', '%'.$search.'%')
-                       ->orWhere('term_name', 'like', '%'.$search.'%');
-                })
-                ->orWhereHas('classSection', function ($cq) use ($search) {
-                    $cq->where('section_name', 'like', '%'.$search.'%');
-                });
-                // ->orWhereHas('publishedBy', function ($pq) use ($search) {
-                //     $pq->where('name', 'like', '%'.$search.'%')
-                //        ->orWhere('first_name', 'like', '%'.$search.'%')
-                //        ->orWhere('last_name', 'like', '%'.$search.'%')
-                //        ->orWhere('email', 'like', '%'.$search.'%');
-                // });
-            })
+            ->filter($request->only('search'))
             ->orderBy('published_at', 'desc')
-            ->paginate($perPage)
+            ->paginate($request->input('perPage', 10))
             ->withQueryString();
 
         return Inertia::render('dashboard/PublishedResults', [
             'published' => $published,
             'exams' => Exam::query()->with('academicYear')->orderBy('start_date', 'desc')->get(),
             'sections' => ClassSection::query()->with('grade')->orderBy('section_name')->get(),
-            'filters' => [
-                'search' => $search,
-                'perPage' => $perPage,
-            ],
+            'filters' => $request->only('search'),
         ]);
     }
 

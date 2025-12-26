@@ -22,23 +22,10 @@ class StudentController extends Controller
 {
     public function index(Request $request): Response
     {
-        $search = (string) $request->input('search', '');
         $perPage = (int) $request->input('perPage', 10);
 
         $students = Student::query()
-            ->with(['user', 'currentClass.grade'])
-            ->when($search !== '', function ($q) use ($search) {
-                $q->where('admission_number', 'like', '%'.$search.'%')
-                  ->orWhereHas('user', function ($uq) use ($search) {
-                      $uq->where('first_name', 'like', '%'.$search.'%')
-                         ->orWhere('last_name', 'like', '%'.$search.'%')
-                         ->orWhere('email', 'like', '%'.$search.'%');
-                  })
-                  ->orWhereHas('currentClass', function ($cq) use ($search) {
-                      $cq->where('section_name', 'like', '%'.$search.'%');
-                  });
-            })
-            ->orderBy('admission_number')
+            ->filter($request)
             ->paginate($perPage)
             ->withQueryString();
 
@@ -47,10 +34,7 @@ class StudentController extends Controller
             'users' => User::query()->orderBy('first_name')->get(),
             'sections' => ClassSection::query()->with('grade')->orderBy('section_name')->get(),
             'years' => AcademicYear::query()->orderBy('year_name')->get(),
-            'filters' => [
-                'search' => $search,
-                'perPage' => $perPage,
-            ],
+            'filters' => $request->all(),
         ]);
     }
 

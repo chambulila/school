@@ -15,23 +15,15 @@ class FeeCategoryController extends Controller
 {
     public function index(Request $request): Response
     {
-        $search = (string) $request->input('search', '');
-        $perPage = (int) $request->input('perPage', 10);
-
         $categories = FeeCategory::query()
-            ->when($search !== '', function ($q) use ($search) {
-                $q->where('category_name', 'like', '%'.$search.'%');
-            })
+            ->filter($request->only('search'))
             ->orderBy('category_name')
-            ->paginate($perPage)
+            ->paginate($request->input('perPage', 10))
             ->withQueryString();
 
         return Inertia::render('dashboard/FeeCategories', [
             'categories' => $categories,
-            'filters' => [
-                'search' => $search,
-                'perPage' => $perPage,
-            ],
+            'filters' => $request->only('search'),
         ]);
     }
 

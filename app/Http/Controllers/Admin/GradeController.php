@@ -15,23 +15,15 @@ class GradeController extends Controller
 {
     public function index(Request $request): Response
     {
-        $search = (string) $request->input('search', '');
-        $perPage = (int) $request->input('perPage', 10);
-
         $grades = Grade::query()
-            ->when($search !== '', function ($q) use ($search) {
-                $q->where('grade_name', 'like', '%'.$search.'%');
-            })
+            ->filter($request->only('search'))
             ->orderBy('grade_name')
-            ->paginate($perPage)
+            ->paginate($request->input('perPage', 10))
             ->withQueryString();
 
         return Inertia::render('dashboard/Grades', [
             'grades' => $grades,
-            'filters' => [
-                'search' => $search,
-                'perPage' => $perPage,
-            ],
+            'filters' => $request->only('search'),
         ]);
     }
 

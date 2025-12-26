@@ -18,8 +18,10 @@ export default function ExamsPage() {
     const years = useMemo(() => props.years ?? [], [props.years]);
     const errors = props.errors || {};
     const initialFilters = props.filters || {};
-    const [search, setSearch] = useState(initialFilters.search || '');
-    const isFirstSearchEffect = useRef(true);
+    const [queryParams, setQueryParams] = useState({
+        search: initialFilters.search || ''
+    });
+    const isMounted = useRef(false);
 
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [newName, setNewName] = useState('');
@@ -36,17 +38,29 @@ export default function ExamsPage() {
     const [editStart, setEditStart] = useState('');
     const [editEnd, setEditEnd] = useState('');
 
+    const prevParamsString = useRef(JSON.stringify(queryParams));
+
     useEffect(() => {
-        if (isFirstSearchEffect.current) {
-            isFirstSearchEffect.current = false;
+        const params = cleanParams(queryParams);
+        Object.keys(params).forEach(key => {
+            if (params[key] === 'all') delete params[key];
+        });
+        const paramString = JSON.stringify(params);
+
+        if (!isMounted.current) {
+            isMounted.current = true;
+            prevParamsString.current = paramString;
             return;
         }
+
+        if (paramString === prevParamsString.current) return;
+
         const timeout = setTimeout(() => {
-            const params = cleanParams({ search });
+            prevParamsString.current = paramString;
             router.get('/dashboard/exams', params, { replace: true, preserveState: true, preserveScroll: true });
-        }, 2000);
+        }, 500);
         return () => clearTimeout(timeout);
-    }, [search]);
+    }, [queryParams]);
 
     const startEdit = (row) => {
         setEditingId(row.id);
@@ -112,8 +126,8 @@ export default function ExamsPage() {
                     <div className="flex items-center justify-between gap-2">
                         <Input
                             className="w-64"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
+                            value={queryParams.search}
+                            onChange={(e) => setQueryParams({ ...queryParams, search: e.target.value })}
                             placeholder="Search by exam, term, or year"
                         />
                         <AddButton onClick={() => setIsAddOpen(true)}>Add Exam</AddButton>
@@ -257,7 +271,7 @@ export default function ExamsPage() {
                 </Table>
                 {exams.links && (
                     <div className="mt-4">
-                        <Pagination links={exams.links} filters={cleanParams({ search })} />
+                        <Pagination links={exams.links} filters={cleanParams(queryParams)} />
                     </div>
                 )}
             </div>

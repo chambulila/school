@@ -7,15 +7,21 @@ use App\Http\Requests\Admin\StoreRoleRequest;
 use App\Http\Requests\Admin\UpdateRoleRequest;
 use App\Models\Role;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class RoleController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $roles = Role::filter($request)
+            ->paginate((int) $request->input('perPage', 10))
+            ->withQueryString();
+
         return Inertia::render('admin/roles', [
-            'roles' => Role::query()->orderBy('role_name')->get(),
+            'roles' => $roles,
+            'filters' => $request->all(),
         ]);
     }
 

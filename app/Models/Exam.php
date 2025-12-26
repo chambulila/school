@@ -41,16 +41,16 @@ class Exam extends Model
         return $this->hasMany(PublishedResult::class);
     }
 
-    public function scopeFilter($query, $request)
+    public function scopeFilter($query, array $filters)
     {
-        return $query->with('academicYear')
-            ->when($request->input('search'), function ($q, $search) {
-                $q->where('exam_name', 'like', '%'.$search.'%')
-                  ->orWhere('term_name', 'like', '%'.$search.'%');
-            })
-            ->when($request->input('academic_year_id'), function ($q, $yearId) {
-                $q->where('academic_year_id', $yearId);
-            })
-            ->orderBy('start_date', 'desc');
+        $query->when($filters['search'] ?? null, function ($query, $search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('exam_name', 'like', '%' . $search . '%')
+                    ->orWhere('term_name', 'like', '%' . $search . '%')
+                    ->orWhereHas('academicYear', function ($yq) use ($search) {
+                        $yq->where('year_name', 'like', '%' . $search . '%');
+                    });
+            });
+        });
     }
 }

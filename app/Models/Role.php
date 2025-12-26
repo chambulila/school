@@ -44,4 +44,14 @@ class Role extends Model
             ->using(\App\Models\Pivots\RolePermissionPivot::class)
             ->withTimestamps();
     }
+
+    public function scopeFilter($query, $request)
+    {
+        return $query
+            ->when($request->input('search'), function ($q, $search) {
+                $q->where('role_name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            })
+            ->orderBy('role_name');
+    }
 }

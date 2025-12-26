@@ -60,4 +60,11 @@ class ClassSection extends Model
     {
         return $this->hasMany(Student::class, 'current_class_id');
     }
+
+    public function scopeFilter($query, array $filters)
+    {
+        $query->when($filters['search'] ?? null, function ($query, $search) {
+            $query->where('section_name', 'like', '%' . $search . '%');
+        });
+    }
 }

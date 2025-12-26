@@ -133,4 +133,24 @@ class User extends Authenticatable
 
         return $this->roles()->whereIn('role_name', $roles)->exists();
     }
+
+    public function scopeFilter($query, $request)
+    {
+        return $query->with('roles')
+            ->when($request->input('search'), function ($q, $search) {
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%");
+                });
+            })
+            ->when($request->input('role_id'), function ($q, $roleId) {
+                $q->whereHas('roles', function ($rq) use ($roleId) {
+                    $rq->where('roles.id', $roleId); // Specify table name to avoid ambiguity
+                });
+            })
+            ->orderBy('first_name')
+            ->orderBy('last_name');
+    }
 }

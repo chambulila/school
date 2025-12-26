@@ -1,6 +1,6 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import { Input } from '@/components/ui/input';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import AuthenticatedLayout from '@/layouts/authenticated-layout'
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table'
@@ -9,6 +9,8 @@ import AddButton from '@/components/buttons/AddButton';
 import SaveButton from '@/components/buttons/SaveButton';
 import SecondaryButton from '@/components/buttons/SecondaryButton';
 import DeleteButton from '@/components/buttons/DeleteButton';
+import Pagination from '@/components/ui/pagination';
+import { cleanParams } from '@/lib/utils';
 
 export default function RolesIndex() {
     const { props } = usePage();
@@ -131,6 +133,11 @@ export default function RolesIndex() {
                         ))}
                     </TableBody>
                 </Table>
+                {roles.links && (
+                    <div className="mt-4">
+                        <Pagination links={roles.links} filters={cleanParams(queryParams)} />
+                    </div>
+                )}
             </div>
         </AuthenticatedLayout>
     );

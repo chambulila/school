@@ -17,31 +17,15 @@ class FeeNotificationController extends Controller
 {
     public function index(Request $request): Response
     {
-        $search = (string) $request->input('search', '');
-        $perPage = (int) $request->input('perPage', 10);
-
-        $notifications = FeeNotification::query()
-            ->with(['student.user', 'bill.academicYear'])
-            ->when($search !== '', function ($q) use ($search) {
-                $q->where('message', 'like', '%'.$search.'%')
-                    ->orWhereHas('student.user', function ($uq) use ($search) {
-                        $uq->where('first_name', 'like', '%'.$search.'%')
-                            ->orWhere('last_name', 'like', '%'.$search.'%')
-                            ->orWhere('email', 'like', '%'.$search.'%');
-                    });
-            })
-            ->orderBy('sent_at', 'desc')
-            ->paginate($perPage)
+        $notifications = FeeNotification::filter($request)
+            ->paginate((int) $request->input('perPage', 10))
             ->withQueryString();
 
         return Inertia::render('dashboard/FeeNotifications', [
             'notifications' => $notifications,
             'students' => Student::query()->with('user')->orderBy('admission_number')->get(),
             'bills' => StudentBilling::query()->with(['student.user', 'academicYear'])->orderBy('issued_date', 'desc')->get(),
-            'filters' => [
-                'search' => $search,
-                'perPage' => $perPage,
-            ],
+            'filters' => $request->all(),
         ]);
     }
 

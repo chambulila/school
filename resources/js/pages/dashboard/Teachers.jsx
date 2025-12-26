@@ -21,8 +21,10 @@ export default function TeachersPage() {
     const users = useMemo(() => props.users ?? [], [props.users]);
     const errors = props.errors || {};
     const initialFilters = props.filters || {};
-    const [search, setSearch] = useState(initialFilters.search || '');
-    const isFirstSearchEffect = useRef(true);
+    const [queryParams, setQueryParams] = useState({
+        search: initialFilters.search || ''
+    });
+    const isMounted = useRef(false);
 
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [newFirstName, setNewFirstName] = useState('');
@@ -58,17 +60,29 @@ export default function TeachersPage() {
     const [editHire, setEditHire] = useState('');
     const [isEditSaving, setIsEditSaving] = useState(false);
 
+    const prevParamsString = useRef(JSON.stringify(queryParams));
+
     useEffect(() => {
-        if (isFirstSearchEffect.current) {
-            isFirstSearchEffect.current = false;
+        const params = cleanParams(queryParams);
+        Object.keys(params).forEach(key => {
+            if (params[key] === 'all') delete params[key];
+        });
+        const paramString = JSON.stringify(params);
+
+        if (!isMounted.current) {
+            isMounted.current = true;
+            prevParamsString.current = paramString;
             return;
         }
+
+        if (paramString === prevParamsString.current) return;
+
         const timeout = setTimeout(() => {
-            const params = cleanParams({ search });
+            prevParamsString.current = paramString;
             router.get('/dashboard/teachers', params, { replace: true, preserveState: true, preserveScroll: true });
-        }, 2000);
+        }, 500);
         return () => clearTimeout(timeout);
-    }, [search]);
+    }, [queryParams]);
 
     const startEdit = (row) => {
         setEditingId(row.id);
@@ -176,8 +190,8 @@ export default function TeachersPage() {
                     <div className="flex items-center justify-between gap-2">
                         <Input
                             className="w-64"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
+                            value={queryParams.search}
+                            onChange={(e) => setQueryParams({ ...queryParams, search: e.target.value })}
                             placeholder="Search by name, email, or employee #"
                         />
                         <Button onClick={() => setIsAddOpen(true)}>Add Teacher</Button>
@@ -331,7 +345,7 @@ export default function TeachersPage() {
                 </Table>
                 {teachers.links && (
                     <div className="mt-4">
-                        <Pagination links={teachers.links} filters={cleanParams({ search })} />
+                        <Pagination links={teachers.links} filters={cleanParams(queryParams)} />
                     </div>
                 )}
                 <Dialog open={isEditOpen} onOpenChange={(open) => { if (!open) cancelEdit(); else setIsEditOpen(true); }}>

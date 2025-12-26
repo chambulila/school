@@ -35,4 +35,34 @@ class FeeNotification extends Model
     {
         return $this->belongsTo(StudentBilling::class, 'bill_id', 'bill_id');
     }
+
+    public function scopeFilter($query, $request)
+    {
+        return $query->with(['student.user', 'bill.academicYear'])
+            ->when($request->input('search'), function ($q, $search) {
+                $q->where('message', 'like', '%'.$search.'%')
+                    ->orWhereHas('student.user', function ($uq) use ($search) {
+                        $uq->where('first_name', 'like', '%'.$search.'%')
+                            ->orWhere('last_name', 'like', '%'.$search.'%')
+                            ->orWhere('email', 'like', '%'.$search.'%');
+                    });
+            })
+            ->orderBy('sent_at', 'desc')
+            ->orderBy('created_at', 'desc');
+    }
+}
+
+    public function scopeFilter($query, $request)
+    {
+        return $query->with(['student.user', 'bill.academicYear'])
+            ->when($request->input('search'), function ($q, $search) {
+                $q->where('message', 'like', '%'.$search.'%')
+                    ->orWhereHas('student.user', function ($uq) use ($search) {
+                        $uq->where('first_name', 'like', '%'.$search.'%')
+                            ->orWhere('last_name', 'like', '%'.$search.'%')
+                            ->orWhere('email', 'like', '%'.$search.'%');
+                    });
+            })
+            ->orderBy('sent_at', 'desc');
+    }
 }
