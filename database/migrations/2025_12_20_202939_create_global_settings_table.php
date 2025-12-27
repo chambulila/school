@@ -18,22 +18,6 @@ return new class extends Migration
             $table->text('value')->nullable();
             $table->timestamps();
         });
-
-        // Seed default values
-        $defaults = [
-            'app.name' => 'School Management System',
-            'app.short_name' => 'SMS',
-            'theme.color' => '#000000',
-        ];
-
-        foreach ($defaults as $key => $value) {
-            DB::table('global_settings')->insert([
-                'key' => $key,
-                'value' => $value,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
     }
 
     /**

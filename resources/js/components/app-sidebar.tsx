@@ -43,6 +43,26 @@ export function AppSidebar() {
     const data = {
         navMain: [
             {
+                title: "Classes/Grades",
+                url: "#",
+                icon: Users,
+                isVisible: true,
+                items: [
+                    {
+                        title: "Grades",
+                        url: "/dashboard/grades",
+                        isVisible: true,
+                        isActive: checkIsActive('/dashboard/grades'),
+                    },
+                    {
+                        title: "Class Sections",
+                        url: "/dashboard/sections",
+                        isVisible: true,
+                        isActive: checkIsActive('/dashboard/sections'),
+                    },
+                ],
+            },
+            {
                 title: "User Management",
                 url: "#",
                 icon: User,
@@ -71,26 +91,6 @@ export function AppSidebar() {
                         url: "/dashboard/students",
                         isVisible: true,
                         isActive: checkIsActive('/dashboard/students'),
-                    },
-                ],
-            },
-            {
-                title: "Classes/Grades",
-                url: "#",
-                icon: Users,
-                isVisible: true,
-                items: [
-                    {
-                        title: "Grades",
-                        url: "/dashboard/grades",
-                        isVisible: true,
-                        isActive: checkIsActive('/dashboard/grades'),
-                    },
-                    {
-                        title: "Class Sections",
-                        url: "/dashboard/sections",
-                        isVisible: true,
-                        isActive: checkIsActive('/dashboard/sections'),
                     },
                 ],
             },

@@ -36,7 +36,15 @@ class AcademicYearController extends Controller
 
     public function update(UpdateAcademicYearRequest $request, AcademicYear $academicYear)
     {
-        $academicYear->update($request->validated());
+        $data_to_update = $request->validated();
+        if ($request->boolean('is_active')) {
+            $currentYear = AcademicYear::query()->where('is_active', true)->first();
+            if ($currentYear) {
+                $currentYear->update(['is_active' => false]);
+            }
+        }
+        $data_to_update['is_active'] = $request->boolean('is_active');
+        $academicYear->update($data_to_update);
         return back()->with('success', 'Academic year updated');
     }
 

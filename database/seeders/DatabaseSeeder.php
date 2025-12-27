@@ -15,13 +15,16 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(RoleSeeder::class);
-        $this->call(PermissionSeeder::class);
+        $this->call([
+            RoleSeeder::class,
+            GlobalSettingSeeder::class,
+            PermissionSeeder::class,
+        ]);
 
         $user = User::firstOrCreate(
             ['email' => 'admin@gmail.com'],
             [
-                'first_name' => 'Admin',
+                'first_name' => 'SuperAdmin',
                 'last_name' => 'User',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
@@ -30,7 +33,7 @@ class DatabaseSeeder extends Seeder
 
         $adminRoleId = Role::where('role_name', 'Admin')->value('id');
         if ($adminRoleId) {
-            $user->roles()->syncWithoutDetaching([$adminRoleId]);
+            $user->roles()->sync([$adminRoleId]);
         }
     }
 }

@@ -11,6 +11,10 @@ import { ListChecks, Pencil, Trash } from 'lucide-react';
 import { askConfirmation } from '@/utils/sweetAlerts';
 import { cleanParams } from '@/lib/utils';
 import AddButton from '@/components/buttons/AddButton';
+import SaveButton from '@/components/buttons/SaveButton';
+import SecondaryButton from '@/components/buttons/SecondaryButton';
+import EditButton from '@/components/buttons/EditButon';
+import DeleteButton from '@/components/buttons/DeleteButton';
 
 export default function ExamsPage() {
     const { props } = usePage();
@@ -221,7 +225,7 @@ export default function ExamsPage() {
                                             </SelectContent>
                                         </Select>
                                     ) : (
-                                        row.academicYear ? row.academicYear.year_name : '—'
+                                        row.academic_year ? row.academic_year.year_name : '—'
                                     )}
                                 </TableCell>
                                 <TableCell>
@@ -245,23 +249,20 @@ export default function ExamsPage() {
                                         row.end_date
                                     )}
                                 </TableCell>
-                                <TableCell className="space-x-2">
+                                <TableCell className="space-x-2 flex items-center ">
                                     {editingId === row.id ? (
                                         <>
-                                            <Button size="sm" onClick={saveEdit}>Save</Button>
-                                            <Button size="sm" variant="outline" onClick={cancelEdit}>Cancel</Button>
+                                            <SaveButton onClick={saveEdit}>Save</SaveButton>
+                                            <SecondaryButton onClick={cancelEdit}>Cancel</SecondaryButton>
                                         </>
                                     ) : (
                                         <>
-                                            <Button size="sm" variant="outline" onClick={() => router.get(`/dashboard/exams/enrollments/${row.id}`)}>
+                                            <Button onClick={() => router.get(`/dashboard/exams/enrollments/${row.id}`)}>
                                                 <ListChecks className="mr-1 h-4 w-4" /> Results
                                             </Button>
-                                            <Button size="sm" variant="outline" onClick={() => startEdit(row)}>
-                                                <Pencil className="mr-1 h-4 w-4" /> Edit
-                                            </Button>
-                                            <Button size="sm" variant="destructive" onClick={() => deleteExam(row)}>
-                                                <Trash className="mr-1 h-4 w-4" /> Delete
-                                            </Button>
+                                            <EditButton onClick={() => startEdit(row)} />
+
+                                            <DeleteButton variant="destructive" onClick={() => deleteExam(row)} />
                                         </>
                                     )}
                                 </TableCell>

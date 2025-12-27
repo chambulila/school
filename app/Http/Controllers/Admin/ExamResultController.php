@@ -206,12 +206,23 @@ class ExamResultController extends Controller
             ->with('success', "$count students enrolled successfully.");
     }
 
-    public function showEnrollments(Request $request, Exam $exam): Response
+    public function showEnrollments(Request $request, $exam_id)
     {
         $perPage = (int) $request->input('perPage', 50); // Higher default for tabular entry
         $search = $request->input('search');
         $subjectId = $request->input('subject_id');
         $sectionId = $request->input('class_section_id');
+
+        // Ensure $exam_id is a valid UUID before querying
+        if (!\Illuminate\Support\Str::isUuid($exam_id)) {
+            dd($exam_id);
+            return back()->with('error', 'Invalid exam ID.');
+        }
+
+        $exam = Exam::where('id', $exam_id)->first();
+        if (!$exam) {
+            return back()->with('error', 'Exam not found.');
+        }
 
         $query = ExamResult::with(['student.user', 'subject', 'classSection'])
             ->where('exam_id', $exam->id);
@@ -225,8 +236,7 @@ class ExamResultController extends Controller
         if ($search !== '') {
             $query->whereHas('student', function ($sq) use ($search) {
                 $sq->whereHas('user', function ($uq) use ($search) {
-                    $uq->where('name', 'like', '%'.$search.'%')
-                       ->orWhere('first_name', 'like', '%'.$search.'%')
+                    $uq->Where('first_name', 'like', '%'.$search.'%')
                        ->orWhere('last_name', 'like', '%'.$search.'%');
                 })->orWhere('admission_number', 'like', '%'.$search.'%');
             });

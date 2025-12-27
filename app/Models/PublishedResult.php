@@ -40,9 +40,9 @@ class PublishedResult extends Model
         return $this->belongsTo(User::class, 'published_by');
     }
 
-    public function scopeFilter($query, array $filters)
+    public function scopeFilter($query, $request)
     {
-        $query->when($filters['search'] ?? null, function ($query, $search) {
+        $query->when($request->search ?? null, function ($query, $search) {
             $query->where(function ($q) use ($search) {
                 $q->whereHas('exam', function ($eq) use ($search) {
                     $eq->where('exam_name', 'like', '%' . $search . '%')

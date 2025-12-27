@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import Pagination from '@/components/ui/pagination';
 import { cleanParams } from '@/lib/utils';
 import { Save } from 'lucide-react';
+import SaveButton from '@/components/buttons/SaveButton';
 
 export default function ExamEnrollmentIndex() {
     const { exam, results, subjects, classSections, filters } = usePage().props;
@@ -97,7 +98,7 @@ export default function ExamEnrollmentIndex() {
         const newParams = { ...filterParams, [key]: value };
         setFilterParams(newParams);
 
-        router.get('/dashboard/exams/enrollments/show', cleanParams(newParams), {
+        router.get(`/dashboard/exams/enrollments/${exam.id}`, cleanParams(newParams), {
             preserveState: true,
             preserveScroll: true,
             replace: true
@@ -179,7 +180,7 @@ export default function ExamEnrollmentIndex() {
                                             <div className="text-xs text-gray-500">{row.student?.admission_number}</div>
                                         </TableCell>
                                         <TableCell>{row.subject?.subject_name}</TableCell>
-                                        <TableCell>{row.classSection?.section_name}</TableCell>
+                                        <TableCell>{row?.class_section?.section_name || ''}</TableCell>
                                         <TableCell>
                                             <Input
                                                 type="number"
@@ -193,15 +194,11 @@ export default function ExamEnrollmentIndex() {
                                         <TableCell>{row.grade}</TableCell>
                                         <TableCell>{row.remarks}</TableCell>
                                         <TableCell>
-                                            <Button
-                                                size="sm"
-                                                variant="ghost"
+                                            <SaveButton
                                                 onClick={() => saveRow(row)}
                                                 disabled={!row.isDirty || savingRows.includes(row.id)}
-                                                className={row.isDirty ? 'text-amber-600 hover:text-amber-700' : 'text-gray-400'}
                                             >
-                                                <Save className="h-4 w-4" />
-                                            </Button>
+                                            </SaveButton>
                                         </TableCell>
                                     </TableRow>
                                 ))

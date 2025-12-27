@@ -32,6 +32,7 @@ class UpdateStudentRequest extends FormRequest
             'admission_number' => ['required', 'string', 'max:50', 'unique:students,admission_number,' . $id . ',id'],
             'admission_date' => ['nullable', 'date'],
             'current_class_id' => ['nullable', 'uuid', 'exists:class_sections,id'],
+            'academic_year_id' => ['nullable', 'exists:academic_years,id'],
         ];
     }
 }

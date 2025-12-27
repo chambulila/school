@@ -30,7 +30,7 @@ class PermissionSeeder extends Seeder
         $admin = Role::where('role_name', 'Admin')->first();
         if ($admin) {
             $permissionIds = Permission::pluck('id')->all();
-            $admin->permissions()->sync($permissionIds);
+            $admin->permissions()->syncWithoutDetaching($permissionIds);
         }
     }
 }

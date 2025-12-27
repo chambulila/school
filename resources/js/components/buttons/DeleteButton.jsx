@@ -1,4 +1,5 @@
 import { Trash } from "lucide-react";
+import { Button } from "../ui/button";
 
 export default function DeleteButton({
     className = '',
@@ -7,5 +8,8 @@ export default function DeleteButton({
     type = "button",
     ...props
 }) {
-    return <Trash type={type} disabled={disabled} {...props} className="text-red-800 h-4 w-4 cursor-pointer" />
+    return <Button type={type} disabled={disabled} {...props}  className="bg-red-700 hover:bg-red-900 cursor-pointer" >
+        <Trash  />
+        {/* {children || 'Delete'} */}
+    </Button>
 }

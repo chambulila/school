@@ -23,13 +23,13 @@ export default function StudentsPage() {
     const years = useMemo(() => props.years ?? [], [props.years]);
     const errors = props.errors || {};
     const initialFilters = props.filters || {};
-    
+
     // Unified Filter State
     const [queryParams, setQueryParams] = useState({
         search: initialFilters.search || '',
         class_section_id: initialFilters.class_section_id || 'all',
     });
-    
+
     const prevParamsString = useRef(JSON.stringify(queryParams));
 
     const [isAddOpen, setIsAddOpen] = useState(false);
@@ -229,7 +229,7 @@ export default function StudentsPage() {
                         </div>
                         <AddButton onClick={() => setIsAddOpen(true)}>Add Student</AddButton>
                     </div>
-                    
+
                     <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
                         <DialogContent className="w-full max-w-[95vw] md:max-w-3xl lg:max-w-6xl">
                             <DialogHeader>
@@ -396,7 +396,7 @@ export default function StudentsPage() {
                                     {s.admission_date || '—'}
                                 </TableCell>
                                 <TableCell>
-                                    {s.currentClass ? `${s.currentClass.section_name}${s.currentClass.grade ? ` (${s.currentClass.grade.grade_name})` : ''}` : '—'}
+                                    {s.current_class ? `${s.current_class.section_name}${s.current_class.grade ? ` (${s.current_class.grade.grade_name})` : ''}` : '—'}
                                 </TableCell>
                                 <TableCell className="space-x-2">
                                     <div className="flex items-center gap-2">

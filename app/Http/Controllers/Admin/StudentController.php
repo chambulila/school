@@ -103,29 +103,77 @@ class StudentController extends Controller
         });
     }
 
-    public function update(UpdateStudentRequest $request, Student $student): RedirectResponse
+    public function update(UpdateStudentRequest $request, Student $student, BillingService $billingService): RedirectResponse
     {
-        $data = $request->validated();
-        $userFields = ['first_name','last_name','email','password','phone','gender','date_of_birth','address','guardian_name','guardian_phone'];
-        $hasUserUpdates = false;
-        $userUpdate = [];
-        foreach ($userFields as $field) {
-            if (array_key_exists($field, $data)) {
-                $hasUserUpdates = true;
-                $userUpdate[$field] = $data[$field];
-                unset($data[$field]);
+        return DB::transaction(function () use ($request, $student, $billingService) {
+            $data = $request->validated();
+
+            // Extract enrollment fields
+            $academicYearId = $data['academic_year_id'] ?? null;
+            $classSectionId = $data['current_class_id'] ?? null;
+
+            // Handle User Updates
+            $userFields = ['first_name','last_name','email','password','phone','gender','date_of_birth','address','guardian_name','guardian_phone'];
+            $hasUserUpdates = false;
+            $userUpdate = [];
+            foreach ($userFields as $field) {
+                if (array_key_exists($field, $data)) {
+                    $hasUserUpdates = true;
+                    $userUpdate[$field] = $data[$field];
+                    unset($data[$field]);
+                }
             }
-        }
-        if ($hasUserUpdates) {
-            if (!empty($userUpdate['password'])) {
-                $userUpdate['password'] = \Illuminate\Support\Facades\Hash::make($userUpdate['password']);
-            } else {
-                unset($userUpdate['password']);
+            if ($hasUserUpdates) {
+                if (!empty($userUpdate['password'])) {
+                    $userUpdate['password'] = \Illuminate\Support\Facades\Hash::make($userUpdate['password']);
+                } else {
+                    unset($userUpdate['password']);
+                }
+                $student->user()->update($userUpdate);
             }
-            $student->user()->update($userUpdate);
-        }
-        $student->update($data);
-        return back()->with('success', 'Student updated');
+
+            // Handle Enrollment and Billing if Academic Year and Class Section are provided
+            if ($academicYearId && $classSectionId) {
+                // Check if already enrolled in this year
+                $existingEnrollment = StudentEnrollment::where('student_id', $student->id)
+                    ->where('academic_year_id', $academicYearId)
+                    ->first();
+
+                if (!$existingEnrollment) {
+                    StudentEnrollment::create([
+                        'student_id' => $student->id,
+                        'class_section_id' => $classSectionId,
+                        'academic_year_id' => $academicYearId,
+                        'enrollment_date' => now(),
+                    ]);
+
+                    $academicYear = AcademicYear::find($academicYearId);
+                    if ($academicYear) {
+                        $billingService->generateBill($student, $academicYear);
+                    }
+                } // else {
+                    // Update existing enrollment if class changed
+                    //  if ($existingEnrollment->class_section_id !== $classSectionId) {
+                    //     $existingEnrollment->update([
+                    //         'class_section_id' => $classSectionId
+                    //     ]);
+                        // Should we regenerate bill?
+                        // If grade changes, fee structure might change.
+                        // BillingService check if bill exists and returns it.
+                        // If we want to update the bill, we might need more logic.
+                        // For now, let's just update enrollment.
+                    //  }
+                }
+
+                // Ensure current_class_id is updated on student
+                $data['current_class_id'] = $classSectionId;
+
+            // Remove non-student fields
+            unset($data['academic_year_id']);
+
+            $student->update($data);
+            return back()->with('success', 'Student updated');
+        });
     }
 
     public function destroy(Student $student): RedirectResponse

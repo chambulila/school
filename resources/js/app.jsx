@@ -6,9 +6,17 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { initializeTheme } from './hooks/use-appearance';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+const appName = import.meta.env.VITE_APP_NAME || 'School Management System';
 
 createInertiaApp({
+        progress: {
+        color:  '#093679ff',
+        includeCSS: true,
+        // throttle: 200,
+        delay: 250,
+        showSpinner: true,
+        showOnComplete: true,
+    },
     title: (title) => (title ? `${title} - ${appName}` : appName),
     resolve: (name) => {
         const pages = {
@@ -28,10 +36,15 @@ createInertiaApp({
             </StrictMode>,
         );
     },
-    progress: {
-        color: '#4B5563',
-    },
+    // progress: {
+    //     color: '#4B5563',
+    //     includeCSS: true,
+    //     // throttle: 200,
+    //     delay: 0,
+    //     showOnComplete: true,
+    // },
 });
 
 // This will set light / dark mode on load...
 initializeTheme();
+

@@ -41,9 +41,9 @@ class Exam extends Model
         return $this->hasMany(PublishedResult::class);
     }
 
-    public function scopeFilter($query, array $filters)
+    public function scopeFilter($query, $request)
     {
-        $query->when($filters['search'] ?? null, function ($query, $search) {
+        $query->when($request->search ?? null, function ($query, $search) {
             $query->where(function ($q) use ($search) {
                 $q->where('exam_name', 'like', '%' . $search . '%')
                     ->orWhere('term_name', 'like', '%' . $search . '%')

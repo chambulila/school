@@ -196,7 +196,7 @@ export default function SubjectsPage() {
                                             {grades.map((g) => (
                                                 <SelectItem key={g.id} value={g.id}>{g.grade_name}</SelectItem>
                                             ))}
-                                            <SelectItem value="">None</SelectItem>
+                                            <SelectItem >None</SelectItem>
                                         </SelectContent>
                                     </Select>
                                     {errors.grade_id && (
