@@ -90,14 +90,18 @@ export default function FeeCategoriesPage() {
     };
 
     const saveEdit = async () => {
-        if (!editingId) return;
+        if (!editingId || isSaving) return;
+        setIsSaving(true);
         router.put(`/dashboard/fee-categories/${editingId}`, {
             category_name: editName,
             description: editDesc || null,
         }, {
             preserveState: true,
             preserveScroll: true,
-            onSuccess: cancelEdit,
+            onSuccess: () => {
+                cancelEdit();
+            },
+            onFinish: () => setIsSaving(false),
         });
     };
 
@@ -140,12 +144,12 @@ export default function FeeCategoriesPage() {
                                 </div>
                             </div>
                             <DialogFooter>
-                                <Button variant="outline" onClick={() => { setIsAddOpen(false); setNewName(''); setNewDesc(''); }} disabled={isSaving}>
+                                <SecondaryButton onClick={() => { setIsAddOpen(false); setNewName(''); setNewDesc(''); }} disabled={isSaving}>
                                     Cancel
-                                </Button>
-                                <Button onClick={createCategory} disabled={isSaving || !newName.trim()}>
+                                </SecondaryButton>
+                                <SaveButton onClick={createCategory} disabled={isSaving || !newName.trim()}>
                                     {isSaving ? 'Saving' : 'Save'}
-                                </Button>
+                                </SaveButton>
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
@@ -164,14 +168,20 @@ export default function FeeCategoriesPage() {
                             <TableRow key={row.fee_category_id || row.id}>
                                 <TableCell>
                                     {editingId === (row.fee_category_id || row.id) ? (
-                                        <Input value={editName} onChange={(e) => setEditName(e.target.value)} />
+                                        <div className='flex flex-col gap-1'>
+                                            <Input value={editName} onChange={(e) => setEditName(e.target.value)} />
+                                            {errors.category_name && <div className="text-red-500 text-xs">{errors.category_name}</div>}
+                                        </div>
                                     ) : (
                                         capitalizeFirstLetter(row.category_name)
                                     )}
                                 </TableCell>
                                 <TableCell>
                                     {editingId === (row.fee_category_id || row.id) ? (
-                                        <Input value={editDesc} onChange={(e) => setEditDesc(e.target.value)} />
+                                        <div className='flex flex-col gap-1'>
+                                            <Input value={editDesc} onChange={(e) => setEditDesc(e.target.value)} />
+                                            {errors.description && <div className="text-red-500 text-xs">{errors.description}</div>}
+                                        </div>
                                     ) : (
                                         row.description || '—'
                                     )}
@@ -179,7 +189,7 @@ export default function FeeCategoriesPage() {
                                 <TableCell className="space-x-2 flex">
                                     {editingId === (row.fee_category_id || row.id) ? (
                                         <>
-                                            <SaveButton onClick={saveEdit}> Save</SaveButton>
+                                            <SaveButton disabled={isSaving || !editName.trim()} onClick={saveEdit}> Save</SaveButton>
                                             <SecondaryButton onClick={cancelEdit}>Cancel</SecondaryButton>
                                         </>
                                     ) : (

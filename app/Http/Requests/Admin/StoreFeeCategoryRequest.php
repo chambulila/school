@@ -14,7 +14,7 @@ class StoreFeeCategoryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'category_name' => ['required', 'string', 'max:100'],
+            'category_name' => ['required', 'string', 'max:100', 'unique:fee_categories,category_name'],
             'description' => ['nullable', 'string', 'max:255'],
         ];
     }

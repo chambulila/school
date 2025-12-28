@@ -7,5 +7,5 @@ export default function SaveButton({
     type="button",
     ...props
 }) {
-    return <Button size="sm" type={type} {...props} ><Save className=" h-4 w-4" /> {children}</Button>
+    return <Button size="sm"  disabled={disabled} type={type} {...props} ><Save className=" h-4 w-4" /> {children}</Button>
 }
