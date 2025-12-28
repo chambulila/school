@@ -14,6 +14,7 @@ import SecondaryButton from '@/components/buttons/SecondaryButton';
 import SaveButton from '@/components/buttons/SaveButton';
 import EditButton from '@/components/buttons/EditButon';
 import DeleteButton from '@/components/buttons/DeleteButton';
+import SearchableSelect from '@/components/ui/SearchableSelect';
 
 export default function StudentEnrollmentsPage() {
     const { props } = usePage();
@@ -190,23 +191,21 @@ export default function StudentEnrollmentsPage() {
                     </div>
 
                     <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-                        <DialogContent>
+                    <DialogContent className="w-full max-w-[95vw] md:max-w-3xl lg:max-w-6xl">
                             <DialogHeader>
                                 <DialogTitle>Add Student Enrollment</DialogTitle>
                             </DialogHeader>
-                            <div className="space-y-3">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Student</label>
-                                    <Select value={newStudentId} onValueChange={setNewStudentId}>
-                                        <SelectTrigger className="w-full">
-                                            <SelectValue placeholder="Select student" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {students.map((s) => (
-                                                <SelectItem key={s.id} value={s.id}>{studentLabel(s)}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                    <SearchableSelect
+                                        value={newStudentId}
+                                        onChange={setNewStudentId}
+                                        options={students}
+                                        getLabel={studentLabel}
+                                        getValue={(s) => s.id}
+                                        placeholder="Select student"
+                                    />
                                     {errors.student_id && <div className="text-red-500 text-sm mt-1">{errors.student_id}</div>}
                                 </div>
                                 <div>
@@ -223,7 +222,7 @@ export default function StudentEnrollmentsPage() {
                                     </Select>
                                     {errors.class_section_id && <div className="text-red-500 text-sm mt-1">{errors.class_section_id}</div>}
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+
                                     <div>
                                         <label className="block text-sm font-medium mb-1">Academic Year</label>
                                         <Select value={newYearId} onValueChange={setNewYearId}>
@@ -243,15 +242,14 @@ export default function StudentEnrollmentsPage() {
                                         <Input type="date" value={newEnrollDate} onChange={(e) => setNewEnrollDate(e.target.value)} />
                                         {errors.enrollment_date && <div className="text-red-500 text-sm mt-1">{errors.enrollment_date}</div>}
                                     </div>
-                                </div>
                             </div>
                             <DialogFooter>
                                 <Button variant="outline" onClick={() => { setIsAddOpen(false); setNewStudentId(''); setNewSectionId(''); setNewYearId(''); setNewEnrollDate(''); }} disabled={isSaving}>
                                     Cancel
                                 </Button>
-                                <Button onClick={createEnrollment} disabled={isSaving || !newStudentId || !newSectionId || !newYearId}>
+                                <SaveButton onClick={createEnrollment} disabled={isSaving || !newStudentId || !newSectionId || !newYearId}>
                                     {isSaving ? 'Saving' : 'Save'}
-                                </Button>
+                                </SaveButton>
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
@@ -333,7 +331,7 @@ export default function StudentEnrollmentsPage() {
                                         </>
                                     ) : (
                                         <>
-                                            <EditButton size="sm" variant="outline" onClick={() => startEdit(row)} />
+                                            <EditButton  onClick={() => startEdit(row)} />
                                             <DeleteButton size="sm" variant="destructive" onClick={() => deleteEnrollment(row)} />
                                         </>
                                     )}

@@ -14,6 +14,7 @@ import SecondaryButton from '@/components/buttons/SecondaryButton';
 import EditButton from '@/components/buttons/EditButon';
 import DeleteButton from '@/components/buttons/DeleteButton';
 import AddButton from '@/components/buttons/AddButton';
+import SearchableSelect from '@/components/ui/SearchableSelect';
 
 export default function StudentBillingPage() {
     const { props } = usePage();
@@ -149,7 +150,7 @@ export default function StudentBillingPage() {
                         <AddButton onClick={() => setIsAddOpen(true)}>Add Bill</AddButton>
                     </div>
                     <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-                        <DialogContent>
+                    <DialogContent className="w-full max-w-[95vw] md:max-w-3xl lg:max-w-6xl">
                             <DialogHeader>
                                 <DialogTitle>Add Student Bill</DialogTitle>
                             </DialogHeader>
@@ -157,7 +158,15 @@ export default function StudentBillingPage() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div>
                                         <label className="block text-sm font-medium mb-1">Student</label>
-                                        <Select value={newStudentId} onValueChange={setNewStudentId}>
+                                        <SearchableSelect
+                                            value={newStudentId}
+                                            onChange={setNewStudentId}
+                                            options={students}
+                                            getLabel={studentLabel}
+                                            getValue={(s) => s.id}
+                                            placeholder="Select student"
+                                        />
+                                        {/* <Select value={newStudentId} onValueChange={setNewStudentId}>
                                             <SelectTrigger className="w-full">
                                                 <SelectValue placeholder="Select student" />
                                             </SelectTrigger>
@@ -166,7 +175,7 @@ export default function StudentBillingPage() {
                                                     <SelectItem key={s.id} value={s.id}>{studentLabel(s)}</SelectItem>
                                                 ))}
                                             </SelectContent>
-                                        </Select>
+                                        </Select> */}
                                         {errors.student_id && <div className="text-red-500 text-sm mt-1">{errors.student_id}</div>}
                                     </div>
                                     <div>

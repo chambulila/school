@@ -146,7 +146,7 @@ export default function FeeStructuresPage() {
                         <AddButton onClick={() => setIsAddOpen(true)}>Add Fee Structure</AddButton>
                     </div>
                     <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-                        <DialogContent>
+                    <DialogContent className="w-full max-w-[95vw] md:max-w-3xl lg:max-w-6xl">
                             <DialogHeader>
                                 <DialogTitle>Add Fee Structure</DialogTitle>
                             </DialogHeader>
