@@ -11,37 +11,19 @@ use Illuminate\Support\Facades\DB;
 class BillingService
 {
     /**
-     * Generate a bill for a student for a specific academic year.
+     * Generate bills for a student for a specific academic year.
      *
      * @param Student $student
      * @param AcademicYear $academicYear
-     * @return StudentBilling
+     * @return \Illuminate\Support\Collection
      */
-    public function generateBill(Student $student, AcademicYear $academicYear): StudentBilling
+    public function generateBill(Student $student, AcademicYear $academicYear): \Illuminate\Support\Collection
     {
-        // Check if a bill already exists for this student and academic year
-        $existingBill = StudentBilling::where('student_id', $student->id)
-            ->where('academic_year_id', $academicYear->id)
-            ->first();
-
-        if ($existingBill) {
-            return $existingBill;
-        }
-
-        // Get the student's current grade (from enrollment or student record?
-        // Enrollment has class_section which has grade. Student might have current_grade_id)
-        // Let's assume we use the enrollment for this academic year to determine the grade.
-
         $enrollment = $student->enrollments()
             ->where('academic_year_id', $academicYear->id)
             ->first();
 
         if (!$enrollment) {
-             // Fallback or error? If not enrolled, maybe we can't bill?
-             // But requirement says "When a student is enrolled... OR at the beginning of an academic year"
-             // If beginning of year, we might need to look at promoted grade.
-             // For now, let's rely on the grade from enrollment if available, or throw exception.
-             // Actually, if called from EnrollmentController, enrollment exists.
              throw new \Exception("Student is not enrolled for this academic year.");
         }
 
@@ -52,16 +34,34 @@ class BillingService
             ->where('grade_id', $gradeId)
             ->get();
 
-        $totalAmount = $feeStructures->sum('amount');
+        $generatedBills = collect();
 
-        return StudentBilling::create([
-            'student_id' => $student->id,
-            'academic_year_id' => $academicYear->id,
-            'total_amount' => $totalAmount,
-            'amount_paid' => 0,
-            'balance' => $totalAmount,
-            'status' => 'Pending',
-        ]);
+        foreach ($feeStructures as $feeStructure) {
+            // Check if a bill already exists for this student, academic year AND fee structure
+            $existingBill = StudentBilling::where('student_id', $student->id)
+                ->where('academic_year_id', $academicYear->id)
+                ->where('fee_structure_id', $feeStructure->fee_structure_id)
+                ->first();
+
+            if ($existingBill) {
+                $generatedBills->push($existingBill);
+                continue;
+            }
+
+            $bill = StudentBilling::create([
+                'student_id' => $student->id,
+                'academic_year_id' => $academicYear->id,
+                'fee_structure_id' => $feeStructure->fee_structure_id,
+                'total_amount' => $feeStructure->amount,
+                'amount_paid' => 0,
+                'balance' => $feeStructure->amount,
+                'status' => 'Pending',
+            ]);
+
+            $generatedBills->push($bill);
+        }
+
+        return $generatedBills;
     }
 
     /**
@@ -88,6 +88,43 @@ class BillingService
             }
         }
 
+        return $count;
+    }
+
+    /**
+     * Create bills for specific fee structures manually.
+     *
+     * @param Student $student
+     * @param AcademicYear $academicYear
+     * @param array $feeStructureIds
+     * @param string|null $issuedDate
+     * @return int Number of bills created
+     */
+    public function createManualBills(Student $student, AcademicYear $academicYear, array $feeStructureIds, ?string $issuedDate = null): int
+    {
+        $count = 0;
+        foreach ($feeStructureIds as $feeStructureId) {
+            $feeStructure = FeeStructure::find($feeStructureId);
+            if (!$feeStructure) continue;
+
+            $exists = StudentBilling::where('student_id', $student->id)
+                ->where('academic_year_id', $academicYear->id)
+                ->where('fee_structure_id', $feeStructureId)
+                ->exists();
+
+            if ($exists) continue;
+
+            StudentBilling::create([
+                'student_id' => $student->id,
+                'academic_year_id' => $academicYear->id,
+                'fee_structure_id' => $feeStructureId,
+                'total_amount' => $feeStructure->amount,
+                'amount_paid' => 0,
+                'status' => 'pending',
+                'balance' => $feeStructure->amount,
+            ]);
+            $count++;
+        }
         return $count;
     }
 }

@@ -19,21 +19,7 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             GlobalSettingSeeder::class,
             PermissionSeeder::class,
+            UserSeeder::class,
         ]);
-
-        $user = User::firstOrCreate(
-            ['email' => 'admin@gmail.com'],
-            [
-                'first_name' => 'SuperAdmin',
-                'last_name' => 'User',
-                'password' => Hash::make('password'),
-                'email_verified_at' => now(),
-            ]
-        );
-
-        $adminRoleId = Role::where('role_name', 'Admin')->value('id');
-        if ($adminRoleId) {
-            $user->roles()->sync([$adminRoleId]);
-        }
     }
 }

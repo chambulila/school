@@ -1,5 +1,5 @@
-import { Save } from "lucide-react";
 import { Button } from "../ui/button";
+import { usePage } from "@inertiajs/react";
 
 export default function PrimaryButton({
     disabled,
@@ -7,5 +7,7 @@ export default function PrimaryButton({
     type="button",
     ...props
 }) {
-    return <Button size="sm" type={type} {...props} > {children}</Button>
+    const { props: pageProps } = usePage();
+
+    return <Button style={{ backgroundColor: pageProps?.settings?.theme_color || "#007bff", color: "#fff" }} size="sm" type={type} {...props} > {children}</Button>
 }

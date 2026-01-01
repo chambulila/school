@@ -8,6 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (!Schema::hasTable('fee_structures')) {
         Schema::create('fee_structures', function (Blueprint $table) {
             $table->uuid('fee_structure_id')->primary();
             $table->foreignUuid('academic_year_id')->constrained('academic_years');
@@ -19,6 +20,7 @@ return new class extends Migration
             $table->foreign('fee_category_id')->references('fee_category_id')->on('fee_categories');
             $table->unique(['academic_year_id', 'grade_id', 'fee_category_id']);
         });
+    }
     }
 
     public function down(): void

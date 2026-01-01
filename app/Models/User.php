@@ -134,6 +134,13 @@ class User extends Authenticatable
         return $this->roles()->whereIn('role_name', $roles)->exists();
     }
 
+    public function hasPermission(string $permission): bool
+    {
+        return $this->roles()->whereHas('permissions', function ($q) use ($permission) {
+            $q->where('slug', $permission);
+        })->exists();
+    }
+
     public function scopeFilter($query, $request)
     {
         return $query->with('roles')

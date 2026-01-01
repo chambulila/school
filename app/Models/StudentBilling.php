@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Auth;
 
 class StudentBilling extends Model
 {
@@ -16,7 +17,20 @@ class StudentBilling extends Model
     protected $primaryKey = 'bill_id';
     public $incrementing = false;
     protected $keyType = 'string';
-    protected $guarded = [];
+    protected $fillable = [
+        'bill_id',
+        'student_id',
+        'academic_year_id',
+        'total_amount',
+        'amount_paid',
+        'fee_structure_id',
+        'balance',
+        'user_id',
+        'updated_by',
+        'status',
+        'created_at',
+        'updated_at',
+    ];
 
     protected static function boot()
     {
@@ -25,6 +39,7 @@ class StudentBilling extends Model
             if (! $model->getKey()) {
                 $model->{$model->getKeyName()} = (string) Str::uuid();
             }
+            $model->user_id = Auth::id();
         });
     }
 
@@ -36,6 +51,11 @@ class StudentBilling extends Model
     public function academicYear(): BelongsTo
     {
         return $this->belongsTo(AcademicYear::class);
+    }
+
+    public function feeStructure(): BelongsTo
+    {
+        return $this->belongsTo(FeeStructure::class, 'fee_structure_id', 'fee_structure_id');
     }
 
     public function payments(): HasMany

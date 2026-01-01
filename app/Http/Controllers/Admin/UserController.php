@@ -9,7 +9,7 @@ use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Request;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -21,7 +21,7 @@ class UserController extends Controller
             ->paginate((int) $request->input('perPage', 10))
             ->withQueryString();
 
-        return Inertia::render('dashboard/users', [ // Note: Ensure the view path matches your actual file structure (admin/users vs dashboard/users)
+        return Inertia::render('admin/users', [ // Note: Ensure the view path matches your actual file structure (admin/users vs dashboard/users)
             'users' => $users,
             'roles' => Role::query()->orderBy('role_name')->get(),
             'filters' => $request->all(),
@@ -52,6 +52,20 @@ class UserController extends Controller
             $user->roles()->sync($data['roles'] ?? []);
         }
         return back()->with('success', 'User updated');
+    }
+
+    public function assignRoles(Request $request, User $user): RedirectResponse
+    {
+        ifCan('manage-roles', 'You are not authorized to assign roles.');
+
+        $request->validate([
+            'roles' => ['array'],
+            'roles.*' => ['uuid', 'exists:roles,id'],
+        ]);
+
+        $user->roles()->sync($request->input('roles', []));
+
+        return back()->with('success', 'User roles updated');
     }
 
     public function destroy(User $user): RedirectResponse

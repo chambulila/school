@@ -1,9 +1,13 @@
 import { Head, Link, useForm, router } from '@inertiajs/react'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { z } from 'zod'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import AuthenticatedLayout from '@/layouts/authenticated-layout'
+import Pagination from '@/components/ui/pagination'
+import { cleanParams } from '@/lib/utils'
 
 const userSchema = z.object({
   first_name: z.string().min(1).max(100),
@@ -19,7 +23,8 @@ const userSchema = z.object({
   roles: z.array(z.string().uuid()).default([]),
 })
 
-export default function UsersPage({ users, roles }) {
+export default function UsersPage({ users, roles, filters }) {
+  const [queryParams, setQueryParams] = useState(filters || {});
   const roleOptions = useMemo(() => roles.map(r => ({ label: r.role_name, value: r.id })), [roles])
 
   const { data, setData, post, put, delete: destroy, processing, errors, reset } = useForm({
@@ -37,6 +42,28 @@ export default function UsersPage({ users, roles }) {
     const parsed = userSchema.safeParse({ ...data })
     if (!parsed.success) return
     put(`/dashboard/users/${id}`)
+  }
+
+  const [assignRoleOpen, setAssignRoleOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedRoles, setSelectedRoles] = useState([]);
+  const [isAssigning, setIsAssigning] = useState(false);
+
+  const openAssignRoles = (user) => {
+      setSelectedUser(user);
+      setSelectedRoles(user.roles.map(r => r.id));
+      setAssignRoleOpen(true);
+  }
+
+  const saveRoles = () => {
+      if (!selectedUser) return;
+      setIsAssigning(true);
+      router.put(`/dashboard/users/${selectedUser.id}/roles`, {
+          roles: selectedRoles
+      }, {
+          onSuccess: () => setAssignRoleOpen(false),
+          onFinish: () => setIsAssigning(false)
+      });
   }
 
   return (
@@ -87,7 +114,7 @@ export default function UsersPage({ users, roles }) {
           </tr>
         </thead>
         <tbody>
-          {users.map(u => (
+          {(users.data ?? users).map(u => (
             <tr key={u.id} className="border-t">
               <td className="p-2">{u.first_name} {u.last_name}</td>
               <td className="p-2">{u.email}</td>
@@ -109,6 +136,7 @@ export default function UsersPage({ users, roles }) {
                   })
                   submitUpdate(u.id)
                 }}>Quick Save</Button>
+                <Button variant="outline" onClick={() => openAssignRoles(u)}>Manage Roles</Button>
                 <Button variant="destructive" onClick={() => {
                   if (window.confirm('Delete user?')) {
                     router.delete(`/dashboard/users/${u.id}`)
@@ -124,8 +152,34 @@ export default function UsersPage({ users, roles }) {
             <Pagination links={users.links} filters={cleanParams(queryParams)} />
         </div>
       )}
+
+      <Dialog open={assignRoleOpen} onOpenChange={setAssignRoleOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Assign Roles to {selectedUser?.first_name} {selectedUser?.last_name}</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+                <div className="flex flex-wrap gap-3">
+                    {roles.map(r => {
+                        const checked = selectedRoles.includes(r.id)
+                        return (
+                            <label key={r.id} className="flex items-center gap-2 cursor-pointer border p-2 rounded hover:bg-gray-50">
+                                <Checkbox checked={checked} onCheckedChange={(v) => {
+                                    setSelectedRoles(v ? [...selectedRoles, r.id] : selectedRoles.filter((id) => id !== r.id))
+                                }} />
+                                <span>{r.role_name}</span>
+                            </label>
+                        )
+                    })}
+                </div>
+            </div>
+            <DialogFooter>
+                <Button variant="secondary" onClick={() => setAssignRoleOpen(false)} disabled={isAssigning}>Cancel</Button>
+                <Button onClick={saveRoles} disabled={isAssigning}>Save Roles</Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
     </AuthenticatedLayout>
   )
 }
-import AuthenticatedLayout from '@/layouts/authenticated-layout'

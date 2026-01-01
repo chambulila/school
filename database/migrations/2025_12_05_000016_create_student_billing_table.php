@@ -12,15 +12,19 @@ return new class extends Migration
             $table->uuid('bill_id')->primary();
             $table->foreignUuid('student_id')->constrained('students');
             $table->foreignUuid('academic_year_id')->constrained('academic_years');
+            $table->foreignUuid('fee_structure_id')->constrained('fee_structures', 'fee_structure_id');
             $table->decimal('total_amount', 10, 2);
             $table->decimal('amount_paid', 10, 2)->default(0);
             $table->decimal('balance', 10, 2);
-            $table->enum('status', ['Pending', 'Partially Paid', 'Fully Paid'])->default('Pending');
+            $table->foreignUuid('user_id')->nullable()->comment('ID of the user who created the billing')->constrained()->onDelete('cascade');
+            $table->foreignUuid('updated_by')->nullable()->comment('ID of the user who updated the billing');
+            $table->enum('status', ['pending', 'partially_paid', 'fully_paid'])->default('pending');
             $table->timestamps();
 
             $table->index(['student_id', 'academic_year_id']);
         });
     }
+
 
     public function down(): void
     {

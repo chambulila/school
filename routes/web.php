@@ -23,10 +23,11 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
         Route::get('users', [\App\Http\Controllers\Admin\UserController::class, 'index'])->name('admin.users.index');
         Route::post('users', [\App\Http\Controllers\Admin\UserController::class, 'store'])->name('admin.users.store');
         Route::put('users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'update'])->name('admin.users.update');
+        Route::put('users/{user}/roles', [\App\Http\Controllers\Admin\UserController::class, 'assignRoles'])->name('admin.users.assign-roles');
         Route::delete('users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('admin.users.destroy');
     // });
 
-    Route::middleware('can:manage-roles')->group(function () {
+    // Route::middleware('can:manage-roles')->group(function () {
         Route::get('roles', [\App\Http\Controllers\Admin\RoleController::class, 'index'])->name('admin.roles.index');
         Route::post('roles', [\App\Http\Controllers\Admin\RoleController::class, 'store'])->name('admin.roles.store');
         Route::put('roles/{role}', [\App\Http\Controllers\Admin\RoleController::class, 'update'])->name('admin.roles.update');
@@ -34,9 +35,9 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
 
         Route::get('permissions', [\App\Http\Controllers\Admin\PermissionController::class, 'index'])->name('admin.permissions.index');
         Route::put('permissions/{role}', [\App\Http\Controllers\Admin\PermissionController::class, 'update'])->name('admin.permissions.update');
-    });
+    // });
 
-    Route::middleware('can:manage-classes')->group(function () {
+    // Route::middleware('can:manage-classes')->group(function () {
         Route::get('grades', [\App\Http\Controllers\Admin\GradeController::class, 'index'])->name('admin.grades.index');
         Route::post('grades', [\App\Http\Controllers\Admin\GradeController::class, 'store'])->name('admin.grades.store');
         Route::put('grades/{grade}', [\App\Http\Controllers\Admin\GradeController::class, 'update'])->name('admin.grades.update');
@@ -68,7 +69,7 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
         Route::delete('exams/{exam}', [\App\Http\Controllers\Admin\ExamController::class, 'destroy'])->name('admin.exams.destroy');
 
         Route::get('exam-results', [\App\Http\Controllers\Admin\ExamResultController::class, 'index'])->name('admin.exam-results.index');
-        
+
         // New Enrollment Routes
         Route::get('exams/enrollments/create', [\App\Http\Controllers\Admin\ExamResultController::class, 'create'])->name('admin.exam-enrollments.create');
         Route::get('exams/enrollments/results', [\App\Http\Controllers\Admin\ExamResultController::class, 'resultsIndex'])->name('admin.exam-enrollments.results-index');
@@ -149,5 +150,5 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
         // Settings
         Route::get('settings/theme', [\App\Http\Controllers\Admin\GeneralSettingController::class, 'edit'])->name('settings.theme');
         Route::put('settings/theme', [\App\Http\Controllers\Admin\GeneralSettingController::class, 'update'])->name('settings.theme.update');
-    });
+    // });
 });

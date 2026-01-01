@@ -75,12 +75,6 @@ export function AppSidebar() {
                         isActive: checkIsActive('/dashboard/users'),
                     },
                     {
-                        title: "Roles",
-                        url: "/dashboard/roles",
-                        isVisible: true,
-                        isActive: checkIsActive('/dashboard/roles'),
-                    },
-                    {
                         title: "Teachers",
                         url: "/dashboard/teachers",
                         isVisible: true,
@@ -216,10 +210,22 @@ export function AppSidebar() {
                 isVisible: true,
                 items: [
                     {
+                        title: "Roles",
+                        url: "/dashboard/roles",
+                        isVisible: true,
+                        isActive: checkIsActive('/dashboard/roles'),
+                    },
+                    {
                         title: "Permissions",
                         url: "/dashboard/permissions",
                         isVisible: true,
                         isActive: checkIsActive('/dashboard/permissions'),
+                    },
+                    {
+                        title: "Assign Roles",
+                        url: "/dashboard/users",
+                        isVisible: true,
+                        isActive: checkIsActive('/dashboard/users'),
                     },
                 ],
             },

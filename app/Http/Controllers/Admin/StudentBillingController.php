@@ -8,8 +8,13 @@ use App\Http\Requests\Admin\UpdateStudentBillingRequest;
 use App\Models\AcademicYear;
 use App\Models\Student;
 use App\Models\StudentBilling;
+use App\Models\FeeStructure;
+use App\Services\BillingService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -17,8 +22,9 @@ class StudentBillingController extends Controller
 {
     public function index(Request $request): Response
     {
+        ifCan('view-student-billings');
         $bills = StudentBilling::query()
-            ->with(['student.user:id,first_name,last_name,email', 'academicYear:id,year_name,is_active'])
+            ->with(['student.user:id,first_name,last_name,email', 'academicYear:id,year_name,is_active', 'feeStructure.feeCategory'])
             ->filter($request->only('search'))
             ->orderBy('created_at', 'desc')
             ->paginate($request->input('perPage', 10))
@@ -41,6 +47,7 @@ class StudentBillingController extends Controller
                     'year_name' => $bill->academicYear->year_name,
                     'is_active' => $bill->academicYear->is_active,
                 ],
+                'fee_category_name' => $bill->feeStructure?->feeCategory?->category_name ?? 'General',
                 'total_amount' => $bill->total_amount,
                 'status' => $bill->status,
                 'due_date' => $bill->due_date,
@@ -53,28 +60,77 @@ class StudentBillingController extends Controller
 
         return Inertia::render('dashboard/StudentBilling', [
             'bills' => $bills,
-            'students' => Student::query()->with('user:id,first_name,last_name,email')->orderBy('admission_number')->select('id', 'admission_number', 'user_id')->get(),
-            'years' => AcademicYear::query()->orderBy('year_name')->active()->select('id', 'year_name', 'is_active')->get(),
+            'students' => Student::query()
+                ->with(['user:id,first_name,last_name,email', 'currentClass.grade:id,grade_name'])
+                ->orderBy('admission_number')
+                ->select('id', 'admission_number', 'user_id', 'current_class_id')
+                ->get()
+                ->map(fn($s) => [
+                    'id' => $s->id,
+                    'admission_number' => $s->admission_number,
+                    'user' => $s->user,
+                    'grade_id' => $s->currentClass?->grade_id,
+                    'grade_name' => $s->currentClass?->grade?->grade_name,
+                ]),
+            'years' => AcademicYear::query()->orderBy('year_name')->select('id', 'year_name', 'is_active')->get(),
+            'feeStructures' => FeeStructure::with('feeCategory', 'grade')->get()->map(fn($fs) => [
+                'id' => $fs->fee_structure_id,
+                'name' => $fs->feeCategory->category_name . ' - ' . $fs->grade->grade_name . ' (' . $fs->amount . ')',
+                'amount' => $fs->amount,
+                'academic_year_id' => $fs->academic_year_id,
+                'grade_id' => $fs->grade_id,
+            ]),
             'filters' => $request->only('search'),
         ]);
     }
 
-    public function store(StoreStudentBillingRequest $request)
+    public function store(StoreStudentBillingRequest $request, BillingService $billingService)
     {
-        StudentBilling::create($request->validated());
+        ifCan('create-student-billing');
+        $validated = $request->validated();
+
+        // Handle bulk creation if fee_structure_ids array is present
+        if ($request->has('fee_structure_ids') && is_array($request->fee_structure_ids)) {
+            return DB::transaction(function () use ($request, $validated, $billingService) {
+                $student = Student::find($validated['student_id']);
+                $academicYear = AcademicYear::find($validated['academic_year_id']);
+
+                if ($student && $academicYear) {
+                    try {
+                        $count = $billingService->createManualBills(
+                            $student,
+                            $academicYear,
+                            $request->fee_structure_ids,
+                        );
+                        return back()->with('success', "$count student bills created");
+                    } catch (\Exception $e) {
+                        logger()->error('Failed to create bills: ' . $e->getMessage());
+                        return back()->with('error', 'Failed to create bills: ' . $e->getMessage());
+                    }
+                }
+                return back()->with('error', 'Invalid student or academic year.');
+            });
+        }
+
+        // Handle single creation (legacy/manual)
+        // StudentBilling::create($validated);
         return back()->with('success', 'Student bill created');
     }
 
     public function update(UpdateStudentBillingRequest $request, StudentBilling $studentBilling)
     {
+        ifCan('edit-student-billing');
         $studentBilling->update($request->validated());
         return back()->with('success', 'Student bill updated');
     }
 
     public function destroy(StudentBilling $studentBilling)
     {
+        ifCan('delete-student-billing');
         $studentBilling->delete();
         return back()->with('success', 'Student bill deleted');
     }
+
+
 }
 

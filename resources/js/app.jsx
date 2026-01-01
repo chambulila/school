@@ -19,13 +19,16 @@ createInertiaApp({
     },
     title: (title) => (title ? `${title} - ${appName}` : appName),
     resolve: (name) => {
-        const pages = {
-            ...import.meta.glob('./pages/**/*.tsx'),
-            ...import.meta.glob('./pages/**/*.jsx'),
-        };
-        const pathTsx = `./pages/${name}.tsx`;
-        const pathJsx = `./pages/${name}.jsx`;
-        return pages[pathTsx]?.() ?? pages[pathJsx]?.();
+        const pages = import.meta.glob(['./pages/**/*.jsx', './pages/**/*.tsx']);
+        // Try to resolve as .jsx first, then .tsx
+        // Note: This naive approach assumes .jsx for simplicity if both exist or for consistency
+        // Ideally, we check which one exists. resolvePageComponent expects a path that matches a key in pages.
+        
+        let path = `./pages/${name}.jsx`;
+        if (!pages[path]) {
+             path = `./pages/${name}.tsx`;
+        }
+        return resolvePageComponent(path, pages);
     },
     setup({ el, App, props }) {
         const root = createRoot(el);

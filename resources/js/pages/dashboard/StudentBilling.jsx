@@ -2,7 +2,6 @@ import { Head, router, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import AuthenticatedLayout from '@/layouts/authenticated-layout';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Pagination from '@/components/ui/pagination';
@@ -11,16 +10,19 @@ import { cleanParams } from '@/lib/utils';
 import { askConfirmation } from '@/utils/sweetAlerts';
 import SaveButton from '@/components/buttons/SaveButton';
 import SecondaryButton from '@/components/buttons/SecondaryButton';
-import EditButton from '@/components/buttons/EditButon';
 import DeleteButton from '@/components/buttons/DeleteButton';
 import AddButton from '@/components/buttons/AddButton';
 import SearchableSelect from '@/components/ui/SearchableSelect';
+
+import { Checkbox } from "@/components/ui/checkbox"
 
 export default function StudentBillingPage() {
     const { props } = usePage();
     const bills = useMemo(() => props.bills ?? [], [props.bills]);
     const students = useMemo(() => props.students ?? [], [props.students]);
     const years = useMemo(() => props.years ?? [], [props.years]);
+
+    const feeStructures = useMemo(() => props.feeStructures ?? [], [props.feeStructures]);
     const errors = props.errors || {};
     const initialFilters = props.filters || {};
     const [queryParams, setQueryParams] = useState({
@@ -31,11 +33,28 @@ export default function StudentBillingPage() {
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [newStudentId, setNewStudentId] = useState('');
     const [newYearId, setNewYearId] = useState('');
-    const [newTotal, setNewTotal] = useState('');
-    const [newPaid, setNewPaid] = useState('');
-    const [newStatus, setNewStatus] = useState('unpaid');
+    const [selectedFeeStructureIds, setSelectedFeeStructureIds] = useState([]);
     const [newIssuedDate, setNewIssuedDate] = useState('');
     const [isSaving, setIsSaving] = useState(false);
+
+    // Set default active year when dialog opens
+    useEffect(() => {
+        if (isAddOpen && !newYearId) {
+            const activeYear = years.find(y => y.is_active);
+            if (activeYear) {
+                setNewYearId(activeYear.id);
+            }
+        }
+        if (!isAddOpen) {
+            // Reset state when closed
+             setNewStudentId('');
+             // Don't reset year if we want it to persist, but maybe safer to reset or keep active default
+             const activeYear = years.find(y => y.is_active);
+             setNewYearId(activeYear ? activeYear.id : '');
+             setSelectedFeeStructureIds([]);
+             setNewIssuedDate('');
+        }
+    }, [isAddOpen, years]);
 
     const [editingId, setEditingId] = useState(null);
     const [editStudentId, setEditStudentId] = useState('');
@@ -44,6 +63,7 @@ export default function StudentBillingPage() {
     const [editPaid, setEditPaid] = useState('');
     const [editStatus, setEditStatus] = useState('unpaid');
     const [editIssuedDate, setEditIssuedDate] = useState('');
+
 
     const prevParamsString = useRef(JSON.stringify(queryParams));
 
@@ -69,17 +89,6 @@ export default function StudentBillingPage() {
         return () => clearTimeout(timeout);
     }, [queryParams]);
 
-    const startEdit = (row) => {
-        const id = row.bill_id || row.id;
-        setEditingId(id);
-        setEditStudentId(row.student_id || (row.student?.id ?? ''));
-        setEditYearId(row.academic_year_id || (row.academicYear?.id ?? ''));
-        setEditTotal(String(row.total_amount ?? '') || '');
-        setEditPaid(String(row.paid_amount ?? '') || '');
-        setEditStatus(row.status || 'unpaid');
-        setEditIssuedDate(row.issued_date || '');
-    };
-
     const cancelEdit = () => {
         setEditingId(null);
         setEditStudentId(''); setEditYearId('');
@@ -87,25 +96,43 @@ export default function StudentBillingPage() {
         setEditStatus('unpaid'); setEditIssuedDate('');
     };
 
+
+    const handleFeeStructureToggle = (id) => {
+        setSelectedFeeStructureIds(prev => {
+            if (prev.includes(id)) {
+                return prev.filter(item => item !== id);
+            } else {
+                return [...prev, id];
+            }
+        });
+    };
+
+    const handleSelectAllFees = (checked) => {
+        if (checked) {
+            setSelectedFeeStructureIds(feeStructures.map(fs => fs.id));
+        } else {
+            setSelectedFeeStructureIds([]);
+        }
+    };
+
     const createBill = async () => {
-        if (!newStudentId || !newYearId || !newTotal || !newStatus || isSaving) return;
+        if (!newStudentId || !newYearId || selectedFeeStructureIds.length === 0 || isSaving) return;
         setIsSaving(true);
         router.post('/dashboard/student-billing', {
             student_id: newStudentId,
             academic_year_id: newYearId,
-            total_amount: parseFloat(newTotal),
-            paid_amount: newPaid ? parseFloat(newPaid) : null,
-            status: newStatus,
+            fee_structure_ids: selectedFeeStructureIds,
+            status: 'unpaid',
             issued_date: newIssuedDate || null,
         }, {
             preserveState: true,
             preserveScroll: true,
             onSuccess: () => {
-                setNewStudentId(''); setNewYearId(''); setNewTotal(''); setNewPaid(''); setNewStatus('unpaid'); setNewIssuedDate('');
                 setIsAddOpen(false);
                 setIsSaving(false);
             },
             onFinish: () => setIsSaving(false),
+            onError: () => setIsAddOpen(true),
         });
     };
 
@@ -138,48 +165,38 @@ export default function StudentBillingPage() {
     return (
         <AuthenticatedLayout breadcrumbs={[{ title: 'Dashboard', href: '/dashboard' }, { title: 'Student Billing', href: '/dashboard/student-billing' }]}>
             <Head title="Student Billing" />
-            <div className="p-6">
-                <div className="mb-6">
-                    <div className="flex items-center justify-between gap-2">
-                        <Input
-                            className="w-64"
-                            value={queryParams.search}
-                            onChange={(e) => setQueryParams({ ...queryParams, search: e.target.value })}
-                            placeholder="Search by student or academic year"
-                        />
-                        <AddButton onClick={() => setIsAddOpen(true)}>Add Bill</AddButton>
-                    </div>
-                    <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+            <div className="p-4 md:p-6">
+                <div className="mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <Input
+                        className="w-full md:w-64"
+                        value={queryParams.search}
+                        onChange={(e) => setQueryParams({ ...queryParams, search: e.target.value })}
+                        placeholder="Search by student or academic year"
+                    />
+                    <AddButton onClick={() => setIsAddOpen(true)} className="w-full md:w-auto">Add Bill</AddButton>
+                </div>
+                <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
                     <DialogContent className="w-full max-w-[95vw] md:max-w-3xl lg:max-w-6xl">
                             <DialogHeader>
                                 <DialogTitle>Add Student Bill</DialogTitle>
                             </DialogHeader>
-                            <div className="space-y-3">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="block text-sm font-medium mb-1">Student</label>
-                                        <SearchableSelect
-                                            value={newStudentId}
-                                            onChange={setNewStudentId}
-                                            options={students}
-                                            getLabel={studentLabel}
-                                            getValue={(s) => s.id}
-                                            placeholder="Select student"
-                                        />
-                                        {/* <Select value={newStudentId} onValueChange={setNewStudentId}>
-                                            <SelectTrigger className="w-full">
-                                                <SelectValue placeholder="Select student" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {students.map((s) => (
-                                                    <SelectItem key={s.id} value={s.id}>{studentLabel(s)}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select> */}
-                                        {errors.student_id && <div className="text-red-500 text-sm mt-1">{errors.student_id}</div>}
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium mb-1">Academic Year</label>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">1. Select Student</label>
+                                    <SearchableSelect
+                                        value={newStudentId}
+                                        onChange={setNewStudentId}
+                                        options={students}
+                                        getLabel={studentLabel}
+                                        getValue={(s) => s.id}
+                                        placeholder="Select student"
+                                    />
+                                    {errors.student_id && <div className="text-red-500 text-sm mt-1">{errors.student_id}</div>}
+                                </div>
+
+                                {newStudentId && (
+                                    <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                                        <label className="block text-sm font-medium mb-1">2. Select Academic Year</label>
                                         <Select value={newYearId} onValueChange={setNewYearId}>
                                             <SelectTrigger className="w-full">
                                                 <SelectValue placeholder="Select year" />
@@ -192,77 +209,90 @@ export default function StudentBillingPage() {
                                         </Select>
                                         {errors.academic_year_id && <div className="text-red-500 text-sm mt-1">{errors.academic_year_id}</div>}
                                     </div>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                    <div>
-                                        <label className="block text-sm font-medium mb-1">Total Amount</label>
-                                        <Input type="number" value={newTotal} onChange={(e) => setNewTotal(e.target.value)} placeholder="e.g. 500.00" />
-                                        {errors.total_amount && <div className="text-red-500 text-sm mt-1">{errors.total_amount}</div>}
+                                )}
+
+                                {newStudentId && newYearId && (
+                                    <div className="animate-in fade-in slide-in-from-top-2 duration-300 space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <label className="block text-sm font-medium">3. Select Fees</label>
+                                            <div className="flex items-center space-x-2">
+                                                 <Checkbox
+                                                    id="select-all"
+                                                    checked={feeStructures.length > 0 && selectedFeeStructureIds.length === feeStructures.length}
+                                                    onCheckedChange={handleSelectAllFees}
+                                                 />
+                                                 <label htmlFor="select-all" className="text-sm cursor-pointer">Select All</label>
+                                            </div>
+                                        </div>
+
+                                        <div className="border rounded-md p-3 max-h-60 overflow-y-auto space-y-2">
+                                            {feeStructures.length > 0 ? (
+                                                feeStructures.map((fs) => (
+                                                    <div key={fs.id} className="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded-md">
+                                                        <Checkbox
+                                                            id={`fee-${fs.id}`}
+                                                            checked={selectedFeeStructureIds.includes(fs.id)}
+                                                            onCheckedChange={() => handleFeeStructureToggle(fs.id)}
+                                                        />
+                                                        <label htmlFor={`fee-${fs.id}`} className="text-sm flex-1 cursor-pointer">
+                                                            <span className="font-medium">{fs.name.split(' - ')[0]}</span>
+                                                            <span className="text-gray-500 text-xs ml-2">({parseFloat(fs.amount).toFixed(2)})</span>
+                                                        </label>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="text-center text-gray-500 py-4 text-sm">
+                                                    No fee structures found for this student's grade in the selected year.
+                                                </div>
+                                            )}
+                                        </div>
+                                        {errors.fee_structure_ids && <div className="text-red-500 text-sm mt-1">{errors.fee_structure_ids}</div>}
+
+                                        {/* <div>
+                                            <label className="block text-sm font-medium mb-1">Issued Date (optional)</label>
+                                            <Input type="date" value={newIssuedDate} onChange={(e) => setNewIssuedDate(e.target.value)} />
+                                            {errors.issued_date && <div className="text-red-500 text-sm mt-1">{errors.issued_date}</div>}
+                                        </div> */}
                                     </div>
-                                    <div>
-                                        <label className="block text-sm font-medium mb-1">Paid Amount (optional)</label>
-                                        <Input type="number" value={newPaid} onChange={(e) => setNewPaid(e.target.value)} placeholder="e.g. 200.00" />
-                                        {errors.paid_amount && <div className="text-red-500 text-sm mt-1">{errors.paid_amount}</div>}
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium mb-1">Status</label>
-                                        <Select value={newStatus} onValueChange={setNewStatus}>
-                                            <SelectTrigger className="w-full">
-                                                <SelectValue placeholder="Select status" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="unpaid">Unpaid</SelectItem>
-                                                <SelectItem value="partial">Partial</SelectItem>
-                                                <SelectItem value="paid">Paid</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                        {errors.status && <div className="text-red-500 text-sm mt-1">{errors.status}</div>}
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">Issued Date (optional)</label>
-                                    <Input type="date" value={newIssuedDate} onChange={(e) => setNewIssuedDate(e.target.value)} />
-                                    {errors.issued_date && <div className="text-red-500 text-sm mt-1">{errors.issued_date}</div>}
-                                </div>
+                                )}
                             </div>
                             <DialogFooter>
-                                <SecondaryButton onClick={() => { setIsAddOpen(false); setNewStudentId(''); setNewYearId(''); setNewTotal(''); setNewPaid(''); setNewStatus('unpaid'); setNewIssuedDate(''); }} disabled={isSaving}>
+                                <SecondaryButton onClick={() => setIsAddOpen(false)} disabled={isSaving}>
                                     Cancel
                                 </SecondaryButton>
-                                <SaveButton onClick={createBill} disabled={isSaving || !newStudentId || !newYearId || !newTotal || !newStatus}>
-                                    {isSaving ? 'Saving' : 'Save'}
+                                <SaveButton onClick={createBill} disabled={isSaving || !newStudentId || !newYearId || selectedFeeStructureIds.length === 0}>
+                                    {isSaving ? 'Saving' : 'Save Bills'}
                                 </SaveButton>
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
                 </div>
 
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Student</TableHead>
-                            <TableHead>Admission#</TableHead>
-                            <TableHead>Year</TableHead>
-                            <TableHead>Total</TableHead>
-                            <TableHead>Paid</TableHead>
-                            <TableHead>Balance</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Issued</TableHead>
-                            <TableHead>Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {(bills.data ?? bills).map((row) => (
+                <div className="overflow-x-auto border rounded-md">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-[50px]"></TableHead>
+                                <TableHead className="min-w-[150px]">Student</TableHead>
+                                <TableHead className="min-w-[100px]">Admission#</TableHead>
+                                <TableHead className="min-w-[120px]">Academic Year</TableHead>
+                                <TableHead className="min-w-[150px]">Fee Type</TableHead>
+                                <TableHead className="min-w-[100px]">Total</TableHead>
+                                <TableHead className="min-w-[100px]">Paid</TableHead>
+                                <TableHead className="min-w-[100px]">Balance</TableHead>
+                                <TableHead className="min-w-[120px]">Status</TableHead>
+                                <TableHead className="min-w-[120px]">Issued</TableHead>
+                                <TableHead className="min-w-[100px]">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                        {(bills.data ?? bills).map((row, index) => (
                             <TableRow key={row.bill_id || row.id}>
-                                <TableCell>
-                                    {row.student ? studentLabel(row.student) : '—'}
-                                </TableCell>
-                                <TableCell>
-                                    {row.student?.user?.admission_number || '—'}
-                                </TableCell>
-                                <TableCell>
-                                    {row.academic_year ? yearLabel(row.academic_year) : '—'}
-                                </TableCell>
+                                <TableCell>{index + 1}</TableCell>
+                                  <TableCell>{row.student ? studentLabel(row.student) : '—'}</TableCell>
+                                <TableCell>{row.student?.user?.admission_number || '—'}</TableCell>
+                                <TableCell>{row.academic_year ? yearLabel(row.academic_year) : '—'}</TableCell>
+                                <TableCell>{row.fee_category_name || 'General'}</TableCell>
                                 <TableCell>{row.total_amount}</TableCell>
                                 <TableCell>{row.amount_paid ?? '—'}</TableCell>
                                 <TableCell>{row.balance ?? '—'}</TableCell>
@@ -276,7 +306,7 @@ export default function StudentBillingPage() {
                                         </>
                                     ) : (
                                         <>
-                                            <EditButton  onClick={() => startEdit(row)} />
+                                            {/* <EditButton  onClick={() => startEdit(row)} /> */}
                                             <DeleteButton onClick={() => deleteBill(row)} />
                                         </>
                                     )}
@@ -285,12 +315,12 @@ export default function StudentBillingPage() {
                         ))}
                     </TableBody>
                 </Table>
+                </div>
                 {bills.links && (
                     <div className="mt-4">
                         <Pagination links={bills.links} filters={cleanParams(queryParams)} />
                     </div>
                 )}
-            </div>
         </AuthenticatedLayout>
     );
 }

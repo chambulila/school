@@ -1,4 +1,4 @@
-import * as React from "react"
+import { useState } from "react"
 import { Check, ChevronsUpDown } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -27,7 +27,7 @@ export default function SearchableSelect({
     disabled = false,
     className,
 }) {
-    const [open, setOpen] = React.useState(false)
+    const [open, setOpen] = useState(false)
     const selectedOption = options.find(
         (option) => String(getValue(option)) == String(value)
     )
