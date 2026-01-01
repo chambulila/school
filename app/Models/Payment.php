@@ -16,7 +16,17 @@ class Payment extends Model
     protected $primaryKey = 'payment_id';
     public $incrementing = false;
     protected $keyType = 'string';
-    protected $guarded = [];
+    protected $fillable = [
+        'bill_id',
+        'student_id',
+        'payment_id',
+        'payment_date',
+        'amount_paid',
+        'payment_method',
+        'transaction_reference',
+        'received_by',
+        'created_by',
+    ];
 
     protected static function boot()
     {
@@ -25,12 +35,20 @@ class Payment extends Model
             if (! $model->getKey()) {
                 $model->{$model->getKeyName()} = (string) Str::uuid();
             }
+            if (! $model->created_by) {
+                $model->created_by = auth()->user()->id;
+            }
         });
     }
 
     public function bill(): BelongsTo
     {
         return $this->belongsTo(StudentBilling::class, 'bill_id', 'bill_id');
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function student(): BelongsTo
@@ -113,7 +131,8 @@ class Payment extends Model
             'student.currentClass.grade',
             'bill.academicYear',
             'receivedBy',
-            'receipt'
+            'receipt',
+            'creator:id,first_name,last_name',
         ])
             ->applyFilters($request)
             ->orderBy('payment_date', 'desc')

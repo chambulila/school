@@ -15,6 +15,7 @@ import EditButton from '@/components/buttons/EditButon';
 import DeleteButton from '@/components/buttons/DeleteButton';
 import SaveButton from '@/components/buttons/SaveButton';
 import SecondaryButton from '@/components/buttons/SecondaryButton';
+import DownloadButton from '@/components/buttons/DownloadButton';
 
 export default function Payments() {
     const { payments, bills, students, users, academicYears, grades, filters } = usePage().props;
@@ -277,20 +278,20 @@ export default function Payments() {
                     {/* Filter Controls */}
                     <div className="flex flex-col gap-4">
                         {/* Row 1: Search & Actions */}
-                        <div className="flex items-center justify-between gap-4">
+                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                             <Input
-                                className="w-96"
+                                className="w-full md:w-96"
                                 placeholder="Search student, receipt, reference..."
                                 value={queryParams.search}
                                 onChange={(e) => handleFilterChange('search', e.target.value)}
                             />
-                            <div className="flex items-center gap-2">
-                                <Button variant="outline" onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}>
+                            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                                <Button variant="outline" onClick={() => setShowAdvancedFilters(!showAdvancedFilters)} className="flex-1 md:flex-none">
                                     <ChevronDown className={`size-4 mr-2 transition-transform ${showAdvancedFilters ? 'rotate-180' : ''}`} />
                                     {showAdvancedFilters ? 'Less Filters' : 'More Filters'}
                                 </Button>
-                                <Button variant="ghost" onClick={resetFilters}>Reset</Button>
-                                <AddButton onClick={() => { setIsAddOpen(true); resetNewFields(); }}>Add Payment</AddButton>
+                                <Button variant="ghost" onClick={resetFilters} className="flex-1 md:flex-none">Reset</Button>
+                                <AddButton onClick={() => { setIsAddOpen(true); resetNewFields(); }} className="w-full md:w-auto">Add Payment</AddButton>
                             </div>
                         </div>
 
@@ -434,7 +435,7 @@ export default function Payments() {
                                                 onClick={() => selectBill(bill)}
                                             >
                                                 <div className="flex justify-between">
-                                                    <span className="font-medium">{bill.academic_year}</span>
+                                                    <span className="font-medium">{bill.bill_name}</span>
                                                     <span className={`text-sm px-2 py-0.5 rounded-full ${bill.status === 'Pending' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
                                                         {bill.status}
                                                     </span>
@@ -460,6 +461,10 @@ export default function Payments() {
                                         <div className="flex justify-between text-sm">
                                             <span className="text-gray-500">Academic Year:</span>
                                             <span className="font-medium">{selectedBill?.academic_year}</span>
+                                        </div>
+                                           <div className="flex justify-between text-sm">
+                                            <span className="text-gray-500">Bill:</span>
+                                            <span className="font-medium">{selectedBill?.bill_name}</span>
                                         </div>
                                         <div className="flex justify-between text-sm border-t pt-2 mt-2">
                                             <span className="text-gray-500">Outstanding Balance:</span>
@@ -553,21 +558,23 @@ export default function Payments() {
                     </Dialog>
                 </div>
 
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Student</TableHead>
-                            <TableHead>Bill</TableHead>
-                            <TableHead>Amount</TableHead>
-                            <TableHead>Method</TableHead>
-                            <TableHead>Reference</TableHead>
-                            <TableHead>Received By</TableHead>
-                            <TableHead>Receipt</TableHead>
-                            <TableHead>Payment Date</TableHead>
-                            <TableHead>Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
+                <div className="overflow-x-auto border rounded-md">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="min-w-[150px]">Student</TableHead>
+                                <TableHead className="min-w-[200px]">Bill</TableHead>
+                                <TableHead className="min-w-[100px]">Amount</TableHead>
+                                <TableHead className="min-w-[120px]">Method</TableHead>
+                                <TableHead className="min-w-[120px]">Reference</TableHead>
+                                <TableHead className="min-w-[150px]">Received By</TableHead>
+                                <TableHead className="min-w-[150px]">Created By</TableHead>
+                                <TableHead className="min-w-[150px]">Receipt</TableHead>
+                                <TableHead className="min-w-[120px]">Payment Date</TableHead>
+                                <TableHead className="min-w-[120px]">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
                         {(payments.data ?? payments).map((row) => (
                             <TableRow key={row.payment_id || row.id}>
                                 <TableCell>{row.student ? studentLabel(row.student) : '—'}</TableCell>
@@ -615,6 +622,9 @@ export default function Payments() {
                                     )}
                                 </TableCell>
                                 <TableCell>
+                                    {row.creator ? userLabel(row.creator) : '—'}
+                                </TableCell>
+                                <TableCell>
                                     {row.receipt ? row.receipt.receipt_number : '—'}
                                 </TableCell>
                                 <TableCell>
@@ -632,17 +642,15 @@ export default function Payments() {
                                         </>
                                     ) : (
                                         <>
-                                            <Button
-                                                size="icon"
-                                                variant="ghost"
+                                            <DownloadButton
                                                 title="Download Receipt"
                                                 onClick={() => window.open(`/dashboard/payments/${row.payment_id || row.id}/receipt`, '_blank')}
                                                 disabled={!row.receipt}
                                             >
                                                 <Download className="size-4" />
-                                            </Button>
-                                            <EditButton size="icon" variant="ghost" onClick={() => startEdit(row)} />
-                                            <DeleteButton size="icon" variant="ghost" onClick={() => removePayment(row)} />
+                                            </DownloadButton>
+                                            <EditButton onClick={() => startEdit(row)} />
+                                            <DeleteButton onClick={() => removePayment(row)} />
                                         </>
                                     )}
                                 </TableCell>
@@ -650,6 +658,7 @@ export default function Payments() {
                         ))}
                     </TableBody>
                 </Table>
+                </div>
                 {payments.links && (
                     <div className="mt-4">
                         <Pagination links={payments.links} filters={cleanParams(queryParams)} />

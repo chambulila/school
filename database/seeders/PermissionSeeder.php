@@ -34,6 +34,7 @@ class PermissionSeeder extends Seeder
             'Communicate' => ['view-communications', 'create-communication', 'edit-communication', 'delete-communication'],
             'Settings' => ['view-settings', 'create-setting', 'edit-setting', 'delete-setting'],
             'Reports' => ['view-reports', 'create-report', 'edit-report', 'delete-report'],
+            'Payments' => ['view-payments', 'create-payment', 'edit-payment', 'delete-payment', 'genarate-payment-reference', 'download-payment-receipt'],
         ];
 
         foreach ($modules as $module => $actions) {

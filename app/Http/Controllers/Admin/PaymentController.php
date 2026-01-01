@@ -27,6 +27,8 @@ class PaymentController extends Controller
 
     public function index(Request $request): Response
     {
+        ifCan('view-payments');
+
         $perPage = (int) $request->input('perPage', 10);
 
         $query = PaymentService::getPayments($request);
@@ -46,6 +48,8 @@ class PaymentController extends Controller
 
     public function searchStudents(Request $request)
     {
+        ifCan('view-payments');
+
         $query = $request->input('query');
 
         $students = Student::query()
@@ -72,9 +76,11 @@ class PaymentController extends Controller
 
     public function getStudentBills(Student $student)
     {
+        ifCan('view-payments');
+
         $bills = $student->bills()
-            ->whereIn('status', ['Pending', 'Partially Paid'])
-            ->with('academicYear')
+            ->whereIn('status', ['pending', 'partially_paid'])
+            ->with('academicYear', 'feeStructure')
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($bill) {
@@ -85,6 +91,7 @@ class PaymentController extends Controller
                     'amount_paid' => $bill->amount_paid,
                     'balance' => $bill->balance,
                     'status' => $bill->status,
+                    'bill_name' => $bill->feeStructure->name ?? $bill->feeStructure->feeCategory->category_name ?? '' ,
                 ];
             });
 
@@ -93,6 +100,8 @@ class PaymentController extends Controller
 
     public function generateReference()
     {
+        ifCan('genarate-payment-reference');
+
         do {
             $reference = 'REF-' . strtoupper(Str::random(10));
         } while (Payment::where('transaction_reference', $reference)->exists());
@@ -102,9 +111,10 @@ class PaymentController extends Controller
 
     public function store(StorePaymentRequest $request)
     {
+        ifCan('create-payment');
         $data = $request->validated();
         if (!isset($data['received_by']) && $request->user()) {
-            $data['received_by'] = $request->user()->id;
+            $data['received_by'] = auth()->user()->id;
         }
 
         try {
@@ -120,12 +130,12 @@ class PaymentController extends Controller
             $bill->balance = $bill->total_amount - $bill->amount_paid;
 
             if ($bill->balance <= 0) {
-                $bill->status = 'Fully Paid';
+                $bill->status = 'fully_paid';
                 // If overpaid, balance is negative (credit).
             } elseif ($bill->amount_paid > 0) {
-                $bill->status = 'Partially Paid';
+                $bill->status = 'partially_paid';
             } else {
-                $bill->status = 'Pending';
+                $bill->status = 'pending';
             }
             $bill->save();
 
@@ -150,6 +160,8 @@ class PaymentController extends Controller
 
     public function downloadReceipt(Payment $payment, ReceiptService $receiptService)
     {
+        ifCan('download-payment-receipt');
+
         if (!$payment->receipt) {
              return back()->with('error', 'Receipt not found for this payment');
         }
@@ -160,12 +172,15 @@ class PaymentController extends Controller
 
     public function update(UpdatePaymentRequest $request, Payment $payment)
     {
+        ifCan('edit-payment');
+
         // Core Rule: Payments must never be edited
         return back()->with('error', 'Payments cannot be edited.');
     }
 
     public function destroy(Payment $payment)
     {
+        ifCan('delete-payment');
         // Core Rule: Payments must never be deleted
         return back()->with('error', 'Payments cannot be deleted.');
     }

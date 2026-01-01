@@ -17,12 +17,14 @@ return new class extends Migration
             $table->enum('payment_method', ['Cash', 'Bank', 'Mobile Money'])->nullable();
             $table->string('transaction_reference')->nullable();
             $table->foreignUuid('received_by')->constrained('users');
+            $table->foreignUuid('created_by')->constrained('users');
             $table->timestamps();
 
             $table->foreign('bill_id')->references('bill_id')->on('student_billing')->cascadeOnDelete();
             $table->unique('transaction_reference');
         });
     }
+
 
     public function down(): void
     {
