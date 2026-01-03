@@ -237,7 +237,7 @@ export default function PublishedResultsPage() {
                                             </SelectContent>
                                         </Select>
                                     ) : (
-                                        row.classSection ? sectionLabel(row.classSection) : '—'
+                                        row.class_section ? sectionLabel(row.class_section) : '—'
                                     )}
                                 </TableCell>
                                 <TableCell>
@@ -248,7 +248,7 @@ export default function PublishedResultsPage() {
                                     )}
                                 </TableCell>
                                 <TableCell>
-                                    {row.publishedBy ? publisherLabel(row.publishedBy) : '—'}
+                                    {row.published_by ? publisherLabel(row.published_by) : '—'} 
                                 </TableCell>
                                 <TableCell>
                                     {editingId === row.id ? (

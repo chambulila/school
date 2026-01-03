@@ -18,7 +18,7 @@ class PublishedResultController extends Controller
     public function index(Request $request): Response
     {
         $published = PublishedResult::query()
-            ->with(['exam.academicYear', 'classSection.grade', 'publishedBy'])
+            ->with(['exam:id,term_name,exam_name', 'classSection:id,section_name,grade_id', 'classSection.grade:id,grade_name', 'publishedBy:id,first_name,last_name'])
             ->filter($request->only('search'))
             ->orderBy('published_at', 'desc')
             ->paginate($request->input('perPage', 10))
