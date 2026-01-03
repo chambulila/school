@@ -7,6 +7,7 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Pagination from '@/components/ui/pagination';
 import { cleanParams } from '@/lib/utils';
+import { can } from '@/hooks/usePermission';
 
 export default function AttendanceReportsPage() {
     const { props } = usePage();
@@ -17,9 +18,23 @@ export default function AttendanceReportsPage() {
     const studentDailySummary = props.studentDailySummary || {};
     const studentSessionSummary = props.studentSessionSummary || {};
     const initialFilters = props.filters || {};
+    const canViewTeacher = can('view-teachers-attendances');
+    const canViewStudent = can('view-students-attendances');
+    const allowedTypes = useMemo(() => {
+        const t = [];
+        if (canViewTeacher) t.push('teacher');
+        if (canViewStudent) {
+            t.push('student_daily');
+            t.push('student_session');
+        }
+        return t;
+    }, [canViewTeacher, canViewStudent]);
+    const initialType = (initialFilters.type && allowedTypes.includes(initialFilters.type))
+        ? initialFilters.type
+        : (canViewStudent ? 'student_daily' : 'teacher');
 
     const [queryParams, setQueryParams] = useState({
-        type: initialFilters.type || 'student_daily',
+        type: initialType,
         status: initialFilters.status || '',
         date_from: initialFilters.date_from || new Date().toISOString().substring(0, 10),
         date_to: initialFilters.date_to || initialFilters.date_from || new Date().toISOString().substring(0, 10),
@@ -168,9 +183,9 @@ export default function AttendanceReportsPage() {
                                     <SelectValue placeholder="Select type" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="teacher">Teacher Daily</SelectItem>
-                                    <SelectItem value="student_daily">Student Daily</SelectItem>
-                                    <SelectItem value="student_session">Student Session</SelectItem>
+                                    {canViewTeacher && <SelectItem value="teacher">Teacher Daily</SelectItem>}
+                                    {canViewStudent && <SelectItem value="student_daily">Student Daily</SelectItem>}
+                                    {canViewStudent && <SelectItem value="student_session">Student Session</SelectItem>}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -243,28 +258,34 @@ export default function AttendanceReportsPage() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    <div className="border rounded p-4 bg-white flex flex-col items-center">
-                        <div className="font-medium mb-2">Teacher Daily</div>
-                        <DonutChart data={teacherData} />
-                        <div className="mt-2 text-sm text-gray-600">Present % {teacherSum.pctPresent}%</div>
-                    </div>
-                    <div className="border rounded p-4 bg-white flex flex-col items-center">
-                        <div className="font-medium mb-2">Student Daily</div>
-                        <DonutChart data={dailyData} />
-                        <div className="mt-2 text-sm text-gray-600">Present % {dailySum.pctPresent}%</div>
-                    </div>
-                    <div className="border rounded p-4 bg-white flex flex-col items-center">
-                        <div className="font-medium mb-2">Student Session</div>
-                        <DonutChart data={sessionData} />
-                        <div className="mt-2 text-sm text-gray-600">Present % {sessionSum.pctPresent}%</div>
-                    </div>
+                    {canViewTeacher && (
+                        <div className="border rounded p-4 bg-white flex flex-col items-center">
+                            <div className="font-medium mb-2">Teacher Daily</div>
+                            <DonutChart data={teacherData} />
+                            <div className="mt-2 text-sm text-gray-600">Present % {teacherSum.pctPresent}%</div>
+                        </div>
+                    )}
+                    {canViewStudent && (
+                        <div className="border rounded p-4 bg-white flex flex-col items-center">
+                            <div className="font-medium mb-2">Student Daily</div>
+                            <DonutChart data={dailyData} />
+                            <div className="mt-2 text-sm text-gray-600">Present % {dailySum.pctPresent}%</div>
+                        </div>
+                    )}
+                    {canViewStudent && (
+                        <div className="border rounded p-4 bg-white flex flex-col items-center">
+                            <div className="font-medium mb-2">Student Session</div>
+                            <DonutChart data={sessionData} />
+                            <div className="mt-2 text-sm text-gray-600">Present % {sessionSum.pctPresent}%</div>
+                        </div>
+                    )}
                 </div>
 
                 <GroupedBars
                     groups={[
-                        { title: 'Teacher', values: { Present: teacherSummary.present || 0, Absent: teacherSummary.absent || 0, Late: teacherSummary.late || 0, Excused: teacherSummary.excused || 0 } },
-                        { title: 'Student Daily', values: { Present: studentDailySummary.present || 0, Absent: studentDailySummary.absent || 0, Late: studentDailySummary.late || 0, Excused: studentDailySummary.excused || 0 } },
-                        { title: 'Student Session', values: { Present: studentSessionSummary.present || 0, Absent: studentSessionSummary.absent || 0, Late: studentSessionSummary.late || 0, Excused: studentSessionSummary.excused || 0 } },
+                        ...(canViewTeacher ? [{ title: 'Teacher', values: { Present: teacherSummary.present || 0, Absent: teacherSummary.absent || 0, Late: teacherSummary.late || 0, Excused: teacherSummary.excused || 0 } }] : []),
+                        ...(canViewStudent ? [{ title: 'Student Daily', values: { Present: studentDailySummary.present || 0, Absent: studentDailySummary.absent || 0, Late: studentDailySummary.late || 0, Excused: studentDailySummary.excused || 0 } }] : []),
+                        ...(canViewStudent ? [{ title: 'Student Session', values: { Present: studentSessionSummary.present || 0, Absent: studentSessionSummary.absent || 0, Late: studentSessionSummary.late || 0, Excused: studentSessionSummary.excused || 0 } }] : []),
                     ]}
                 />
 
