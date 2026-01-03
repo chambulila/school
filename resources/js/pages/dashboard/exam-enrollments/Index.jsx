@@ -11,7 +11,7 @@ import { Save } from 'lucide-react';
 import SaveButton from '@/components/buttons/SaveButton';
 
 export default function ExamEnrollmentIndex() {
-    const { exam, results, subjects, classSections, filters } = usePage().props;
+    const { exam, results, subjects, classSections, filters, publishedSectionIds } = usePage().props;
     const [localResults, setLocalResults] = useState(results.data || []);
     const [hasChanges, setHasChanges] = useState(false);
     const [savingRows, setSavingRows] = useState([]);
@@ -84,6 +84,11 @@ export default function ExamEnrollmentIndex() {
                 setLocalResults(prev => prev.map(r => ({ ...r, isDirty: false })));
             }
         });
+    };
+
+    // Check if a row is published
+    const isPublished = (sectionId) => {
+        return (publishedSectionIds || []).includes(sectionId);
     };
 
     // Filter Logic
@@ -189,6 +194,7 @@ export default function ExamEnrollmentIndex() {
                                                 value={row.score ?? ''}
                                                 onChange={(e) => handleScoreChange(row.id, e.target.value)}
                                                 className={row.isDirty ? 'border-amber-500' : ''}
+                                                disabled={isPublished(row.class_section_id)}
                                             />
                                         </TableCell>
                                         <TableCell>{row.grade}</TableCell>
@@ -196,7 +202,7 @@ export default function ExamEnrollmentIndex() {
                                         <TableCell>
                                             <SaveButton
                                                 onClick={() => saveRow(row)}
-                                                disabled={!row.isDirty || savingRows.includes(row.id)}
+                                                disabled={!row.isDirty || savingRows.includes(row.id) || isPublished(row.class_section_id)}
                                             >
                                             </SaveButton>
                                         </TableCell>

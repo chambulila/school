@@ -16,6 +16,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Models\PublishedResult;
 use App\Services\AuditService;
 use Illuminate\Support\Facades\DB;
 
@@ -72,7 +73,18 @@ class ExamResultController extends Controller
         ifCan('create-mark');
 
         return DB::transaction(function () use ($request) {
-            $result = ExamResult::create($request->validated());
+            $data = $request->validated();
+
+            // Check if results are published
+            $isPublished = PublishedResult::where('exam_id', $data['exam_id'])
+                ->where('class_section_id', $data['class_section_id'])
+                ->exists();
+
+            if ($isPublished) {
+                return back()->with('error', 'Cannot add result. Results for this section have already been published.');
+            }
+
+            $result = ExamResult::create($data);
 
             AuditService::log(
                 actionType: 'CREATE',
@@ -101,6 +113,15 @@ class ExamResultController extends Controller
                 'students' => ['required', 'array', 'min:1'],
                 'students.*' => ['uuid', 'exists:students,id'],
             ]);
+
+            // Check if results are published
+            $isPublished = PublishedResult::where('exam_id', $data['exam_id'])
+                ->where('class_section_id', $data['class_section_id'])
+                ->exists();
+
+            if ($isPublished) {
+                return back()->with('error', 'Cannot enroll students. Results for this section have already been published.');
+            }
 
             $createdResults = [];
             foreach ($data['students'] as $studentId) {
@@ -143,6 +164,15 @@ class ExamResultController extends Controller
         ifCan('edit-mark');
 
         return DB::transaction(function () use ($request, $examResult) {
+            // Check if results are published
+            $isPublished = PublishedResult::where('exam_id', $examResult->exam_id)
+                ->where('class_section_id', $examResult->class_section_id)
+                ->exists();
+
+            if ($isPublished) {
+                return back()->with('error', 'Cannot update result. Results for this section have already been published.');
+            }
+
             $oldValues = $examResult->toArray();
             $examResult->update($request->validated());
 
@@ -166,6 +196,15 @@ class ExamResultController extends Controller
         ifCan('delete-mark');
 
         return DB::transaction(function () use ($examResult) {
+            // Check if results are published
+            $isPublished = PublishedResult::where('exam_id', $examResult->exam_id)
+                ->where('class_section_id', $examResult->class_section_id)
+                ->exists();
+
+            if ($isPublished) {
+                return back()->with('error', 'Cannot delete result. Results for this section have already been published.');
+            }
+
             $id = $examResult->id;
             $oldValues = $examResult->toArray();
 
@@ -325,12 +364,18 @@ class ExamResultController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
+        // Check if published for frontend
+        $publishedSectionIds = PublishedResult::where('exam_id', $exam->id)
+            ->pluck('class_section_id')
+            ->toArray();
+
         return Inertia::render('dashboard/exam-enrollments/Index', [
             'exam' => $exam->load('academicYear'),
             'results' => $results,
             'subjects' => Subject::orderBy('subject_name')->get(), // For filtering
             'classSections' => ClassSection::orderBy('section_name')->get(), // For filtering
             'filters' => $request->all(),
+            'publishedSectionIds' => $publishedSectionIds,
         ]);
     }
 
@@ -339,10 +384,21 @@ class ExamResultController extends Controller
         ifCan('update-exam-scores');
         $data = $request->validated();
         $count = 0;
+        $skipped = 0;
 
         foreach ($data['results'] as $item) {
             $result = ExamResult::find($item['id']);
             if ($result) {
+                // Check publication
+                $isPublished = PublishedResult::where('exam_id', $result->exam_id)
+                    ->where('class_section_id', $result->class_section_id)
+                    ->exists();
+
+                if ($isPublished) {
+                    $skipped++;
+                    continue;
+                }
+
                 $score = isset($item['score']) ? (float) $item['score'] : null;
 
                 $updateData = ['score' => $score];
@@ -360,6 +416,14 @@ class ExamResultController extends Controller
             }
         }
 
-        return back()->with('success', "$count scores updated successfully.");
+        $message = "$count scores updated successfully.";
+        if ($skipped > 0) {
+            $message .= " $skipped results skipped because they are already published.";
+            if ($count === 0) {
+                return back()->with('error', "Cannot update scores. Results have been published.");
+            }
+        }
+
+        return back()->with('success', $message);
     }
 }
