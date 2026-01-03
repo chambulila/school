@@ -127,6 +127,14 @@ class StudentBillingController extends Controller
     public function destroy(StudentBilling $studentBilling)
     {
         ifCan('delete-student-billing');
+        if (!$studentBilling) {
+            return back()->with('error', 'Bill not found bill.');
+        }
+
+        // Prevent deletion if any payment (full or partial) has been recorded
+        if ($studentBilling->payments()->exists()) {
+            return back()->with('error', 'Cannot delete bill with recorded payments.');
+        }
         $studentBilling->delete();
         return back()->with('success', 'Student bill deleted');
     }

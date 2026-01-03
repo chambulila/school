@@ -183,5 +183,15 @@ class PaymentController extends Controller
         ifCan('delete-payment');
         // Core Rule: Payments must never be deleted
         return back()->with('error', 'Payments cannot be deleted.');
+        if (!$payment) {
+            return back()->with('error', 'Payment not found.');
+        }
+        if ($payment->receipt) {
+            return back()->with('error', 'Cannot delete payment with receipt. Delete receipt first.');
+        }
+
+        $payment->delete();
+        return back()->with('success', 'Payment deleted successfully');
+
     }
 }
