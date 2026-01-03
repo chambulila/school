@@ -261,8 +261,9 @@ export default function ExamsPage() {
                                                 <ListChecks className="mr-1 h-4 w-4" /> Results
                                             </Button>
                                             <EditButton onClick={() => startEdit(row)} />
-
-                                            <DeleteButton variant="destructive" onClick={() => deleteExam(row)} />
+                                            {!row.results_count > 0 && !row.published_results_count > 0 && (
+                                                <DeleteButton onClick={() => deleteExam(row)} />
+                                            )}
                                         </>
                                     )}
                                 </TableCell>

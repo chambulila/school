@@ -75,10 +75,7 @@ class ExamResultController extends Controller
         return DB::transaction(function () use ($request) {
             $data = $request->validated();
 
-            // Check if results are published
-            $isPublished = PublishedResult::where('exam_id', $data['exam_id'])
-                ->where('class_section_id', $data['class_section_id'])
-                ->exists();
+            $isPublished = PublishedResult::isPublished($data['exam_id'], $data['class_section_id'], $data['subject_id'] ?? null);
 
             if ($isPublished) {
                 return back()->with('error', 'Cannot add result. Results for this section have already been published.');
@@ -114,10 +111,7 @@ class ExamResultController extends Controller
                 'students.*' => ['uuid', 'exists:students,id'],
             ]);
 
-            // Check if results are published
-            $isPublished = PublishedResult::where('exam_id', $data['exam_id'])
-                ->where('class_section_id', $data['class_section_id'])
-                ->exists();
+            $isPublished = PublishedResult::isPublished($data['exam_id'], $data['class_section_id'], $data['subject_id'] ?? null);
 
             if ($isPublished) {
                 return back()->with('error', 'Cannot enroll students. Results for this section have already been published.');
@@ -164,10 +158,7 @@ class ExamResultController extends Controller
         ifCan('edit-mark');
 
         return DB::transaction(function () use ($request, $examResult) {
-            // Check if results are published
-            $isPublished = PublishedResult::where('exam_id', $examResult->exam_id)
-                ->where('class_section_id', $examResult->class_section_id)
-                ->exists();
+            $isPublished = PublishedResult::isPublished($examResult->exam_id, $examResult->class_section_id, $examResult->subject_id);
 
             if ($isPublished) {
                 return back()->with('error', 'Cannot update result. Results for this section have already been published.');
@@ -196,10 +187,7 @@ class ExamResultController extends Controller
         ifCan('delete-mark');
 
         return DB::transaction(function () use ($examResult) {
-            // Check if results are published
-            $isPublished = PublishedResult::where('exam_id', $examResult->exam_id)
-                ->where('class_section_id', $examResult->class_section_id)
-                ->exists();
+            $isPublished = PublishedResult::isPublished($examResult->exam_id, $examResult->class_section_id, $examResult->subject_id);
 
             if ($isPublished) {
                 return back()->with('error', 'Cannot delete result. Results for this section have already been published.');
@@ -365,9 +353,7 @@ class ExamResultController extends Controller
             ->withQueryString();
 
         // Check if published for frontend
-        $publishedSectionIds = PublishedResult::where('exam_id', $exam->id)
-            ->pluck('class_section_id')
-            ->toArray();
+        $publishedSectionIds = PublishedResult::publishedSectionIdsForExam($exam->id);
 
         return Inertia::render('dashboard/exam-enrollments/Index', [
             'exam' => $exam->load('academicYear'),
@@ -389,10 +375,7 @@ class ExamResultController extends Controller
         foreach ($data['results'] as $item) {
             $result = ExamResult::find($item['id']);
             if ($result) {
-                // Check publication
-                $isPublished = PublishedResult::where('exam_id', $result->exam_id)
-                    ->where('class_section_id', $result->class_section_id)
-                    ->exists();
+                $isPublished = PublishedResult::isPublished($result->exam_id, $result->class_section_id, $result->subject_id);
 
                 if ($isPublished) {
                     $skipped++;

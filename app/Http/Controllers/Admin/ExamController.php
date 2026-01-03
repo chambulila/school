@@ -20,7 +20,9 @@ class ExamController extends Controller
     {
         ifCan('view-exams');
         $exams = Exam::query()
-            ->with('academicYear')
+            ->with('academicYear:id,year_name')
+            ->select('id', 'term_name', 'exam_name', 'start_date', 'end_date', 'academic_year_id')
+            ->withCount(['results', 'publishedResults'])
             ->filter($request->only('search'))
             ->orderBy('start_date', 'desc')
             ->paginate($request->input('perPage', 10))
@@ -28,7 +30,7 @@ class ExamController extends Controller
 
         return Inertia::render('dashboard/Exams', [
             'exams' => $exams,
-            'years' => AcademicYear::query()->orderBy('year_name')->get(),
+            'years' => AcademicYear::query()->select('id', 'year_name')->orderBy('year_name')->get(),
             'filters' => $request->only('search'),
         ]);
     }
@@ -36,7 +38,7 @@ class ExamController extends Controller
     public function store(StoreExamRequest $request): RedirectResponse
     {
         ifCan('create-exam');
-        
+
         return DB::transaction(function () use ($request) {
             $exam = Exam::create($request->validated());
 
@@ -83,9 +85,14 @@ class ExamController extends Controller
         ifCan('delete-exam');
 
         return DB::transaction(function () use ($exam) {
+            $hasResults = \App\Models\ExamResult::where('exam_id', $exam->id)->exists();
+            $hasPublications = \App\Models\PublishedResult::where('exam_id', $exam->id)->exists();
+            if ($hasResults || $hasPublications) {
+                return back()->with('error', 'Cannot delete exam because it has results or published entries.');
+            }
             $id = $exam->id;
             $oldValues = $exam->toArray();
-            
+
             $exam->delete();
 
             AuditService::log(
@@ -103,4 +110,3 @@ class ExamController extends Controller
         });
     }
 }
-

@@ -40,6 +40,11 @@ class PublishedResult extends Model
         return $this->belongsTo(User::class, 'published_by');
     }
 
+    public function subject(): BelongsTo
+    {
+        return $this->belongsTo(Subject::class);
+    }
+
     public function scopeFilter($query, $request)
     {
         $query->when($request->search ?? null, function ($query, $search) {
@@ -53,5 +58,30 @@ class PublishedResult extends Model
                 });
             });
         });
+    }
+
+    public static function isPublished(string $examId, string $classSectionId, ?string $subjectId = null): bool
+    {
+        return static::query()
+            ->where('exam_id', $examId)
+            ->where('class_section_id', $classSectionId)
+            ->where(function ($q) use ($subjectId) {
+                $q->whereNull('subject_id');
+                if ($subjectId) {
+                    $q->orWhere('subject_id', $subjectId);
+                }
+            })
+            ->exists();
+    }
+
+    public static function publishedSectionIdsForExam(string $examId): array
+    {
+        return static::query()
+            ->where('exam_id', $examId)
+            ->distinct()
+            ->pluck('class_section_id')
+            ->filter()
+            ->values()
+            ->toArray();
     }
 }

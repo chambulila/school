@@ -84,6 +84,7 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
 
         Route::get('published-results', [\App\Http\Controllers\Admin\PublishedResultController::class, 'index'])->name('admin.published-results.index');
         Route::post('published-results', [\App\Http\Controllers\Admin\PublishedResultController::class, 'store'])->name('admin.published-results.store');
+        Route::post('published-results/preview', [\App\Http\Controllers\Admin\PublishedResultController::class, 'preview'])->name('admin.published-results.preview');
         Route::put('published-results/{publishedResult}', [\App\Http\Controllers\Admin\PublishedResultController::class, 'update'])->name('admin.published-results.update');
         Route::delete('published-results/{publishedResult}', [\App\Http\Controllers\Admin\PublishedResultController::class, 'destroy'])->name('admin.published-results.destroy');
 
