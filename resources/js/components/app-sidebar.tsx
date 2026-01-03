@@ -16,7 +16,7 @@ import {
 import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, ChevronDown, ChevronRight, Folder, Home, Minus, Plus, Settings, User, Users } from 'lucide-react';
+import { BookOpen, Calendar, ChevronDown, ChevronRight, Folder, Home, Minus, Plus, Settings, User, Users } from 'lucide-react';
 import AppLogo from './app-logo';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 import { can, canAny } from '@/hooks/usePermission';
@@ -200,6 +200,27 @@ export function AppSidebar() {
                         url: "/dashboard/fee-notifications",
                         isVisible: can('view-fee-notifications'),
                         isActive: checkIsActive('/dashboard/fee-notifications'),
+                    },
+                ],
+            },
+            // for attendances
+            {
+                title: "Attendances",
+                url: "#",
+                icon: Calendar,
+                isVisible: canAny(['view-teachers-attendances', 'view-students-attendances']),
+                items: [
+                    {
+                        title: "Teachers Attendances",
+                        url: "/dashboard/attendances/teachers",
+                        isVisible: can('view-teachers-attendances'),
+                        isActive: checkIsActive('/dashboard/attendances/teachers'),
+                    },
+                    {
+                        title: "Students Attendances",
+                        url: "/dashboard/attendances/students",
+                        isVisible: can('view-students-attendances'),
+                        isActive: checkIsActive('/dashboard/attendances/students'),
                     },
                 ],
             },

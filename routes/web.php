@@ -148,6 +148,16 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
             Route::get('payments/export/excel', [\App\Http\Controllers\Admin\PaymentReportController::class, 'exportExcel'])->name('payments.export.excel');
         });
 
+        // Attendance
+        Route::get('attendances/teachers', [\App\Http\Controllers\Admin\TeacherAttendanceController::class, 'index'])->name('admin.attendance.teachers.index');
+        Route::post('attendances/teachers', [\App\Http\Controllers\Admin\TeacherAttendanceController::class, 'storeBulk'])->name('admin.attendance.teachers.store');
+        Route::get('attendances/students/daily', [\App\Http\Controllers\Admin\StudentAttendanceController::class, 'index'])->name('admin.attendance.students.daily.index');
+        Route::get('attendances/students', [\App\Http\Controllers\Admin\StudentAttendanceController::class, 'index'])->name('admin.attendance.students.index');
+        Route::post('attendances/students/daily', [\App\Http\Controllers\Admin\StudentAttendanceController::class, 'storeBulk'])->name('admin.attendance.students.daily.store');
+        Route::get('attendances/students/session', [\App\Http\Controllers\Admin\StudentSessionAttendanceController::class, 'index'])->name('admin.attendance.students.session.index');
+        Route::post('attendances/students/session', [\App\Http\Controllers\Admin\StudentSessionAttendanceController::class, 'storeBulk'])->name('admin.attendance.students.session.store');
+        Route::get('attendances/reports', [\App\Http\Controllers\Admin\AttendanceReportController::class, 'index'])->name('admin.attendance.reports.index');
+
         // Settings
         Route::get('settings/theme', [\App\Http\Controllers\Admin\GeneralSettingController::class, 'edit'])->name('settings.theme');
         Route::put('settings/theme', [\App\Http\Controllers\Admin\GeneralSettingController::class, 'update'])->name('settings.theme.update');

@@ -26,7 +26,7 @@ class PermissionSeeder extends Seeder
             'Parents' => ['view-parents', 'create-parent', 'edit-parent', 'delete-parent'],
             'Students' => ['view-students', 'create-student', 'edit-student', 'delete-student'],
             'Student Enrollments' => ['view-student-enrollments', 'create-student-enrollment', 'edit-student-enrollment', 'delete-student-enrollment'],
-            'Attendance' => ['view-attendance', 'create-attendance', 'edit-attendance', 'delete-attendance'],
+            'Attendance' => ['view-teachers-attendances', 'view-students-attendances', 'create-teachers-attendance', 'create-students-attendance', 'edit-teachers-attendance', 'edit-students-attendance', 'delete-teachers-attendance', 'delete-students-attendance'],
             'Exams' => ['view-exams', 'create-exam', 'edit-exam', 'delete-exam'],
             'Marks' => ['view-marks', 'create-mark', 'edit-mark', 'delete-mark', 'view-results', 'view-exam-results', 'enroll-student-to-exam', 'view-exam-enrollments', 'update-exam-scores', 'publish-exam-results'],
             'Grades' => ['view-grades', 'create-grade', 'edit-grade', 'delete-grade'],
