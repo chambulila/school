@@ -45,7 +45,7 @@ class HandleInertiaRequests extends Middleware
         // Load user roles and permissions properly
         if ($user) {
             $user->load('roles');
-            $permissions = $user->getAllPermissions()->pluck('name');
+            $permissions = $user->getAllPermissions()->pluck('slug');
         } else {
             $permissions = collect();
         }

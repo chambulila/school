@@ -9,7 +9,7 @@ class UpdateClassSectionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('manage-classes') ?? false;
+        return $this->user()?->can('edit-section') ?? false;
     }
 
     public function rules(): array

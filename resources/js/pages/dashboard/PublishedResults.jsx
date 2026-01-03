@@ -7,9 +7,11 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Pagination from '@/components/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Pencil, Trash } from 'lucide-react';
 import { askConfirmation } from '@/utils/sweetAlerts';
 import { cleanParams } from '@/lib/utils';
+import DeleteButton from '@/components/buttons/DeleteButton';
+import EditButton from '@/components/buttons/EditButon';
+import SaveButton from '@/components/buttons/SaveButton';
 
 export default function PublishedResultsPage() {
     const { props } = usePage();
@@ -261,17 +263,13 @@ export default function PublishedResultsPage() {
                                 <TableCell className="space-x-2">
                                     {editingId === row.id ? (
                                         <>
-                                            <Button size="sm" onClick={saveEdit}>Save</Button>
+                                            <SaveButton onClick={saveEdit}>Save</SaveButton>
                                             <Button size="sm" variant="outline" onClick={cancelEdit}>Cancel</Button>
                                         </>
                                     ) : (
                                         <>
-                                            <Button size="sm" variant="outline" onClick={() => startEdit(row)}>
-                                                <Pencil className="mr-1 h-4 w-4" /> Edit
-                                            </Button>
-                                            <Button size="sm" variant="destructive" onClick={() => deletePublished(row)}>
-                                                <Trash className="mr-1 h-4 w-4" /> Delete
-                                            </Button>
+                                            <EditButton onClick={() => startEdit(row)} />
+                                            <DeleteButton onClick={() => deletePublished(row)} />
                                         </>
                                     )}
                                 </TableCell>

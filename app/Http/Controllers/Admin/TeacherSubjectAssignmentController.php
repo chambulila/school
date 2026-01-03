@@ -14,10 +14,14 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+use App\Services\AuditService;
+use Illuminate\Support\Facades\DB;
+
 class TeacherSubjectAssignmentController extends Controller
 {
     public function index(Request $request): Response
     {
+        ifCan('view-teacher-subjects');
         $perPage = (int) $request->input('perPage', 10);
 
         $assignments = TeacherSubjectAssignment::query()
@@ -36,20 +40,72 @@ class TeacherSubjectAssignmentController extends Controller
 
     public function store(StoreTeacherSubjectAssignmentRequest $request)
     {
-        TeacherSubjectAssignment::create($request->validated());
-        return back()->with('success', 'Teacher subject assignment created');
+        ifCan('create-teacher-subject');
+
+        return DB::transaction(function () use ($request) {
+            $assignment = TeacherSubjectAssignment::create($request->validated());
+
+            AuditService::log(
+                actionType: 'CREATE',
+                entityName: 'TeacherSubjectAssignment',
+                entityId: $assignment->id,
+                oldValue: null,
+                newValue: $assignment->toArray(),
+                module: 'Academics',
+                category: 'Teacher Subjects',
+                notes: "Assigned subject ID {$assignment->subject_id} to teacher ID {$assignment->teacher_id}"
+            );
+
+            return back()->with('success', 'Teacher subject assignment created');
+        });
     }
 
     public function update(UpdateTeacherSubjectAssignmentRequest $request, TeacherSubjectAssignment $teacherSubjectAssignment)
     {
-        $teacherSubjectAssignment->update($request->validated());
-        return back()->with('success', 'Teacher subject assignment updated');
+        ifCan('edit-teacher-subject');
+
+        return DB::transaction(function () use ($request, $teacherSubjectAssignment) {
+            $oldValues = $teacherSubjectAssignment->toArray();
+            $teacherSubjectAssignment->update($request->validated());
+
+            AuditService::log(
+                actionType: 'UPDATE',
+                entityName: 'TeacherSubjectAssignment',
+                entityId: $teacherSubjectAssignment->id,
+                oldValue: $oldValues,
+                newValue: $teacherSubjectAssignment->refresh()->toArray(),
+                module: 'Academics',
+                category: 'Teacher Subjects',
+                notes: "Updated assignment ID {$teacherSubjectAssignment->id}"
+            );
+
+            return back()->with('success', 'Teacher subject assignment updated');
+        });
     }
 
     public function destroy(TeacherSubjectAssignment $teacherSubjectAssignment)
     {
-        $teacherSubjectAssignment->delete();
-        return back()->with('success', 'Teacher subject assignment deleted');
+        ifCan('delete-teacher-subject');
+
+        return DB::transaction(function () use ($teacherSubjectAssignment) {
+            $id = $teacherSubjectAssignment->id;
+            $oldValues = $teacherSubjectAssignment->toArray();
+
+            $teacherSubjectAssignment->delete();
+
+            AuditService::log(
+                actionType: 'DELETE',
+                entityName: 'TeacherSubjectAssignment',
+                entityId: $id,
+                oldValue: $oldValues,
+                newValue: null,
+                module: 'Academics',
+                category: 'Teacher Subjects',
+                notes: "Deleted assignment ID {$id}"
+            );
+
+            return back()->with('success', 'Teacher subject assignment deleted');
+        });
     }
 }
 

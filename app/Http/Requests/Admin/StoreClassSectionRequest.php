@@ -9,7 +9,7 @@ class StoreClassSectionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('manage-classes') ?? false;
+        return $this->user()?->can('create-section') ?? false;
     }
 
     public function rules(): array

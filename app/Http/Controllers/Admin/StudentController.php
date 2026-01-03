@@ -18,10 +18,13 @@ use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
 
+use App\Services\AuditService;
+
 class StudentController extends Controller
 {
     public function index(Request $request): Response
     {
+        ifCan('view-students');
         $perPage = (int) $request->input('perPage', 10);
 
         $students = Student::query()
@@ -47,6 +50,7 @@ class StudentController extends Controller
             $classSectionId = $data['class_section_id'] ?? $data['current_class_id'] ?? null;
             $academicYearId = $data['academic_year_id'] ?? null;
 
+            $userCreated = false;
             if (empty($data['user_id'])) {
                 $userPayload = [
                     'first_name' => $data['first_name'],
@@ -62,6 +66,13 @@ class StudentController extends Controller
                 ];
                 $user = User::create($userPayload);
                 $data['user_id'] = $user->id;
+                $userCreated = true;
+
+                // Assign student role if exists
+                $role = \App\Models\Role::where('slug', 'student')->first();
+                if ($role) {
+                    $user->roles()->syncWithoutDetaching([$role->id]);
+                }
             }
 
             // Remove user fields and extra enrollment fields
@@ -82,14 +93,36 @@ class StudentController extends Controller
 
             $student = Student::create($data);
 
+            AuditService::log(
+                actionType: 'CREATE',
+                entityName: 'Student',
+                entityId: $student->id,
+                oldValue: null,
+                newValue: $student->toArray(),
+                module: 'Academics',
+                category: 'Students',
+                notes: "Created student '{$student->admission_number}'" . ($userCreated ? " (New User Created)" : "")
+            );
+
             // Handle automatic enrollment and billing
             if ($classSectionId && $academicYearId) {
-                StudentEnrollment::create([
+                $enrollment = StudentEnrollment::create([
                     'student_id' => $student->id,
                     'class_section_id' => $classSectionId,
                     'academic_year_id' => $academicYearId,
                     'enrollment_date' => now(),
                 ]);
+
+                AuditService::log(
+                    actionType: 'CREATE',
+                    entityName: 'StudentEnrollment',
+                    entityId: $enrollment->id,
+                    oldValue: null,
+                    newValue: $enrollment->toArray(),
+                    module: 'Academics',
+                    category: 'Student Enrollments',
+                    notes: "Automatically enrolled new student in section ID {$classSectionId}"
+                );
 
                 $academicYear = AcademicYear::find($academicYearId);
                 if ($academicYear) {
@@ -106,6 +139,7 @@ class StudentController extends Controller
     public function update(UpdateStudentRequest $request, Student $student, BillingService $billingService): RedirectResponse
     {
         return DB::transaction(function () use ($request, $student, $billingService) {
+            $oldValues = $student->toArray();
             $data = $request->validated();
 
             // Extract enrollment fields
@@ -125,7 +159,7 @@ class StudentController extends Controller
             }
             if ($hasUserUpdates) {
                 if (!empty($userUpdate['password'])) {
-                    $userUpdate['password'] = \Illuminate\Support\Facades\Hash::make($userUpdate['password']);
+                    $userUpdate['password'] = Hash::make($userUpdate['password']);
                 } else {
                     unset($userUpdate['password']);
                 }
@@ -140,45 +174,76 @@ class StudentController extends Controller
                     ->first();
 
                 if (!$existingEnrollment) {
-                    StudentEnrollment::create([
+                    $enrollment = StudentEnrollment::create([
                         'student_id' => $student->id,
                         'class_section_id' => $classSectionId,
                         'academic_year_id' => $academicYearId,
                         'enrollment_date' => now(),
                     ]);
 
+                    AuditService::log(
+                        actionType: 'CREATE',
+                        entityName: 'StudentEnrollment',
+                        entityId: $enrollment->id,
+                        oldValue: null,
+                        newValue: $enrollment->toArray(),
+                        module: 'Academics',
+                        category: 'Student Enrollments',
+                        notes: "Automatically enrolled existing student in section ID {$classSectionId}"
+                    );
+
                     $academicYear = AcademicYear::find($academicYearId);
                     if ($academicYear) {
                         $billingService->generateBill($student, $academicYear);
                     }
-                } // else {
-                    // Update existing enrollment if class changed
-                    //  if ($existingEnrollment->class_section_id !== $classSectionId) {
-                    //     $existingEnrollment->update([
-                    //         'class_section_id' => $classSectionId
-                    //     ]);
-                        // Should we regenerate bill?
-                        // If grade changes, fee structure might change.
-                        // BillingService check if bill exists and returns it.
-                        // If we want to update the bill, we might need more logic.
-                        // For now, let's just update enrollment.
-                    //  }
                 }
+            }
 
-                // Ensure current_class_id is updated on student
-                $data['current_class_id'] = $classSectionId;
+            // Ensure current_class_id is updated on student
+            $data['current_class_id'] = $classSectionId;
 
             // Remove non-student fields
             unset($data['academic_year_id']);
 
             $student->update($data);
+
+            AuditService::log(
+                actionType: 'UPDATE',
+                entityName: 'Student',
+                entityId: $student->id,
+                oldValue: $oldValues,
+                newValue: $student->refresh()->toArray(),
+                module: 'Academics',
+                category: 'Students',
+                notes: "Updated student '{$student->admission_number}'"
+            );
+
             return back()->with('success', 'Student updated');
         });
     }
 
     public function destroy(Student $student): RedirectResponse
     {
-        $student->delete();
-        return back()->with('success', 'Student deleted');
+        ifCan('delete-student');
+
+        return DB::transaction(function () use ($student) {
+            $id = $student->id;
+            $oldValues = $student->toArray();
+
+            $student->delete();
+
+            AuditService::log(
+                actionType: 'DELETE',
+                entityName: 'Student',
+                entityId: $id,
+                oldValue: $oldValues,
+                newValue: null,
+                module: 'Academics',
+                category: 'Students',
+                notes: "Deleted student '{$oldValues['admission_number']}'"
+            );
+
+            return back()->with('success', 'Student deleted');
+        });
     }
 }

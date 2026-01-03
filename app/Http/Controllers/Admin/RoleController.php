@@ -10,11 +10,14 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Services\AuditService;
+use Illuminate\Support\Facades\DB;
 
 class RoleController extends Controller
 {
     public function index(Request $request): Response
     {
+        ifCan('view-roles');
         $roles = Role::filter($request)
             ->paginate((int) $request->input('perPage', 10))
             ->withQueryString();
@@ -27,20 +30,68 @@ class RoleController extends Controller
 
     public function store(StoreRoleRequest $request): RedirectResponse
     {
-        Role::create($request->validated());
-        return back()->with('success', 'Role created');
+        return DB::transaction(function () use ($request) {
+            $role = Role::create($request->validated());
+
+            AuditService::log(
+                actionType: 'CREATE',
+                entityName: 'Role',
+                entityId: $role->id,
+                oldValue: null,
+                newValue: $role->toArray(),
+                module: 'User Management',
+                category: 'Roles',
+                notes: "Created role '{$role->role_name}'"
+            );
+
+            return back()->with('success', 'Role created');
+        });
     }
 
     public function update(UpdateRoleRequest $request, Role $role): RedirectResponse
     {
-        $role->update($request->validated());
-        return back()->with('success', 'Role updated');
+        return DB::transaction(function () use ($request, $role) {
+            $oldValues = $role->toArray();
+            $role->update($request->validated());
+
+            AuditService::log(
+                actionType: 'UPDATE',
+                entityName: 'Role',
+                entityId: $role->id,
+                oldValue: $oldValues,
+                newValue: $role->refresh()->toArray(),
+                module: 'User Management',
+                category: 'Roles',
+                notes: "Updated role '{$role->role_name}'"
+            );
+
+            return back()->with('success', 'Role updated');
+        });
     }
 
     public function destroy(Role $role): RedirectResponse
     {
-        $role->delete();
-        return back()->with('success', 'Role deleted');
+        ifCan('delete-role');
+
+        return DB::transaction(function () use ($role) {
+            $id = $role->id;
+            $oldValues = $role->toArray();
+
+            $role->delete();
+
+            AuditService::log(
+                actionType: 'DELETE',
+                entityName: 'Role',
+                entityId: $id,
+                oldValue: $oldValues,
+                newValue: null,
+                module: 'User Management',
+                category: 'Roles',
+                notes: "Deleted role '{$oldValues['role_name']}'"
+            );
+
+            return back()->with('success', 'Role deleted');
+        });
     }
 }
 

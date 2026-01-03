@@ -19,6 +19,7 @@ import { Link, usePage } from '@inertiajs/react';
 import { BookOpen, ChevronDown, ChevronRight, Folder, Home, Minus, Plus, Settings, User, Users } from 'lucide-react';
 import AppLogo from './app-logo';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
+import { canAny } from '@/hooks/usePermission';
 
 const footerNavItems: NavItem[] = [
     {
@@ -46,7 +47,7 @@ export function AppSidebar() {
                 title: "Classes/Grades",
                 url: "#",
                 icon: Users,
-                isVisible: true,
+                isVisible: canAny(['view-classes', 'view-grades', 'view-sections']),
                 items: [
                     {
                         title: "Grades",
@@ -66,7 +67,7 @@ export function AppSidebar() {
                 title: "User Management",
                 url: "#",
                 icon: User,
-                isVisible: true,
+                isVisible: canAny(['view-users', 'view-teachers', 'view-students']),
                 items: [
                     {
                         title: "Users",
@@ -92,7 +93,7 @@ export function AppSidebar() {
                 title: "Academics",
                 url: "#",
                 icon: BookOpen,
-                isVisible: true,
+                isVisible: canAny(['academic-years', 'subjects']),
                 items: [
                     {
                         title: "Academic Years",
@@ -124,7 +125,7 @@ export function AppSidebar() {
                 title: "Exams & Results",
                 url: "#",
                 icon: Folder,
-                isVisible: true,
+                isVisible: canAny(['view-exams', 'view-exam-enrollments', 'view-exam-results', 'view-published-results']),
                 items: [
                     {
                         title: "Exams",
@@ -157,7 +158,7 @@ export function AppSidebar() {
                 title: "Fees & Billing",
                 url: "#",
                 icon: Folder,
-                isVisible: true,
+                isVisible: canAny(['view-fee-categories', 'view-fee-structures', 'view-student-billings', 'view-payments', 'view-payment-receipts', 'view-payment-reports', 'view-fee-notifications']),
                 items: [
                     {
                         title: "Fee Categories",

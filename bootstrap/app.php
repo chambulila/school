@@ -34,6 +34,14 @@ return Application::configure(basePath: dirname(__DIR__))
                 return Inertia::render('Errors/403', ['status' => 403, 'message' => $exception->getMessage()])
                     ->toResponse($request)
                     ->setStatusCode(403);
+            }  elseif ($response->getStatusCode() === 405) {
+                return Inertia::render('Errors/405', ['status' => 405, 'message' => $exception->getMessage()])
+                    ->toResponse($request)
+                    ->setStatusCode(405);
+            }  elseif ($response->getStatusCode() === 404) {
+                return Inertia::render('Errors/404', ['status' => 404, 'message' => $exception->getMessage()])
+                    ->toResponse($request)
+                    ->setStatusCode(404);
             }
             return $response;
         });

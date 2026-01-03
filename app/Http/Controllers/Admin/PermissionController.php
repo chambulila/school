@@ -11,10 +11,14 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+use App\Services\AuditService;
+use Illuminate\Support\Facades\DB;
+
 class PermissionController extends Controller
 {
     public function index(): Response
     {
+        ifCan('manage-permissions');
         $permissions = Permission::query()
             ->orderBy('module')
             ->orderBy('name')
@@ -40,20 +44,37 @@ class PermissionController extends Controller
 
     public function update(Request $request, $role_id): RedirectResponse
     {
-        $role = Role::find($role_id);
-        if (!$role) {
-            return back()->with('error', 'Role not found');
-        }
+        ifCan('manage-permissions');
 
-        $permission_ids = $request->input('permission_ids');
+        return DB::transaction(function () use ($request, $role_id) {
+            $role = Role::find($role_id);
+            if (!$role) {
+                return back()->with('error', 'Role not found');
+            }
 
-        try {
-        $role->permissions()->sync($permission_ids);
-        } catch (Exception $e) {
-            return back()->with('error', 'An error occurred while updating permissions to a role '. $role->name);
-        }
+            $permission_ids = $request->input('permission_ids', []);
+            $oldPermissions = $role->permissions()->pluck('id')->toArray();
 
-        return back()->with('success', 'Permissions updated');
+            try {
+                $role->permissions()->sync($permission_ids);
+
+                AuditService::log(
+                    actionType: 'UPDATE',
+                    entityName: 'Role',
+                    entityId: $role->id,
+                    oldValue: ['permissions' => $oldPermissions],
+                    newValue: ['permissions' => $permission_ids],
+                    module: 'User Management',
+                    category: 'Permissions',
+                    notes: "Updated permissions for role '{$role->role_name}'"
+                );
+
+            } catch (Exception $e) {
+                return back()->with('error', 'An error occurred while updating permissions to a role '. $role->role_name);
+            }
+
+            return back()->with('success', 'Permissions updated');
+        });
     }
 }
 

@@ -10,11 +10,14 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Services\AuditService;
+use Illuminate\Support\Facades\DB;
 
 class GradeController extends Controller
 {
     public function index(Request $request): Response
     {
+        ifCan('view-grades');
         $grades = Grade::query()
             ->filter($request->only('search'))
             ->orderBy('grade_name')
@@ -29,19 +32,70 @@ class GradeController extends Controller
 
     public function store(StoreGradeRequest $request): RedirectResponse
     {
-        Grade::create($request->validated());
-        return back()->with('success', 'Grade created');
+        return DB::transaction(function () use ($request) {
+            $grade = Grade::create($request->validated());
+
+            AuditService::log(
+                actionType: 'CREATE',
+                entityName: 'Grade',
+                entityId: $grade->id,
+                oldValue: null,
+                newValue: $grade->toArray(),
+                module: 'Academics',
+                category: 'Grades',
+                notes: "Created grade '{$grade->grade_name}'"
+            );
+
+            return back()->with('success', 'Grade created');
+        });
     }
 
     public function update(UpdateGradeRequest $request, Grade $grade): RedirectResponse
     {
-        $grade->update($request->validated());
-        return back()->with('success', 'Grade updated');
+        return DB::transaction(function () use ($request, $grade) {
+            $oldValues = $grade->toArray();
+            $grade->update($request->validated());
+
+            AuditService::log(
+                actionType: 'UPDATE',
+                entityName: 'Grade',
+                entityId: $grade->id,
+                oldValue: $oldValues,
+                newValue: $grade->refresh()->toArray(),
+                module: 'Academics',
+                category: 'Grades',
+                notes: "Updated grade '{$grade->grade_name}'"
+            );
+
+            return back()->with('success', 'Grade updated');
+        });
     }
 
     public function destroy(Grade $grade): RedirectResponse
     {
-        $grade->delete();
-        return back()->with('success', 'Grade deleted');
+        ifCan('delete-grade');
+
+        if (!$grade) {
+            return back()->with('error', 'Grade with this identifier not found!');
+        }
+        return DB::transaction(function () use ($grade) {
+            $id = $grade->id;
+            $oldValues = $grade->toArray();
+
+            $grade->delete();
+
+            AuditService::log(
+                actionType: 'DELETE',
+                entityName: 'Grade',
+                entityId: $id,
+                oldValue: $oldValues,
+                newValue: null,
+                module: 'Academics',
+                category: 'Grades',
+                notes: "Deleted grade '{$oldValues['grade_name']}'"
+            );
+
+            return back()->with('success', 'Grade deleted');
+        });
     }
 }

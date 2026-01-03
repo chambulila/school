@@ -12,10 +12,14 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+use App\Services\AuditService;
+use Illuminate\Support\Facades\DB;
+
 class SubjectController extends Controller
 {
     public function index(Request $request): Response
     {
+        ifCan('view-subjects');
         $perPage = (int) $request->input('perPage', 10);
 
         $subjects = Subject::query()
@@ -32,20 +36,72 @@ class SubjectController extends Controller
 
     public function store(StoreSubjectRequest $request): RedirectResponse
     {
-        Subject::create($request->validated());
-        return back()->with('success', 'Subject created');
+        ifCan('create-subject');
+
+        return DB::transaction(function () use ($request) {
+            $subject = Subject::create($request->validated());
+
+            AuditService::log(
+                actionType: 'CREATE',
+                entityName: 'Subject',
+                entityId: $subject->id,
+                oldValue: null,
+                newValue: $subject->toArray(),
+                module: 'Academics',
+                category: 'Subjects',
+                notes: "Created subject '{$subject->subject_name}'"
+            );
+
+            return back()->with('success', 'Subject created');
+        });
     }
 
     public function update(UpdateSubjectRequest $request, Subject $subject): RedirectResponse
     {
-        $subject->update($request->validated());
-        return back()->with('success', 'Subject updated');
+        ifCan('edit-subject');
+
+        return DB::transaction(function () use ($request, $subject) {
+            $oldValues = $subject->toArray();
+            $subject->update($request->validated());
+
+            AuditService::log(
+                actionType: 'UPDATE',
+                entityName: 'Subject',
+                entityId: $subject->id,
+                oldValue: $oldValues,
+                newValue: $subject->refresh()->toArray(),
+                module: 'Academics',
+                category: 'Subjects',
+                notes: "Updated subject '{$subject->subject_name}'"
+            );
+
+            return back()->with('success', 'Subject updated');
+        });
     }
 
     public function destroy(Subject $subject): RedirectResponse
     {
-        $subject->delete();
-        return back()->with('success', 'Subject deleted');
+        ifCan('delete-subject');
+
+        return DB::transaction(function () use ($subject) {
+            $id = $subject->id;
+            $oldValues = $subject->toArray();
+
+            $subject->delete();
+
+            AuditService::log(
+                actionType: 'DELETE',
+                entityName: 'Subject',
+                entityId: $id,
+                oldValue: $oldValues,
+                newValue: null,
+                module: 'Academics',
+                category: 'Subjects',
+                notes: "Deleted subject '{$oldValues['subject_name']}'"
+            );
+
+            return back()->with('success', 'Subject deleted');
+        });
     }
 }
 

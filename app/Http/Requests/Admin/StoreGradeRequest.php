@@ -8,7 +8,7 @@ class StoreGradeRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('manage-classes') ?? false;
+        return $this->user()?->can('create-grade') ?? false;
     }
 
     public function rules(): array

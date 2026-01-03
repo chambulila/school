@@ -32,7 +32,7 @@ export default function RolesIndex() {
     const handleAddRole = async () => {
         const confirmed = await askConfirmation('Add this role?');
         if (!confirmed) return;
-        router.post('/admin/roles', {
+        router.post('/dashboard/roles', {
             role_name: newRoleName,
         }, {
             preserveState: true,
@@ -56,7 +56,7 @@ export default function RolesIndex() {
         if (!editingRoleId) return;
         const confirmed = await askConfirmation('Save changes to this role?');
         if (!confirmed) return;
-        router.put(`/admin/roles/${editingRoleId}`, {
+        router.put(`/dashboard/roles/${editingRoleId}`, {
             role_name: editName,
             description: editDescription,
         }, {
@@ -69,7 +69,7 @@ export default function RolesIndex() {
     const deleteRole = async (role) => {
         const confirmed = await askConfirmation('Delete this role?');
         if (!confirmed) return;
-        router.delete(`/admin/roles/${role.id}`, {
+        router.delete(`/dashboard/roles/${role.id}`, {
             preserveState: true,
             preserveScroll: true,
         });
