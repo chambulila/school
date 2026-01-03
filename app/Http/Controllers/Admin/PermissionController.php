@@ -53,7 +53,7 @@ class PermissionController extends Controller
             }
 
             $permission_ids = $request->input('permission_ids', []);
-            $oldPermissions = $role->permissions()->pluck('id')->toArray();
+            $oldPermissions = $role->permissions()->pluck('permissions.id')->toArray();
 
             try {
                 $role->permissions()->sync($permission_ids);
@@ -77,4 +77,3 @@ class PermissionController extends Controller
         });
     }
 }
-
