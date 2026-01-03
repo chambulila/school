@@ -222,6 +222,12 @@ export function AppSidebar() {
                         isVisible: can('view-students-attendances'),
                         isActive: checkIsActive('/dashboard/attendances/students'),
                     },
+                    {
+                        title: "Attendance Reports",
+                        url: "/dashboard/attendances/reports",
+                        isVisible: canAny(['view-students-attendances', 'view-teachers-attendances']),
+                        isActive: checkIsActive('/dashboard/attendances/reports'),
+                    },
                 ],
             },
             {

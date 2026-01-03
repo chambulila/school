@@ -157,6 +157,8 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
         Route::get('attendances/students/session', [\App\Http\Controllers\Admin\StudentSessionAttendanceController::class, 'index'])->name('admin.attendance.students.session.index');
         Route::post('attendances/students/session', [\App\Http\Controllers\Admin\StudentSessionAttendanceController::class, 'storeBulk'])->name('admin.attendance.students.session.store');
         Route::get('attendances/reports', [\App\Http\Controllers\Admin\AttendanceReportController::class, 'index'])->name('admin.attendance.reports.index');
+        Route::get('attendances/reports/export/pdf', [\App\Http\Controllers\Admin\AttendanceReportController::class, 'exportPdf'])->name('admin.attendance.reports.export.pdf');
+        Route::get('attendances/reports/export/csv', [\App\Http\Controllers\Admin\AttendanceReportController::class, 'exportCsv'])->name('admin.attendance.reports.export.csv');
 
         // Audit Logs
         Route::get('audit-logs', [\App\Http\Controllers\Admin\AuditLogController::class, 'index'])->name('admin.audit-logs.index');
