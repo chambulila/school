@@ -163,6 +163,15 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
         // Audit Logs
         Route::get('audit-logs', [\App\Http\Controllers\Admin\AuditLogController::class, 'index'])->name('admin.audit-logs.index');
 
+        // Leaves
+        Route::get('leaves/types', [\App\Http\Controllers\Admin\LeaveTypeController::class, 'index'])->name('admin.leaves.types.index');
+        Route::post('leaves/types', [\App\Http\Controllers\Admin\LeaveTypeController::class, 'store'])->name('admin.leaves.types.store');
+        Route::put('leaves/types/{leaveType}', [\App\Http\Controllers\Admin\LeaveTypeController::class, 'update'])->name('admin.leaves.types.update');
+        Route::get('leaves/my', [\App\Http\Controllers\Admin\LeaveRequestController::class, 'index'])->name('admin.leaves.my.index');
+        Route::post('leaves/apply', [\App\Http\Controllers\Admin\LeaveRequestController::class, 'store'])->name('admin.leaves.apply.store');
+        Route::get('leaves/approvals', [\App\Http\Controllers\Admin\LeaveApprovalController::class, 'index'])->name('admin.leaves.approvals.index');
+        Route::post('leaves/{leave}/approve', [\App\Http\Controllers\Admin\LeaveApprovalController::class, 'approve'])->name('admin.leaves.approve');
+        Route::post('leaves/{leave}/reject', [\App\Http\Controllers\Admin\LeaveApprovalController::class, 'reject'])->name('admin.leaves.reject');
         // Settings
         Route::get('settings/theme', [\App\Http\Controllers\Admin\GeneralSettingController::class, 'edit'])->name('settings.theme');
         Route::put('settings/theme', [\App\Http\Controllers\Admin\GeneralSettingController::class, 'update'])->name('settings.theme.update');

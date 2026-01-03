@@ -231,6 +231,32 @@ export function AppSidebar() {
                 ],
             },
             {
+                title: "Leaves",
+                url: "#",
+                icon: Calendar,
+                isVisible: canAny(['manage-leave-types', 'apply-leave', 'approve-teacher-leave', 'approve-student-leave']),
+                items: [
+                    {
+                        title: "Leave Types",
+                        url: "/dashboard/leaves/types",
+                        isVisible: can('manage-leave-types'),
+                        isActive: checkIsActive('/dashboard/leaves/types'),
+                    },
+                    {
+                        title: "My Leaves",
+                        url: "/dashboard/leaves/my",
+                        isVisible: can('apply-leave'),
+                        isActive: checkIsActive('/dashboard/leaves/my'),
+                    },
+                    {
+                        title: "Approvals",
+                        url: "/dashboard/leaves/approvals",
+                        isVisible: canAny(['approve-teacher-leave', 'approve-student-leave']),
+                        isActive: checkIsActive('/dashboard/leaves/approvals'),
+                    },
+                ],
+            },
+            {
                 title: "Access Control",
                 url: "#",
                 icon: Users,
