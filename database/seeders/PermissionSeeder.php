@@ -12,7 +12,7 @@ class PermissionSeeder extends Seeder
     {
         $modules = [
             'User Management' => ['view-users', 'create-user', 'edit-user', 'delete-user'],
-            'Roles' => ['view-roles', 'create-role', 'edit-role', 'delete-role', 'manage-permissions', 'manage-roles'],
+            'Access Control' => ['view-roles', 'create-role', 'edit-role', 'delete-role', 'manage-permissions', 'manage-roles', 'view-audit-logs'],
             'Student Billing' => ['view-student-billings', 'create-student-billing', 'edit-student-billing', 'delete-student-billing'],
             'Fee Categories' => ['view-fee-categories', 'create-fee-category', 'edit-fee-category', 'delete-fee-category'],
             'Fee Structures' => ['view-fee-structures', 'create-fee-structure', 'edit-fee-structure', 'delete-fee-structure'],

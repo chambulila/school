@@ -158,6 +158,9 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
         Route::post('attendances/students/session', [\App\Http\Controllers\Admin\StudentSessionAttendanceController::class, 'storeBulk'])->name('admin.attendance.students.session.store');
         Route::get('attendances/reports', [\App\Http\Controllers\Admin\AttendanceReportController::class, 'index'])->name('admin.attendance.reports.index');
 
+        // Audit Logs
+        Route::get('audit-logs', [\App\Http\Controllers\Admin\AuditLogController::class, 'index'])->name('admin.audit-logs.index');
+
         // Settings
         Route::get('settings/theme', [\App\Http\Controllers\Admin\GeneralSettingController::class, 'edit'])->name('settings.theme');
         Route::put('settings/theme', [\App\Http\Controllers\Admin\GeneralSettingController::class, 'update'])->name('settings.theme.update');

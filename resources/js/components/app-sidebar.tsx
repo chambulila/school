@@ -228,7 +228,7 @@ export function AppSidebar() {
                 title: "Access Control",
                 url: "#",
                 icon: Users,
-                isVisible: canAny(['view-roles', 'manage-permissions', 'manage-roles']),
+                isVisible: canAny(['view-roles', 'manage-permissions', 'manage-roles', 'view-audit-logs']),
                 items: [
                     {
                         title: "Roles",
@@ -247,6 +247,12 @@ export function AppSidebar() {
                         url: "/dashboard/users",
                         isVisible: can('manage-roles'),
                         isActive: checkIsActive('/dashboard/users'),
+                    },
+                    {
+                        title: "Audit Logs",
+                        url: "/dashboard/audit-logs",
+                        isVisible: can('view-audit-logs'),
+                        isActive: checkIsActive('/dashboard/audit-logs'),
                     },
                 ],
             },
