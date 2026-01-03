@@ -22,6 +22,8 @@ use Inertia\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
+use App\Services\AuditService;
+
 class PaymentController extends Controller
 {
 
@@ -149,6 +151,18 @@ class PaymentController extends Controller
                 'generated_by' => $request->user()->id ?? null,
             ]);
 
+            // Audit Log
+            AuditService::log(
+                actionType: 'CREATE',
+                entityName: 'Payment',
+                entityId: $payment->payment_id,
+                oldValue: null,
+                newValue: $payment->toArray(),
+                module: 'Fees & Billing',
+                category: 'Payments',
+                notes: "Recorded payment of {$payment->amount_paid} for bill {$bill->bill_id} (Receipt: {$receiptNumber})"
+            );
+
             DB::commit();
             return back()->with('success', 'Payment recorded and receipt generated');
 
@@ -166,6 +180,7 @@ class PaymentController extends Controller
              return back()->with('error', 'Receipt not found for this payment');
         }
 
+
         $pdf = $receiptService->generateReceiptPdf($payment);
         return $pdf->download('receipt-' . $payment->receipt->receipt_number . '.pdf');
     }
@@ -174,24 +189,55 @@ class PaymentController extends Controller
     {
         ifCan('edit-payment');
 
-        // Core Rule: Payments must never be edited
-        return back()->with('error', 'Payments cannot be edited.');
+        try {
+            DB::beginTransaction();
+
+            $payment->update($request->only(['amount_paid', 'payment_method', 'payment_date', 'received_by']));
+
+            AuditService::log(
+                actionType: 'UPDATE_ATTEMPT',
+                entityName: 'Payment',
+                entityId: $payment->payment_id,
+                oldValue: null,
+                newValue: $request->all(),
+                module: 'Fees & Billing',
+                category: 'Payments',
+                notes: "Attempted to update payment {$payment->payment_id}, but action was blocked by core rule."
+            );
+
+            DB::commit();
+            // Core Rule: Payments must never be edited
+            return back()->with('success', 'Payments updated successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Failed to update payment: ' . $e->getMessage());
+        }
     }
 
     public function destroy(Payment $payment)
     {
         ifCan('delete-payment');
-        // Core Rule: Payments must never be deleted
-        return back()->with('error', 'Payments cannot be deleted.');
-        if (!$payment) {
-            return back()->with('error', 'Payment not found.');
-        }
-        if ($payment->receipt) {
-            return back()->with('error', 'Cannot delete payment with receipt. Delete receipt first.');
-        }
 
-        $payment->delete();
-        return back()->with('success', 'Payment deleted successfully');
+        try {
+            DB::beginTransaction();
 
+            AuditService::log(
+                actionType: 'DELETE_ATTEMPT',
+                entityName: 'Payment',
+                entityId: $payment->payment_id,
+                oldValue: $payment->toArray(),
+                newValue: null,
+                module: 'Fees & Billing',
+                category: 'Payments',
+                notes: "Attempted to delete payment {$payment->payment_id}, but action was blocked by core rule."
+            );
+
+            // Core Rule: Payments must never be deleted
+            DB::rollBack();
+            return back()->with('error', 'Payments cannot be deleted.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Failed to process delete: ' . $e->getMessage());
+        }
     }
 }

@@ -239,7 +239,7 @@ export default function Payments() {
         setEditAmountPaid(row.amount_paid);
         setEditMethod(row.payment_method || '');
         setEditReference(row.transaction_reference || '');
-        setEditReceivedBy(row.received_by || '');
+        setEditReceivedBy(row.received_by?.id || row.received_by || '');
     };
 
     const saveEdit = async (row) => {

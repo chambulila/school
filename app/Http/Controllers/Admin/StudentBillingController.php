@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Services\AuditService;
 
 class StudentBillingController extends Controller
 {
@@ -102,6 +103,18 @@ class StudentBillingController extends Controller
                             $academicYear,
                             $request->fee_structure_ids,
                         );
+
+                        AuditService::log(
+                            actionType: 'CREATE_BULK',
+                            entityName: 'StudentBilling',
+                            entityId: $student->id, // Logging against student since multiple bills are created
+                            oldValue: null,
+                            newValue: ['count' => $count, 'fee_structure_ids' => $request->fee_structure_ids],
+                            module: 'Fees & Billing',
+                            category: 'Student Billing',
+                            notes: "Created $count bills for student {$student->admission_number} in year {$academicYear->year_name}"
+                        );
+
                         return back()->with('success', "$count student bills created");
                     } catch (\Exception $e) {
                         logger()->error('Failed to create bills: ' . $e->getMessage());
@@ -120,23 +133,58 @@ class StudentBillingController extends Controller
     public function update(UpdateStudentBillingRequest $request, StudentBilling $studentBilling)
     {
         ifCan('edit-student-billing');
-        $studentBilling->update($request->validated());
-        return back()->with('success', 'Student bill updated');
+        
+        return DB::transaction(function () use ($request, $studentBilling) {
+            $oldValues = $studentBilling->toArray();
+            $studentBilling->update($request->validated());
+            
+            AuditService::log(
+                actionType: 'UPDATE',
+                entityName: 'StudentBilling',
+                entityId: $studentBilling->bill_id,
+                oldValue: $oldValues,
+                newValue: $studentBilling->refresh()->toArray(),
+                module: 'Fees & Billing',
+                category: 'Student Billing',
+                notes: "Updated student bill {$studentBilling->bill_id}"
+            );
+
+            return back()->with('success', 'Student bill updated');
+        });
     }
 
     public function destroy(StudentBilling $studentBilling)
     {
         ifCan('delete-student-billing');
-        if (!$studentBilling) {
-            return back()->with('error', 'Bill not found bill.');
-        }
+        
+        return DB::transaction(function () use ($studentBilling) {
+            if (!$studentBilling) {
+                return back()->with('error', 'Bill not found bill.');
+            }
 
-        // Prevent deletion if any payment (full or partial) has been recorded
-        if ($studentBilling->payments()->exists()) {
-            return back()->with('error', 'Cannot delete bill with recorded payments.');
-        }
-        $studentBilling->delete();
-        return back()->with('success', 'Student bill deleted');
+            // Prevent deletion if any payment (full or partial) has been recorded
+            if ($studentBilling->payments()->exists()) {
+                return back()->with('error', 'Cannot delete bill with recorded payments.');
+            }
+
+            $billId = $studentBilling->bill_id;
+            $oldValues = $studentBilling->toArray();
+            
+            $studentBilling->delete();
+
+            AuditService::log(
+                actionType: 'DELETE',
+                entityName: 'StudentBilling',
+                entityId: $billId,
+                oldValue: $oldValues,
+                newValue: null,
+                module: 'Fees & Billing',
+                category: 'Student Billing',
+                notes: "Deleted student bill $billId"
+            );
+
+            return back()->with('success', 'Student bill deleted');
+        });
     }
 
 
