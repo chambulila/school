@@ -16,11 +16,14 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Services\AuditService;
+use Illuminate\Support\Facades\DB;
 
 class ExamResultController extends Controller
 {
     public function index(Request $request): Response
     {
+        ifCan('view-results'); // Assuming 'view-results' is the permission for viewing exam results
         $search = (string) $request->input('search', '');
         $perPage = (int) $request->input('perPage', 10);
 
@@ -66,55 +69,128 @@ class ExamResultController extends Controller
 
     public function store(StoreExamResultRequest $request): RedirectResponse
     {
-        ExamResult::create($request->validated());
-        return back()->with('success', 'Exam result created');
+        ifCan('create-mark');
+
+        return DB::transaction(function () use ($request) {
+            $result = ExamResult::create($request->validated());
+
+            AuditService::log(
+                actionType: 'CREATE',
+                entityName: 'ExamResult',
+                entityId: $result->id,
+                oldValue: null,
+                newValue: $result->toArray(),
+                module: 'Exams & Results',
+                category: 'Exam Result',
+                notes: "Created exam result for student ID {$result->student_id}, Exam ID {$result->exam_id}, Subject ID {$result->subject_id}"
+            );
+
+            return back()->with('success', 'Exam result created');
+        });
     }
 
     public function storeBulk(Request $request): RedirectResponse
     {
-        $data = $request->validate([
-            'subject_id' => ['required', 'uuid', 'exists:subjects,id'],
-            'exam_id' => ['required', 'uuid', 'exists:exams,id'],
-            'class_section_id' => ['required', 'uuid', 'exists:class_sections,id'],
-            'students' => ['required', 'array', 'min:1'],
-            'students.*' => ['uuid', 'exists:students,id'],
-        ]);
+        ifCan('create-mark'); // Assuming bulk creation also requires 'create-mark' permission
 
-        foreach ($data['students'] as $studentId) {
-            ExamResult::firstOrCreate(
-                [
-                    'student_id' => $studentId,
-                    'subject_id' => $data['subject_id'],
-                    'exam_id' => $data['exam_id'],
-                ],
-                [
-                    'class_section_id' => $data['class_section_id'],
-                    'score' => null,
-                    'grade' => null,
-                    'remarks' => null,
-                ]
+        return DB::transaction(function () use ($request) {
+            $data = $request->validate([
+                'subject_id' => ['required', 'uuid', 'exists:subjects,id'],
+                'exam_id' => ['required', 'uuid', 'exists:exams,id'],
+                'class_section_id' => ['required', 'uuid', 'exists:class_sections,id'],
+                'students' => ['required', 'array', 'min:1'],
+                'students.*' => ['uuid', 'exists:students,id'],
+            ]);
+
+            $createdResults = [];
+            foreach ($data['students'] as $studentId) {
+                $result = ExamResult::firstOrCreate(
+                    [
+                        'student_id' => $studentId,
+                        'subject_id' => $data['subject_id'],
+                        'exam_id' => $data['exam_id'],
+                    ],
+                    [
+                        'class_section_id' => $data['class_section_id'],
+                        'score' => null,
+                        'grade' => null,
+                        'remarks' => null,
+                    ]
+                );
+
+                if ($result->wasRecentlyCreated) {
+                    $createdResults[] = $result->id;
+                }
+            }
+
+            AuditService::log(
+                actionType: 'CREATE_BULK',
+                entityName: 'ExamResult',
+                entityId: 'BULK', // Using 'BULK' as ID since multiple were created
+                oldValue: null,
+                newValue: ['count' => count($createdResults), 'exam_id' => $data['exam_id'], 'subject_id' => $data['subject_id'], 'class_section_id' => $data['class_section_id']],
+                module: 'Exams & Results',
+                category: 'Exam Result',
+                notes: "Enrolled " . count($createdResults) . " students for exam ID {$data['exam_id']} and subject ID {$data['subject_id']}"
             );
-        }
 
-        return back()->with('success', 'Students enrolled for the exam');
+            return back()->with('success', 'Students enrolled for the exam');
+        });
     }
 
     public function update(UpdateExamResultRequest $request, ExamResult $examResult): RedirectResponse
     {
-        $examResult->update($request->validated());
-        return back()->with('success', 'Exam result updated');
+        ifCan('edit-mark');
+
+        return DB::transaction(function () use ($request, $examResult) {
+            $oldValues = $examResult->toArray();
+            $examResult->update($request->validated());
+
+            AuditService::log(
+                actionType: 'UPDATE',
+                entityName: 'ExamResult',
+                entityId: $examResult->id,
+                oldValue: $oldValues,
+                newValue: $examResult->refresh()->toArray(),
+                module: 'Exams & Results',
+                category: 'Exam Result',
+                notes: "Updated exam result ID {$examResult->id}"
+            );
+
+            return back()->with('success', 'Exam result updated');
+        });
     }
 
     public function destroy(ExamResult $examResult): RedirectResponse
     {
-        $examResult->delete();
-        return back()->with('success', 'Exam result deleted');
+        ifCan('delete-mark');
+
+        return DB::transaction(function () use ($examResult) {
+            $id = $examResult->id;
+            $oldValues = $examResult->toArray();
+
+            $examResult->delete();
+
+            AuditService::log(
+                actionType: 'DELETE',
+                entityName: 'ExamResult',
+                entityId: $id,
+                oldValue: $oldValues,
+                newValue: null,
+                module: 'Exams & Results',
+                category: 'Exam Result',
+                notes: "Deleted exam result ID {$id}"
+            );
+
+            return back()->with('success', 'Exam result deleted');
+        });
     }
 
     // New Methods
 
     public function create(Request $request): Response
     {
+        ifCan('enroll-student-to-exam');
         $sections = ClassSection::with('grade:id,grade_name')->orderBy('section_name')->select('id', 'section_name', 'grade_id')->get();
         $subjects = Subject::query()->orderBy('subject_name')->select('id', 'subject_name', 'subject_code')->get();
         $exams = Exam::query()->orderBy('start_date', 'desc')->select('id', 'exam_name')->get();
@@ -156,6 +232,7 @@ class ExamResultController extends Controller
 
     public function resultsIndex(Request $request): Response
     {
+        ifCan('view-exam-results');
         $perPage = (int) $request->input('perPage', 10);
 
         $exams = Exam::query()
@@ -173,6 +250,7 @@ class ExamResultController extends Controller
 
     public function storeEnrollments(Request $request): RedirectResponse
     {
+        ifCan('enroll-student-to-exam');
         $data = $request->validate([
             'subject_id' => ['required', 'uuid', 'exists:subjects,id'],
             'exam_id' => ['required', 'uuid', 'exists:exams,id'],
@@ -208,6 +286,7 @@ class ExamResultController extends Controller
 
     public function showEnrollments(Request $request, $exam_id)
     {
+        ifCan('view-exam-enrollments');
         $perPage = (int) $request->input('perPage', 50); // Higher default for tabular entry
         $search = $request->input('search');
         $subjectId = $request->input('subject_id');
@@ -215,7 +294,6 @@ class ExamResultController extends Controller
 
         // Ensure $exam_id is a valid UUID before querying
         if (!\Illuminate\Support\Str::isUuid($exam_id)) {
-            dd($exam_id);
             return back()->with('error', 'Invalid exam ID.');
         }
 
@@ -258,6 +336,7 @@ class ExamResultController extends Controller
 
     public function updateScores(UpdateExamScoresRequest $request): RedirectResponse
     {
+        ifCan('update-exam-scores');
         $data = $request->validated();
         $count = 0;
 

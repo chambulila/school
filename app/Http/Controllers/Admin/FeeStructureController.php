@@ -15,11 +15,14 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Services\AuditService;
+use Illuminate\Support\Facades\DB;
 
 class FeeStructureController extends Controller
 {
     public function index(Request $request): Response
     {
+        ifCan('view-fee-structures');
         $structures = FeeStructure::query()
             ->with(['feeCategory', 'grade', 'academicYear'])
             ->filter($request->only('search'))
@@ -38,28 +41,80 @@ class FeeStructureController extends Controller
 
     public function store(StoreFeeStructureRequest $request)
     {
-        FeeStructure::create($request->validated());
-        return back()->with('success', 'Fee structure created');
+        ifCan('create-fee-structure');
+        
+        return DB::transaction(function () use ($request) {
+            $feeStructure = FeeStructure::create($request->validated());
+
+            AuditService::log(
+                actionType: 'CREATE',
+                entityName: 'FeeStructure',
+                entityId: $feeStructure->fee_structure_id,
+                oldValue: null,
+                newValue: $feeStructure->toArray(),
+                module: 'Fees & Billing',
+                category: 'Fee Structure',
+                notes: "Created fee structure for {$feeStructure->grade->grade_name} in {$feeStructure->academicYear->year_name}"
+            );
+
+            return back()->with('success', 'Fee structure created');
+        });
     }
 
     public function update(UpdateFeeStructureRequest $request, FeeStructure $feeStructure)
     {
+        ifCan('edit-fee-structure');
+
         if ($this->billingExistsFor($feeStructure)) {
             return back()->with('error', 'Cannot modify fee structure because billing has already started for this grade and academic year.');
         }
 
-        $feeStructure->update($request->validated());
-        return back()->with('success', 'Fee structure updated');
+        return DB::transaction(function () use ($request, $feeStructure) {
+            $oldValues = $feeStructure->toArray();
+            $feeStructure->update($request->validated());
+
+            AuditService::log(
+                actionType: 'UPDATE',
+                entityName: 'FeeStructure',
+                entityId: $feeStructure->fee_structure_id,
+                oldValue: $oldValues,
+                newValue: $feeStructure->refresh()->toArray(),
+                module: 'Fees & Billing',
+                category: 'Fee Structure',
+                notes: "Updated fee structure {$feeStructure->fee_structure_id}"
+            );
+
+            return back()->with('success', 'Fee structure updated');
+        });
     }
 
     public function destroy(FeeStructure $feeStructure)
     {
+        ifCan('delete-fee-structure');
+
         if ($this->billingExistsFor($feeStructure)) {
             return back()->with('error', 'Cannot delete fee structure because billing has already started for this grade and academic year.');
         }
 
-        $feeStructure->delete();
-        return back()->with('success', 'Fee structure deleted');
+        return DB::transaction(function () use ($feeStructure) {
+            $id = $feeStructure->fee_structure_id;
+            $oldValues = $feeStructure->toArray();
+            
+            $feeStructure->delete();
+
+            AuditService::log(
+                actionType: 'DELETE',
+                entityName: 'FeeStructure',
+                entityId: $id,
+                oldValue: $oldValues,
+                newValue: null,
+                module: 'Fees & Billing',
+                category: 'Fee Structure',
+                notes: "Deleted fee structure $id"
+            );
+
+            return back()->with('success', 'Fee structure deleted');
+        });
     }
 
     private function billingExistsFor(FeeStructure $structure): bool
