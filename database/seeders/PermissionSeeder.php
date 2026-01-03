@@ -12,7 +12,7 @@ class PermissionSeeder extends Seeder
     {
         $modules = [
             'User Management' => ['view-users', 'create-user', 'edit-user', 'delete-user'],
-            'Roles' => ['view-roles', 'create-role', 'edit-role', 'delete-role', 'manage-permissions'],
+            'Roles' => ['view-roles', 'create-role', 'edit-role', 'delete-role', 'manage-permissions', 'manage-roles'],
             'Student Billing' => ['view-student-billings', 'create-student-billing', 'edit-student-billing', 'delete-student-billing'],
             'Fee Categories' => ['view-fee-categories', 'create-fee-category', 'edit-fee-category', 'delete-fee-category'],
             'Fee Structures' => ['view-fee-structures', 'create-fee-structure', 'edit-fee-structure', 'delete-fee-structure'],
@@ -38,6 +38,10 @@ class PermissionSeeder extends Seeder
             'Settings' => ['view-settings', 'create-setting', 'edit-setting', 'delete-setting'],
             'Reports' => ['view-reports', 'create-report', 'edit-report', 'delete-report'],
             'Payments' => ['view-payments', 'create-payment', 'edit-payment', 'delete-payment', 'genarate-payment-reference', 'download-payment-receipt'],
+            'Payment Receipts' => ['view-payment-receipts', 'create-payment-receipt', 'edit-payment-receipt', 'delete-payment-receipt'],
+            'Payment Reports' => ['view-payment-reports', 'export-payment-reports'],
+            'Fee Notifications' => ['view-fee-notifications', 'create-fee-notification', 'edit-fee-notification', 'delete-fee-notification'],
+            'Published Results' => ['view-published-results', 'create-published-result', 'edit-published-result', 'delete-published-result'],
         ];
 
         foreach ($modules as $module => $actions) {

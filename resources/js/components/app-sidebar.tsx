@@ -19,7 +19,7 @@ import { Link, usePage } from '@inertiajs/react';
 import { BookOpen, ChevronDown, ChevronRight, Folder, Home, Minus, Plus, Settings, User, Users } from 'lucide-react';
 import AppLogo from './app-logo';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
-import { canAny } from '@/hooks/usePermission';
+import { can, canAny } from '@/hooks/usePermission';
 
 const footerNavItems: NavItem[] = [
     {
@@ -47,18 +47,18 @@ export function AppSidebar() {
                 title: "Classes/Grades",
                 url: "#",
                 icon: Users,
-                isVisible: canAny(['view-classes', 'view-grades', 'view-sections']),
+                isVisible: canAny(['view-grades', 'view-sections']),
                 items: [
                     {
                         title: "Grades",
                         url: "/dashboard/grades",
-                        isVisible: true,
+                        isVisible: can('view-grades'),
                         isActive: checkIsActive('/dashboard/grades'),
                     },
                     {
                         title: "Class Sections",
                         url: "/dashboard/sections",
-                        isVisible: true,
+                        isVisible: can('view-sections'),
                         isActive: checkIsActive('/dashboard/sections'),
                     },
                 ],
@@ -72,19 +72,19 @@ export function AppSidebar() {
                     {
                         title: "Users",
                         url: "/dashboard/users",
-                        isVisible: true,
+                        isVisible: can('view-users'),
                         isActive: checkIsActive('/dashboard/users'),
                     },
                     {
                         title: "Teachers",
                         url: "/dashboard/teachers",
-                        isVisible: true,
+                        isVisible: can('view-teachers'),
                         isActive: checkIsActive('/dashboard/teachers'),
                     },
                     {
                         title: "Students",
                         url: "/dashboard/students",
-                        isVisible: true,
+                        isVisible: can('view-students'),
                         isActive: checkIsActive('/dashboard/students'),
                     },
                 ],
@@ -93,30 +93,30 @@ export function AppSidebar() {
                 title: "Academics",
                 url: "#",
                 icon: BookOpen,
-                isVisible: canAny(['academic-years', 'subjects']),
+                isVisible: canAny(['view-academic-years', 'view-subjects', 'view-teacher-subjects', 'view-student-enrollments']),
                 items: [
                     {
                         title: "Academic Years",
                         url: "/dashboard/academic-years",
-                        isVisible: true,
+                        isVisible: can('view-academic-years'),
                         isActive: checkIsActive('/dashboard/academic-years'),
                     },
                     {
                         title: "Subjects",
                         url: "/dashboard/subjects",
-                        isVisible: true,
+                        isVisible: can('view-subjects'),
                         isActive: checkIsActive('/dashboard/subjects'),
                     },
                     {
                         title: "Teacher Subjects",
                         url: "/dashboard/teacher-subject-assignments",
-                        isVisible: true,
+                        isVisible: can('view-teacher-subjects'),
                         isActive: checkIsActive('/dashboard/teacher-subject-assignments'),
                     },
                     {
                         title: "Student Enrollments",
                         url: "/dashboard/student-enrollments",
-                        isVisible: true,
+                        isVisible: can('view-student-enrollments'),
                         isActive: checkIsActive('/dashboard/student-enrollments'),
                     },
                 ],
@@ -125,31 +125,30 @@ export function AppSidebar() {
                 title: "Exams & Results",
                 url: "#",
                 icon: Folder,
-                isVisible: canAny(['view-exams', 'view-exam-enrollments', 'view-exam-results', 'view-published-results']),
+                isVisible: canAny(['view-exams', 'enroll-student-to-exam', 'view-exam-results', 'view-published-results']),
                 items: [
                     {
                         title: "Exams",
                         url: "/dashboard/exams",
-                        isVisible: true,
+                        isVisible: can('view-exams'),
                         isActive: checkIsActive('/dashboard/exams'),
                     },
                     {
                         title: "Exam Enrollments",
-                        // url: "/dashboard/exam-results",
                         url: "/dashboard/exams/enrollments/create",
-                        isVisible: true,
+                        isVisible: can('enroll-student-to-exam'),
                         isActive: checkIsActive('/dashboard/exams/enrollments/create'),
                     },
                     {
                         title: "Exam Results",
                         url: "/dashboard/exams/enrollments/results",
-                        isVisible: true,
+                        isVisible: can('view-exam-results'),
                         isActive: checkIsActive('/dashboard/exams/enrollments/results'),
                     },
                     {
                         title: "Published Results",
                         url: "/dashboard/published-results",
-                        isVisible: true,
+                        isVisible: can('view-published-results'),
                         isActive: checkIsActive('/dashboard/published-results'),
                     },
                 ],
@@ -163,43 +162,43 @@ export function AppSidebar() {
                     {
                         title: "Fee Categories",
                         url: "/dashboard/fee-categories",
-                        isVisible: true,
+                        isVisible: can('view-fee-categories'),
                         isActive: checkIsActive('/dashboard/fee-categories'),
                     },
                     {
                         title: "Fee Structures",
                         url: "/dashboard/fee-structures",
-                        isVisible: true,
+                        isVisible: can('view-fee-structures'),
                         isActive: checkIsActive('/dashboard/fee-structures'),
                     },
                     {
                         title: "Student Billing",
                         url: "/dashboard/student-billing",
-                        isVisible: true,
+                        isVisible: can('view-student-billings'),
                         isActive: checkIsActive('/dashboard/student-billing'),
                     },
                     {
                         title: "Payments",
                         url: "/dashboard/payments",
-                        isVisible: true,
+                        isVisible: can('view-payments'),
                         isActive: checkIsActive('/dashboard/payments'),
                     },
                     {
                         title: "Payment Receipts",
                         url: "/dashboard/payment-receipts",
-                        isVisible: true,
+                        isVisible: can('view-payment-receipts'),
                         isActive: checkIsActive('/dashboard/payment-receipts'),
                     },
                     {
                         title: "Payment Reports",
                         url: "/dashboard/reports/payments",
-                        isVisible: true,
+                        isVisible: can('view-payment-reports'),
                         isActive: checkIsActive('/dashboard/reports/payments'),
                     },
                     {
                         title: "Fee Notifications",
                         url: "/dashboard/fee-notifications",
-                        isVisible: true,
+                        isVisible: can('view-fee-notifications'),
                         isActive: checkIsActive('/dashboard/fee-notifications'),
                     },
                 ],
@@ -208,24 +207,24 @@ export function AppSidebar() {
                 title: "Access Control",
                 url: "#",
                 icon: Users,
-                isVisible: true,
+                isVisible: canAny(['view-roles', 'manage-permissions', 'manage-roles']),
                 items: [
                     {
                         title: "Roles",
                         url: "/dashboard/roles",
-                        isVisible: true,
+                        isVisible: can('view-roles'),
                         isActive: checkIsActive('/dashboard/roles'),
                     },
                     {
                         title: "Permissions",
                         url: "/dashboard/permissions",
-                        isVisible: true,
+                        isVisible: can('manage-permissions'),
                         isActive: checkIsActive('/dashboard/permissions'),
                     },
                     {
                         title: "Assign Roles",
                         url: "/dashboard/users",
-                        isVisible: true,
+                        isVisible: can('manage-roles'),
                         isActive: checkIsActive('/dashboard/users'),
                     },
                 ],
